@@ -1,0 +1,13 @@
+node_modules
+.vscode
+*.log
+dist
+.git
+.gitignore
+.pnpm-store
+.DS_Store
+Thumbs.db
+.git
+.gitignore
+.idea
+dist

@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: laochristian_app
+    build:
+      context: ./laochristian
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./laochristian:/app
+    environment:
+      - NODE_ENV=development
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
+    restart: unless-stopped
