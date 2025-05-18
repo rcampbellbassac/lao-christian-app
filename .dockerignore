@@ -7,7 +7,4 @@ dist
 .pnpm-store
 .DS_Store
 Thumbs.db
-.git
-.gitignore
 .idea
-dist
