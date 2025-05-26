@@ -1,0 +1,19 @@
+{
+    "name": "LaoChristian.org",
+    "short_name": "LaoChristian.org",
+    "icons": [
+        {
+            "src": "/beta/img/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/beta/img/android-chrome-256x256.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#677993",
+    "background_color": "#677993",
+    "display": "standalone"
+}

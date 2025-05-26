@@ -1,2 +1,9 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+Lao:wght@100..900&display=swap');
+
+@theme {
+  --font-noto-sans-lao: "Noto Sans Lao", sans-serif;
+  --font-noto-color-emoji: "Noto Color Emoji", sans-serif;
+}

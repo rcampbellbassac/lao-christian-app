@@ -1,0 +1,54 @@
+{
+    "urls":[
+        {
+            "eng_name": "Bible",
+            "native_name": "ພຣະຄຳພີ",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBible.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBible.svg"
+        }, 
+        {
+            "eng_name": "Worship Songs",
+            "native_name": "ເພງນະມັດສະການ",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoSongs.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoSongs.svg"
+        }, 
+        {
+            "eng_name": "Bible Studies",
+            "native_name": "ການສຶກສາພຣະຄຳພີ",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStudies.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStudies.svg"
+        }, 
+        {
+            "eng_name": "Ellen G. White Books",
+            "native_name": "ປື້ມທ່ານ​ນາງ​ເອ​ເລັນຈີ​ໄວທ໌",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoEGW.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoEGW.svg"
+        }, 
+        {
+            "eng_name": "Health Studies",
+            "native_name": "ສຸຂະພາບ ປຶ້ມກ່ຽວກັບສຸຂະພາບ",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoHealthBooks.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoHealthBooks.svg"
+        },
+        {
+            "eng_name": "Bible Stories",
+            "native_name": "ບັນດາເລື່ອງ ພຣະຄຳພີ",
+            "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStories.json",
+            "lang": "Lao",
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStories.svg"
+        }
+    ],
+    "langs": [
+        {
+            "name": "Lao",
+            "native_name": "ລາວ",
+            "emoji_flag": "🇱🇦"
+        }
+    ],
+    "update": "2025-05-26T17:31:27.009Z"
+}

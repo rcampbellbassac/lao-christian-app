@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
+import MainToolbar from './components/MainToolbar.vue'
+import MainFooter from './components/MainFooter.vue'
 </script>
 
 <template>
-  <header>
-
-    <div>
-      <h1 class="text-3xl font-bold underline">LaoChristian.org App</h1>
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  <div class="flex flex-col h-screen justify-between overflow-hidden">
+    <MainToolbar />
+    <RouterView class="transition-all transition-discrete duration-500 ease-in-out delay-50 mb-auto h-9/12 overflow-auto" />
+    <MainFooter />
+  </div>
 </template>
