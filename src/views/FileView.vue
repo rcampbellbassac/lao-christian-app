@@ -30,14 +30,14 @@ const contentSet = computed(() => store.currentSetData)
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl  min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
+  <main class="mx-auto max-w-3xl  min-w-3/7 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
     <BreadcrumbNav />
     <section v-if="contentSet">
       <div class="flex items-center mb-4">
         <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="Set Icon" class="h-16 mr-4" />
         <div>
-          <h1 class="text-3xl font-bold">{{ contentSet.title }}</h1>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ contentSet.description }}</p>
+          <h1 v-html="contentSet.title" class="text-3xl font-bold"></h1>
+          <p v-html="contentSet.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
         </div>
       </div>
 
@@ -50,9 +50,9 @@ const contentSet = computed(() => store.currentSetData)
             :to="{ path: `/content/${route.params.fileid}/${book.id}` }"
             class="text-blue-700 dark:text-blue-300 hover:underline text-lg"
           >
-            📘 {{ book.name }}
+            📘 <span v-html="book.name"></span>
           </router-link>
-          <p v-if="book.content" class="text-gray-600 dark:text-gray-400 text-sm mt-1">{{ book.content }}</p>
+          <p v-if="book.content" class="text-gray-600 dark:text-gray-400 text-sm mt-1"><span v-html="book.content"></span></p>
         </li>
       </ul>
     </section>

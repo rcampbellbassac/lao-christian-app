@@ -34,14 +34,11 @@ const book = computed(() =>
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
+  <main class="mx-auto max-w-3xl min-w-3/7 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
     <BreadcrumbNav />
     <section v-if="book">
       <h1 class="text-3xl font-bold mb-2">{{ book.name }}</h1>
-      <p v-if="book.content" class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-        {{ book.content }}
-      </p>
-
+      <p v-if="book.content" v-html="book.content" class="text-sm text-gray-600 dark:text-gray-400 mb-6"></p>
       <div>
         <h2 class="text-xl font-semibold mb-3">Chapters</h2>
         <ul class="space-y-1">
@@ -53,7 +50,7 @@ const book = computed(() =>
             <router-link
               :to="`/content/${fileId}/${bookId}/${content.id}`"
             >
-              📄 {{ content.name }}
+              📄 <span v-html="content.name"></span>
             </router-link>
           </li>
         </ul>

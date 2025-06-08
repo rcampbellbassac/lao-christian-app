@@ -55,7 +55,7 @@ const breadcrumbs = computed(() => {
         <router-link to="/" class="hover:underline">🏠 Home</router-link>
       </li>
       <li v-for="(crumb) in breadcrumbs" :key="crumb.path" class="flex items-center space-x-2">
-        <span>/</span>
+        <span>></span>
         <router-link :to="crumb.path" class="hover:underline">
           {{ crumb.name }}
         </router-link>

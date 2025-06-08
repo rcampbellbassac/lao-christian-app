@@ -40,7 +40,7 @@ const chapter = computed(() =>
   <main class="mx-auto max-w-3xl min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
     <BreadcrumbNav />
     <section v-if="chapter">
-      <h1 class="text-2xl font-bold mb-2">{{ chapter.name }}</h1>
+      <h1 class="text-2xl font-bold mb-2"><span v-html="chapter.name"></span></h1>
       <div class="prose dark:prose-invert max-w-none" v-html="chapter.content" />
       <div v-if="chapter.audioembed || chapter.videoembed" class="mt-4">
         <div v-if="chapter.audioembed" v-html="chapter.audioembed" />
