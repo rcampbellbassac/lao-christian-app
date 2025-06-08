@@ -1,5 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import AboutView from '../views/AboutView.vue'
+import CookiePolicyView from '../views/CookiePolicyView.vue'
+import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
+import TermsOfServiceView from '../views/TermsOfServiceView.vue'
+import FileView from '../views/FileView.vue'
+import BookView from '../views/BookView.vue'
+import ChapterView from '../views/ChapterView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,23 +19,39 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      component: AboutView,
     },
     {
       path: '/cookie-policy',
       name: 'cookie-policy',
-      component: () => import('../views/CookiePolicyView.vue'),
+      component: CookiePolicyView,
     },
     {
       path: '/privacy-policy',
       name: 'privacy-policy',
-      component: () => import('../views/PrivacyPolicyView.vue'),
+      component: PrivacyPolicyView,
     },
     {
       path: '/terms-of-service',
       name: 'terms-of-service',
-      component: () => import('../views/TermsOfServiceView.vue'),
+      component: TermsOfServiceView,
     },
+
+    {
+      path: '/content/:fileid',
+      component: FileView, // This loads the JSON file
+    },
+
+    {
+      path: '/content/:fileid/:bookid',
+      component: BookView, // This loads the indiivudal books withint the JSON file
+    },
+
+    {
+      path: '/content/:fileid/:bookid/:chapterid',
+      component: ChapterView,  // This loads the individual chapters within the book
+    },
+
   ],
 })
 

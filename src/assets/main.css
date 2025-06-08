@@ -1,9 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+Lao:wght@100..900&display=swap');
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
-
-@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+Lao:wght@100..900&display=swap');
 
 @theme {
   --font-noto-sans-lao: "Noto Sans Lao", sans-serif;
   --font-noto-color-emoji: "Noto Color Emoji", sans-serif;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #bdbdbd46;
+    border-radius: 12px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #00000060;
+    border-radius: 12px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(70, 116, 192, 0.61);
 }
