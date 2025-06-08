@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useContentStore } from '@/stores/content'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,6 +38,7 @@ const chapter = computed(() =>
 
 <template>
   <main class="mx-auto max-w-3xl min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
+    <BreadcrumbNav />
     <section v-if="chapter">
       <h1 class="text-2xl font-bold mb-2">{{ chapter.name }}</h1>
       <div class="prose dark:prose-invert max-w-none" v-html="chapter.content" />

@@ -1,31 +1,8 @@
-<!-- <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useContentStore } from '@/stores/content'
-
-const route = useRoute()
-const store = useContentStore()
-
-onMounted(async () => {
-  const id = parseInt(route.params.fileid as string, 10)
-  await store.loadIndex()
-  const key = store.getKeyFromId(id)
-  if (key) {
-    await store.loadContentSet(key)
-  }
-})
-</script>
-
-<template>
-  <div>
-    <h1 v-if="store.currentSetData">{{ store.currentSetData.title }}</h1>
-  </div>
-</template> -->
-
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useContentStore } from '@/stores/content'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,6 +31,7 @@ const contentSet = computed(() => store.currentSetData)
 
 <template>
   <main class="mx-auto max-w-3xl  min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
+    <BreadcrumbNav />
     <section v-if="contentSet">
       <div class="flex items-center mb-4">
         <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="Set Icon" class="h-16 mr-4" />
