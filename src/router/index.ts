@@ -7,6 +7,7 @@ import TermsOfServiceView from '../views/TermsOfServiceView.vue'
 import FileView from '../views/FileView.vue'
 import BookView from '../views/BookView.vue'
 import ChapterView from '../views/ChapterView.vue'
+import PresentationView from '../views/PresentationView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +51,12 @@ const router = createRouter({
     {
       path: '/content/:fileid/:bookid/:chapterid',
       component: ChapterView,  // This loads the individual chapters within the book
+    },
+
+    {
+      path: '/present/:fileid/:bookid/:chapterid',
+      name: 'presentation',
+      component: PresentationView,
     },
 
   ],

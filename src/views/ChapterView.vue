@@ -37,20 +37,30 @@ const chapter = computed(() =>
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl min-w-11/12 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
-    <BreadcrumbNav />
+  <main class="app-page">
+    <section class="app-panel">
+      <BreadcrumbNav />
     <section v-if="chapter">
-      <h1 class="text-2xl font-bold mb-2"><span v-html="chapter.name"></span></h1>
-      <div class="prose dark:prose-invert max-w-none" v-html="chapter.content" />
-      <div v-if="chapter.audioembed || chapter.videoembed" class="mt-4">
+      <div class="mb-4 flex justify-end">
+        <router-link
+          :to="`/present/${fileId}/${bookId}/${chapterId}`"
+          class="inline-flex items-center rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-teal-800"
+        >
+          Presentation mode
+        </router-link>
+      </div>
+      <h1 class="app-section-title mb-3"><span v-html="chapter.name"></span></h1>
+      <div class="prose prose-slate max-w-none dark:prose-invert" v-html="chapter.content" />
+      <div v-if="chapter.audioembed || chapter.videoembed" class="mt-5 rounded-xl border border-slate-300/70 bg-white/75 p-3 dark:border-slate-500/50 dark:bg-slate-950/86">
         <div v-if="chapter.audioembed" v-html="chapter.audioembed" />
         <div v-if="chapter.videoembed" v-html="chapter.videoembed" />
       </div>
     </section>
     <section v-else>
-      <p class="text-center text-gray-500 dark:text-gray-300">
+      <p class="text-center text-slate-500 dark:text-slate-300">
         Loading chapter...
       </p>
+    </section>
     </section>
   </main>
 </template>

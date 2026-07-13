@@ -30,35 +30,38 @@ const contentSet = computed(() => store.currentSetData)
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl  min-w-3/7 p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
-    <BreadcrumbNav />
+  <main class="app-page">
+    <section class="app-panel">
+      <BreadcrumbNav />
     <section v-if="contentSet">
-      <div class="flex items-center mb-4">
-        <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="Set Icon" class="h-16 mr-4" />
-        <div>
-          <h1 v-html="contentSet.title" class="text-3xl font-bold"></h1>
-          <p v-html="contentSet.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="Set Icon" class="h-16 w-16 rounded-xl bg-slate-100 object-contain p-2 dark:bg-slate-700" />
+        <div class="min-w-0">
+          <h1 v-html="contentSet.title" class="app-section-title"></h1>
+          <p v-html="contentSet.description" class="mt-1 text-sm text-slate-600 dark:text-slate-300"></p>
+          <p v-if="store.lastContentRefresh" class="mt-2 text-xs text-slate-500 dark:text-slate-400">Last refresh: {{ new Date(store.lastContentRefresh).toLocaleString() }}</p>
         </div>
       </div>
 
-      <hr class="my-6 border-gray-300 dark:border-gray-600" />
+      <hr class="app-divider" />
 
-      <h2 class="text-xl font-semibold mb-4">Books</h2>
-      <ul class="space-y-2">
-        <li v-for="book in contentSet.unit" :key="book.id" class="border-b pb-2 border-gray-300 dark:border-gray-600">
+      <h2 class="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">Books</h2>
+      <ul class="app-card-list">
+        <li v-for="book in contentSet.unit" :key="book.id" class="rounded-xl border border-slate-300/70 bg-white/85 p-3 transition hover:shadow-md dark:border-slate-500/55 dark:bg-slate-950/88">
           <router-link
             :to="{ path: `/content/${route.params.fileid}/${book.id}` }"
-            class="text-blue-700 dark:text-blue-300 hover:underline text-lg"
+            class="app-link text-base"
           >
             📘 <span v-html="book.name"></span>
           </router-link>
-          <p v-if="book.content" class="text-gray-600 dark:text-gray-400 text-sm mt-1"><span v-html="book.content"></span></p>
+          <p v-if="book.content" class="mt-1 text-sm text-slate-600 dark:text-slate-300"><span v-html="book.content"></span></p>
         </li>
       </ul>
     </section>
 
     <section v-else>
-      <p class="text-center text-gray-600 dark:text-gray-300">Loading content set...</p>
+      <p class="text-center text-slate-600 dark:text-slate-300">Loading content set...</p>
+    </section>
     </section>
   </main>
 </template>

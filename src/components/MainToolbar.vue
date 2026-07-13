@@ -14,9 +14,9 @@ const menuItems = [
 </script>
 
 <template>
-  <header>
-    <nav class="bg-white outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10 px-8 pt-2 shadow-md mb-5 pb-1">
-      <div class="-mb-px flex justify-center space-x-12">
+  <header class="sticky top-0 z-40 px-2 pb-1 pt-2 sm:px-4 sm:pb-1 lg:pb-1">
+    <nav class="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/85 px-3 py-2 shadow-lg backdrop-blur dark:border-slate-500/45 dark:bg-slate-950/92">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <RouterLink
           v-for="item in menuItems"
           :key="item.to"
@@ -25,17 +25,18 @@ const menuItems = [
         >
           <span
             :class="[
-              'text-teal-dark tracking-wide font-bold text-xs drop-shadow-md',
-              isActive ? 'text-cyan-500 dark:text-amber-400' : 'text-slate-800 dark:text-slate-200'
+              'inline-flex items-center rounded-full px-3 py-1.5 text-xs font-bold tracking-wide transition',
+              isActive
+                ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-100'
+                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
             ]"
           >
             <font-awesome-icon v-if="item.icon" :icon="item.icon" class="pr-1" />
             {{ item.name }}
           </span>
         </RouterLink>
-
-        <DarkToggle />
       </div>
+      <DarkToggle />
     </nav>
   </header>
 </template>

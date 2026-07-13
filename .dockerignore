@@ -2,6 +2,8 @@ node_modules
 .vscode
 *.log
 dist
+.vite
+dev-dist
 .git
 .gitignore
 .pnpm-store

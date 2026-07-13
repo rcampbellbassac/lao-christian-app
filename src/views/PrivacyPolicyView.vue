@@ -20,13 +20,13 @@ showModal.value = false
 
 
 <template>
-  <main class="mx-auto max-w-3xl p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
-    <div class="">
+  <main class="app-page">
+    <div class="app-panel dark:bg-slate-950/95 dark:border-slate-500/45">
       <div class="text-center mb-6">
         <img src="../assets/img/privacy-penguin-web-fast.webp" alt="Privacy Penguin Logo" class="mx-auto max-w-xs" />
       </div>
-      <hr class="border-slate-300 dark:border-slate-600 mb-6" />
-      <h1 class="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Privacy Policy</h1>
+      <hr class="app-divider" />
+      <h1 class="app-section-title mb-4">Privacy Policy</h1>
 
       <section class="mb-6">
         <h2 class="text-2xl font-semibold mb-2">Legal Basis for Processing Personal Data (GDPR)</h2>
@@ -80,7 +80,7 @@ showModal.value = false
         <h2 class="text-2xl font-semibold mb-2">Cookie Policy</h2>
         <p>
           Our website uses cookies. For more information, please visit our
-          <RouterLink to="/cookie-policy" class="text-blue-600 hover:text-blue-800 underline">Cookie Policy</RouterLink>.
+          <RouterLink to="/cookie-policy" class="app-link underline">Cookie Policy</RouterLink>.
         </p>
       </section>
 
@@ -107,12 +107,12 @@ showModal.value = false
         role="dialog"
         aria-modal="true"
       >
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md">
+        <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
           <h3 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Cookie Consent</h3>
           <p class="mb-4">
             We use cookies to improve your experience on our site. By continuing, you agree to our use of cookies.
             Read the terms
-            <RouterLink to="/cookie-policy" class="text-blue-600 hover:text-blue-800 underline">here</RouterLink>.
+            <RouterLink to="/cookie-policy" class="app-link underline">here</RouterLink>.
           </p>
           <div class="text-right">
             <button

@@ -49,14 +49,14 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-    <ul class="flex flex-wrap items-center space-x-2">
+  <nav aria-label="Breadcrumb" class="mb-4 rounded-xl border border-slate-300/60 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-500/50 dark:bg-slate-950/82 dark:text-slate-200">
+    <ul class="flex flex-wrap items-center gap-x-2 gap-y-1">
       <li>
-        <router-link to="/" class="hover:underline">🏠 Home</router-link>
+        <router-link to="/" class="font-semibold text-teal-700 hover:underline dark:text-teal-300">🏠 Home</router-link>
       </li>
-      <li v-for="(crumb) in breadcrumbs" :key="crumb.path" class="flex items-center space-x-2">
-        <span>></span>
-        <router-link :to="crumb.path" class="hover:underline">
+      <li v-for="(crumb) in breadcrumbs" :key="crumb.path" class="flex items-center gap-2">
+        <span class="text-slate-400">/</span>
+        <router-link :to="crumb.path" class="line-clamp-1 max-w-[16rem] hover:underline">
           {{ crumb.name }}
         </router-link>
       </li>

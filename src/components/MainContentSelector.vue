@@ -43,21 +43,24 @@ function openSet(fileId: number) {
 </script>
 
 <template>
-  <ul class="space-y-4 max-w-3xl mx-auto px-4">
+  <ul class="app-card-list mx-auto">
     <li
       v-for="item in urls"
       :key="item.id"
-      class="p-4 border rounded-lg shadow hover:shadow-md transition bg-slate-200 dark:bg-slate-700 dark:border-gray-600"
+      class="group cursor-pointer rounded-2xl border border-slate-300/70 bg-white/92 p-4 shadow transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-500/55 dark:bg-slate-950/90"
+      @click="openSet(item.id)"
     >
-      <div class="flex items-center space-x-4 cursor-pointer" @click="openSet(item.id)">
-        <img :src="item.icon" alt="Set icon" class="h-14 w-14 object-contain" />
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {{ item.native_name }} <span class="text-sm text-gray-700 dark:text-gray-400">({{ item.eng_name }})</span>
+      <div class="flex items-start gap-3">
+        <img :src="item.icon" alt="Set icon" class="h-14 w-14 shrink-0 rounded-xl bg-slate-100 p-2 object-contain dark:bg-slate-700" />
+        <div class="min-w-0">
+          <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+            {{ item.native_name }}
+            <span class="block text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline sm:text-sm">({{ item.eng_name }})</span>
           </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
             {{ getLangDetails(item.lang)?.emoji_flag }} {{ getLangDetails(item.lang)?.native_name }}
           </p>
+          <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-teal-700 group-hover:text-teal-600 dark:text-teal-300 dark:group-hover:text-teal-200">Open collection</p>
         </div>
       </div>
     </li>

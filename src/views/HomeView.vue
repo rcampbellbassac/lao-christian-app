@@ -2,38 +2,45 @@
 import MainContentSelector from '@/components/MainContentSelector.vue';
 </script>
 <template>
-  <main class="mx-auto max-w-3xl p-6 mb-20 bg-white rounded-xl shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:outline-white/10 overflow-y-auto">
-    <section>
-      <h1 class="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
-          <img src="../assets/img/logo 2-black.png" alt="LaoChristian.org Logo" class="h-16 inline dark:hidden" /> <img src="../assets/img/logo 2-white.png" alt="LaoChristian.org Logo" class="h-16 hidden dark:inline" /> <span class="ml-4">LaoChristian.org App Platform</span>
-      </h1>
-        <p class="italic text-gray-500 dark:text-gray-400 mb-4">
-          We are migrating our SEA-SDA.org Apps to the new LaoChristian.org App platform!
-        </p>
-        <hr class="border-gray-300 dark:border-gray-600 mb-4" />
-        <article class="text-gray-700 dark:text-gray-300 space-y-4">
-          <p class="mt-2">Which application would you like to use?</p>
-          <MainContentSelector />
-        </article>
+  <main class="app-page">
+    <section class="app-panel">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="app-section-title flex items-center gap-3">
+          <img src="../assets/img/logo 2-black.png" alt="LaoChristian.org Logo" class="h-12 inline dark:hidden sm:h-14" />
+          <img src="../assets/img/logo 2-white.png" alt="LaoChristian.org Logo" class="h-12 hidden dark:inline sm:h-14" />
+          <span>LaoChristian.org App Platform</span>
+        </h1>
+        <span class="app-chip">PWA-ready</span>
+      </div>
+      <p class="app-muted mt-2 italic">
+        We are migrating our SEA-SDA.org Apps to the new LaoChristian.org App platform.
+      </p>
+      <hr class="app-divider" />
+      <article class="space-y-4 text-slate-700 dark:text-slate-200">
+        <p class="text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Choose an application</p>
+        <MainContentSelector />
+      </article>
     </section>
-    <section class="mt-16">
-      <h1 class="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-2">
-          LaoChristian.org Other Digital Resources
-      </h1>
-        <p class="italic text-gray-500 dark:text-gray-400 mb-4">
-          We also provide other digital resources to help the Lao people learn about Jesus Christ and the Bible.
-        </p>
-        <hr class="border-gray-300 dark:border-gray-600 mb-4" />
-        <article class="text-gray-700 dark:text-gray-300 space-y-4">
-          <ul>
-            <li>
-              <a href="https://github.com/rcampbellbassac/KouangSiWaterfall" target="_blank" rel="noopener noreferrer" class="text-blue-700 dark:text-blue-300 hover:underline">
-                Kouang Si Waterfall Font
-              </a> - A display font for children's books, posters, and other materials in the Lao language. (<span class="italic">Preview it <a class="text-blue-700 dark:text-blue-300 hover:underline" href="https://htmlpreview.github.io/?https://github.com/rober42539/KouangSiWaterfall/blob/master/example.html">here.</a></span>)
 
-            </li>
-          </ul>
-        </article>
+    <section class="app-panel mt-4">
+      <h2 class="app-section-title">LaoChristian.org Other Digital Resources</h2>
+      <p class="app-muted mt-2 italic">
+        We also provide additional digital resources to help Lao communities study the Bible.
+      </p>
+      <hr class="app-divider" />
+      <article class="text-slate-700 dark:text-slate-200">
+        <ul class="space-y-2">
+          <li>
+            <a href="https://github.com/rcampbellbassac/KouangSiWaterfall" target="_blank" rel="noopener noreferrer" class="app-link">
+              Kouang Si Waterfall Font
+            </a>
+            <span class="app-muted"> - A display font for Lao-language children's books, posters, and print resources. </span>
+            <span class="italic">Preview it
+              <a class="app-link" href="https://htmlpreview.github.io/?https://github.com/rober42539/KouangSiWaterfall/blob/master/example.html">here</a>.
+            </span>
+          </li>
+        </ul>
+      </article>
     </section>
   </main>
 </template>
