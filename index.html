@@ -15,6 +15,21 @@
     <meta name="msapplication-TileColor" content="#2b5797">
     <meta name="theme-color" content="#677993">
     <title>LaoChristian.org App</title>
+    <script>
+      // Restores deep-link paths redirected by public/404.html on GitHub Pages.
+      ;(function () {
+        const locationRef = window.location
+        if (locationRef.search[1] !== '/') return
+
+        const decoded = locationRef.search
+          .slice(1)
+          .split('&')
+          .map((segment) => segment.replace(/~and~/g, '&'))
+          .join('?')
+
+        window.history.replaceState(null, '', decoded + locationRef.hash)
+      })()
+    </script>
   </head>
   <body class="max-w-[2000px] h-full my-auto mx-auto 
   bg-sky-100 dark:bg-neutral-900 text-gray-900 dark:text-gray-100 

@@ -16,6 +16,16 @@ LaoChristian.org is a Vue 3 + Vite SPA/PWA that presents Lao Christian materials
 - npm 10+
 - Docker + Docker Compose (for containerized workflows)
 
+## Environment configuration
+
+Copy `.env.example` to `.env` when you need custom settings.
+
+- `VITE_BASE_PATH`: Vite base path for static hosting.
+	- Project-site GitHub Pages: `/REPOSITORY_NAME/`
+	- Custom domain or root hosting: `/`
+- `VITE_CONTENT_BASE_URL`: optional content origin for relative URLs in `src/assets/data/index.json`.
+	- Leave empty to use URL values exactly as stored in `index.json`.
+
 ## Local development
 
 Install dependencies with a reproducible lockfile install:
@@ -58,7 +68,7 @@ This repo uses a multi-stage Dockerfile:
 docker compose up -d --build
 ```
 
-The app is served on port `5173` (mapped to nginx port `80` in the container).
+The app is served on port `5173` (mapped to container port `8080`).
 
 ### Containerized dev server with HMR
 
@@ -74,6 +84,73 @@ Or use helper scripts:
 npm run docker:up
 npm run docker:dev
 ```
+
+## GitHub Pages deployment
+
+This repo includes a Pages workflow at `.github/workflows/deploy-pages.yml`.
+
+### First deploy now (no custom domain)
+
+Use this flow first so we can verify everything on the default GitHub Pages URL.
+
+1. Push current branch changes to your default branch (`main` or `master`).
+2. In GitHub: `Settings -> Pages`, set **Source** to **GitHub Actions**.
+3. In GitHub: `Actions`, run or confirm the workflow **Deploy GitHub Pages**.
+4. Wait for the `deploy` job to finish, then open the URL shown in:
+	- GitHub: `Settings -> Pages`
+	- or workflow output `page_url`
+5. Validate these URLs in browser:
+	- app root (`https://<user>.github.io/<repo>/`)
+	- a deep link (for example `/content/...`)
+	- presentation route `/present/:fileid/:bookid/:chapterid`
+6. If you see stale UI, clear site data once and hard refresh.
+
+After this is stable, we can switch to custom domain configuration.
+
+### Deployment model
+
+- Initial target: **project-site** mode (`https://<user>.github.io/<repo>/`)
+- Future target: **custom domain** mode (`https://apps.laochristian.org/`)
+
+The workflow uses `actions/configure-pages` and sets `VITE_BASE_PATH` automatically from the Pages base path output.
+
+### Local simulation of Pages builds
+
+```sh
+# Project-site style build (adjust for your repository name)
+VITE_BASE_PATH=/lao-christian-app/ npm run build-only
+
+# Root/custom-domain style build
+VITE_BASE_PATH=/ npm run build-only
+```
+
+### SPA deep links on Pages
+
+History mode is preserved. The app uses:
+
+- `public/404.html` redirect shim
+- `index.html` restore script
+
+This keeps deep links such as `/content/1` and `/present/:fileid/:bookid/:chapterid` working on GitHub Pages.
+
+### Custom domain setup (`apps.laochristian.org`)
+
+1. In GitHub Pages settings, set custom domain to `apps.laochristian.org` and enable HTTPS after DNS resolves.
+2. Create a DNS `CNAME` record:
+	- Host/name: `apps`
+	- Target/value: `<your-github-username>.github.io`
+3. If DNS is not ready yet, continue using the default `github.io` URL.
+
+### S3 content hosting with Pages
+
+Keep S3 as canonical production content source.
+
+Required CORS guidance:
+
+- Include your Pages origin(s) and local dev origins in S3 CORS.
+- Keep `GET`/`HEAD` methods.
+- Use `AllowedHeaders: ["*"]` for conditional request headers.
+- Expose `ETag` and `Last-Modified` for refresh/invalidation logic.
 
 ## Content update tracking
 
@@ -118,4 +195,8 @@ docker compose up -d app
 curl -I http://127.0.0.1:5173/
 docker compose --profile dev up -d app-dev
 curl -I http://127.0.0.1:5174/
+
+# Optional Pages-targeted checks
+VITE_BASE_PATH=/lao-christian-app/ npm run build-only
+VITE_BASE_PATH=/ npm run build-only
 ```

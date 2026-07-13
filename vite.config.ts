@@ -1,13 +1,19 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
+import { loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const basePath = env.VITE_BASE_PATH || '/'
+
+  return {
+    base: basePath,
   plugins: [
     vue(),
     ...(mode === 'production' ? [] : [vueDevTools()]),
@@ -32,4 +38,5 @@ export default defineConfig(({ mode }) => ({
       usePolling: true,
     },
   },
-}))
+}
+})

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>LaoChristian.org App</title>
+    <script>
+      // GitHub Pages SPA fallback redirect.
+      ;(function () {
+        const locationRef = window.location
+        const pathSegments = locationRef.pathname.split('/').filter(Boolean)
+
+        // Project site on github.io includes repo segment in URL.
+        const basePath = locationRef.hostname.endsWith('.github.io')
+          ? `/${pathSegments[0] || ''}/`
+          : '/'
+
+        const path = locationRef.pathname
+          .slice(basePath.length)
+          .replace(/^\/+/, '')
+          .replace(/&/g, '~and~')
+
+        const query = locationRef.search ? locationRef.search.slice(1).replace(/&/g, '~and~') : ''
+        const redirectPath = `${basePath}?/${path}${query ? `&${query}` : ''}${locationRef.hash}`
+
+        locationRef.replace(redirectPath)
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>

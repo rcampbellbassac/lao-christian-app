@@ -139,6 +139,18 @@ export const useContentStore = defineStore('content', () => {
     return url.split('/').pop()?.replace('.json', '') ?? ''
   }
 
+  function _resolveContentUrl(url: string): string {
+    // Absolute URLs keep existing behavior.
+    if (/^https?:\/\//i.test(url)) return url
+
+    const base = import.meta.env.VITE_CONTENT_BASE_URL
+    if (!base) return url
+
+    const normalizedBase = base.endsWith('/') ? base : `${base}/`
+    const normalizedPath = url.startsWith('/') ? url.slice(1) : url
+    return new URL(normalizedPath, normalizedBase).toString()
+  }
+
   async function loadIndex(): Promise<void> {
     if (indexList.value.length > 0) return
     indexUpdate.value = indexData.update ?? null
@@ -163,6 +175,7 @@ export const useContentStore = defineStore('content', () => {
 
     const match = indexList.value.find(item => _keyFromUrl(item.url) === setKey)
     if (!match) throw new Error(`Material set "${setKey}" not found in index`)
+    const sourceUrl = _resolveContentUrl(match.url)
 
     const cachedRaw = await localforage.getItem<ContentSet | CachedSetEnvelope>(setKey)
     const cachedMeta = await localforage.getItem<CachedSetEnvelope>(_metaKey(setKey))
@@ -211,7 +224,7 @@ export const useContentStore = defineStore('content', () => {
     if (lastModified) requestHeaders.set('If-Modified-Since', lastModified)
 
     try {
-      const res = await fetch(match.url, {
+      const res = await fetch(sourceUrl, {
         cache: 'no-store',
         headers: requestHeaders,
       })
@@ -229,7 +242,7 @@ export const useContentStore = defineStore('content', () => {
         return
       }
 
-      if (!res.ok) throw new Error(`Failed to fetch ${match.url}`)
+      if (!res.ok) throw new Error(`Failed to fetch ${sourceUrl}`)
 
       const data = await res.json() as ContentSet
 
