@@ -5,6 +5,7 @@
             "eng_name": "Bible",
             "native_name": "ພຣະຄຳພີ",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBible.json",
+            "content_type": "bible",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible.svg"
         }, 
@@ -13,6 +14,7 @@
             "eng_name": "Worship Songs",
             "native_name": "ເພງນະມັດສະການ",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoSongs.json",
+            "content_type": "songs",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Songs.svg"
         }, 
@@ -21,6 +23,7 @@
             "eng_name": "Bible Studies",
             "native_name": "ການສຶກສາພຣະຄຳພີ",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStudies.json",
+            "content_type": "studies",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible Studies.svg"
         }, 
@@ -29,6 +32,7 @@
             "eng_name": "Ellen G. White Books",
             "native_name": "ປື້ມທ່ານ​ນາງ​ເອ​ເລັນຈີ​ໄວທ໌",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoEGW.json",
+            "content_type": "studies",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao EGW Books.svg"
         }, 
@@ -37,6 +41,7 @@
             "eng_name": "Health Studies",
             "native_name": "ສຸຂະພາບ ປຶ້ມກ່ຽວກັບສຸຂະພາບ",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoHealthBooks.json",
+            "content_type": "studies",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Health Books.svg"
         },
@@ -45,6 +50,7 @@
             "eng_name": "Bible Stories",
             "native_name": "ບັນດາເລື່ອງ ພຣະຄຳພີ",
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoStories.json",
+            "content_type": "studies",
             "lang": "Lao",
             "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible Stories.svg"
         }

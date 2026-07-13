@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import localforage from 'localforage'
 import indexData from '@/assets/data/index.json'
+import type { SlideContentType } from '@/utils/slideGenerators'
 
 
 // LocalForage config
@@ -80,6 +81,7 @@ export interface MaterialSet {
   url: string
   lang: Lang
   icon: string
+  content_type?: SlideContentType
 }
 
 export interface ContentState {
@@ -151,6 +153,27 @@ export const useContentStore = defineStore('content', () => {
     return new URL(normalizedPath, normalizedBase).toString()
   }
 
+  function _normalizeContentType(value: string | undefined): SlideContentType {
+    if (!value) return 'default'
+    const normalized = value.toLowerCase()
+    if (normalized === 'bible') return 'bible'
+    if (normalized === 'songs' || normalized === 'song') return 'songs'
+    if (normalized === 'studies' || normalized === 'study' || normalized === 'prose') return 'studies'
+    return 'default'
+  }
+
+  function _inferContentType(material: MaterialSet, setKey: string): SlideContentType {
+    if (material.content_type) return _normalizeContentType(material.content_type)
+
+    const combined = `${material.eng_name} ${setKey}`.toLowerCase()
+    if (combined.includes('bible') && !combined.includes('stud')) return 'bible'
+    if (combined.includes('song')) return 'songs'
+    if (combined.includes('study') || combined.includes('health') || combined.includes('egw') || combined.includes('story')) {
+      return 'studies'
+    }
+    return 'default'
+  }
+
   async function loadIndex(): Promise<void> {
     if (indexList.value.length > 0) return
     indexUpdate.value = indexData.update ?? null
@@ -161,8 +184,10 @@ export const useContentStore = defineStore('content', () => {
       url: string
       lang: string | Lang
       icon: string
+      content_type?: string
     }) => ({
       ...item,
+      content_type: _normalizeContentType(item.content_type),
       lang: typeof item.lang === 'string'
         ? { name: item.lang, native_name: item.lang, emoji_flag: '' }
         : item.lang
@@ -289,6 +314,13 @@ export const useContentStore = defineStore('content', () => {
     return match ? _keyFromUrl(match.url) : undefined
   }
 
+  function getCurrentContentType(): SlideContentType {
+    if (!currentSetKey.value) return 'default'
+    const material = indexList.value.find(item => _keyFromUrl(item.url) === currentSetKey.value)
+    if (!material) return 'default'
+    return _inferContentType(material, currentSetKey.value)
+  }
+
   return {
     indexList,
     currentSetKey,
@@ -300,5 +332,6 @@ export const useContentStore = defineStore('content', () => {
     removeContentSet,
     getSetById,
     getKeyFromId,
+    getCurrentContentType,
   }
 })

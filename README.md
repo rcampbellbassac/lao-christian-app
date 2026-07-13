@@ -152,6 +152,50 @@ Required CORS guidance:
 - Use `AllowedHeaders: ["*"]` for conditional request headers.
 - Expose `ETag` and `Last-Modified` for refresh/invalidation logic.
 
+Example S3 bucket CORS (replace origins as needed):
+
+```json
+[
+	{
+		"AllowedHeaders": ["*"],
+		"AllowedMethods": ["GET", "HEAD"],
+		"AllowedOrigins": [
+			"https://rcampbellbassac.github.io",
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+			"http://localhost:5174",
+			"http://127.0.0.1:5174"
+		],
+		"ExposeHeaders": ["ETag", "Last-Modified"],
+		"MaxAgeSeconds": 3000
+	}
+]
+```
+
+Notes:
+
+- For GitHub Pages project-site URLs, allow the origin `https://rcampbellbassac.github.io` (no repo path in origin).
+- Do not add `OPTIONS` to S3 CORS methods; S3 validates CORS rules and rejects unsupported entries.
+- If you later move to a custom domain, add that domain origin as an additional `AllowedOrigins` entry.
+
+Apply with AWS CLI:
+
+```sh
+aws s3api put-bucket-cors \
+	--bucket laoadventist-media \
+	--cors-configuration file://cors.json
+```
+
+Quick verification:
+
+```sh
+curl -I \
+	-H "Origin: https://rcampbellbassac.github.io" \
+	"https://laoadventist-media.s3.us-west-2.amazonaws.com/path/to/content.json"
+```
+
+You should see `Access-Control-Allow-Origin` in the response for allowed origins.
+
 ## Content update tracking
 
 The app now tracks cache metadata per content set and refreshes remote JSON automatically when cached material is stale or when catalog update metadata changes.

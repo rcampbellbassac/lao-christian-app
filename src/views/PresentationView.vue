@@ -3,12 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
 import { useContentStore } from '@/stores/content'
-
-interface Slide {
-  id: string
-  title: string
-  html: string
-}
+import { createSlideGenerator, type Slide } from '@/utils/slideGenerators'
 
 const route = useRoute()
 const router = useRouter()
@@ -55,60 +50,22 @@ const chapter = computed(() =>
   unit.value?.contents.find((entry) => entry.id === chapterId)
 )
 
+const slideGenerator = computed(() =>
+  createSlideGenerator(store.getCurrentContentType())
+)
+
 const slides = computed<Slide[]>(() => {
   if (!chapter.value) return []
 
-  const builtSlides: Slide[] = [
-    {
-      id: 'title',
+  try {
+    return slideGenerator.value.generate({
       title: chapter.value.name,
-      html: chapter.value.name,
-    },
-  ]
-
-  const html = chapter.value.content || ''
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(`<div id="root">${html}</div>`, 'text/html')
-  const root = doc.querySelector('#root')
-  if (!root) return builtSlides
-
-  const chunks: string[] = []
-  let currentChunk: string[] = []
-
-  const flushChunk = () => {
-    if (currentChunk.length === 0) return
-    chunks.push(currentChunk.join(''))
-    currentChunk = []
-  }
-
-  root.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()) return
-
-    const element = node as Element
-    const tagName = element.tagName?.toLowerCase()
-    if (tagName && /^h[1-6]$/.test(tagName) && currentChunk.length > 0) {
-      flushChunk()
-    }
-
-    currentChunk.push(nodeToHtml(node))
-
-    const isHardBreakTag = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr'].includes(tagName)
-    if (isHardBreakTag || currentChunk.length >= 5) {
-      flushChunk()
-    }
-  })
-
-  flushChunk()
-
-  chunks.forEach((chunk, index) => {
-    builtSlides.push({
-      id: `slide-${index + 1}`,
-      title: `Slide ${index + 1}`,
-      html: chunk,
+      html: chapter.value.content || '',
     })
-  })
-
-  return builtSlides
+  } catch (err) {
+    console.error('Failed to generate presentation slides', err)
+    return []
+  }
 })
 
 const currentSlide = computed(() => slides.value[currentSlideIndex.value] || null)
@@ -117,15 +74,6 @@ const progressLabel = computed(() => {
   if (slides.value.length === 0) return '0 / 0'
   return `${currentSlideIndex.value + 1} / ${slides.value.length}`
 })
-
-function nodeToHtml(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) {
-    return `<p>${node.textContent ?? ''}</p>`
-  }
-  const wrapper = document.createElement('div')
-  wrapper.appendChild(node.cloneNode(true))
-  return wrapper.innerHTML
-}
 
 function goNext(): void {
   if (currentSlideIndex.value < slides.value.length - 1) {
