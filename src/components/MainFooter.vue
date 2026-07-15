@@ -2,16 +2,14 @@
 import { RouterLink } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faHouse, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
-import { faFacebook, faInstagram, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons'
+import { faFacebook, faYoutube } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-library.add(faHouse, faCircleInfo, faFacebook, faInstagram, faYoutube, faTiktok)
+library.add(faHouse, faCircleInfo, faFacebook, faYoutube)
 
 const socialItems = [
   { name: 'Facebook', to: 'https://www.facebook.com/sklgospel', icon: 'fa-brands fa-facebook'},
-  { name: 'Instagram', to: 'https://www.instagram.com/sklgospel/', icon: 'fa-brands fa-instagram'},
-  { name: 'YouTube', to: 'https://www.youtube.com/@SiengKhaenLaoGospel', icon: 'fa-brands fa-youtube'},
-  { name: 'TikTok', to: 'https://www.tiktok.com/@siengkhaenlaogospel', icon: 'fa-brands fa-tiktok'},
+  { name: 'YouTube', to: 'https://www.youtube.com/@SiengKhaenLaoGospel', icon: 'fa-brands fa-youtube'}
 ]
 
 const policies = [

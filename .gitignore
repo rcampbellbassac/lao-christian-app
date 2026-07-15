@@ -30,3 +30,12 @@ dev-dist
 *.sw?
 
 *.tsbuildinfo
+
+# Local content processing artifacts
+src/assets/data-normalized/
+src/assets/data/LaoBible.json
+src/assets/data/LaoBibleStudies.json
+src/assets/data/LaoEGW.json
+src/assets/data/LaoHealthBooks.json
+src/assets/data/LaoSongs.json
+src/assets/data/LaoStories.json

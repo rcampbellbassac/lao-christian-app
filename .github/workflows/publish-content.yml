@@ -1,0 +1,59 @@
+name: Publish Content to S3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - src/assets/data/**
+      - src/assets/data-normalized/**
+      - scripts/normalize-content.mjs
+      - scripts/build-content-release.mjs
+      - scripts/publish-content.sh
+      - .github/workflows/publish-content.yml
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Normalize data
+        run: npm run normalize:data
+
+      - name: Build content release
+        run: npm run content:release
+        env:
+          CONTENT_BASE_URL: ${{ vars.CONTENT_BASE_URL }}
+          CONTENT_RELEASE_VERSION: ${{ github.run_number }}
+          CONTENT_PUBLISHED_AT: ${{ github.event.head_commit.timestamp || '' }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
+
+      - name: Publish release to S3
+        run: npm run content:publish
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
+          S3_BUCKET: ${{ vars.CONTENT_S3_BUCKET }}
+          S3_PREFIX: ${{ vars.CONTENT_S3_PREFIX }}

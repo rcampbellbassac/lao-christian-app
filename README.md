@@ -206,6 +206,96 @@ The app now tracks cache metadata per content set and refreshes remote JSON auto
 
 This keeps users updated with new materials while preserving resilience in low-connectivity environments.
 
+## Managed S3 content publishing
+
+This repository now includes a content release pipeline for publishing material JSON files to S3 with gzip variants and version metadata.
+
+### Runtime update metadata
+
+The app can load a remote index (manifest) at runtime and use it to detect newer content versions.
+
+Add environment variables when needed:
+
+- `VITE_REMOTE_INDEX_URL`: remote index URL (for example `https://laoadventist-media.s3.us-west-2.amazonaws.com/index.json`)
+- `VITE_PREFER_GZIP`: when `true`, use `url_gzip` when present in the index
+
+The store now tracks per-set update state and can prompt users before downloading newer content.
+
+### Build a content release artifact
+
+1. Normalize source data:
+
+```sh
+npm run normalize:data
+```
+
+2. Build release files (JSON + JSON.GZ + index with version/checksum metadata):
+
+```sh
+npm run content:release
+```
+
+Default output directory: `dist/content-release`
+
+Optional release build environment variables:
+
+- `CONTENT_SOURCE_DIR` (defaults to `src/assets/data-normalized`, falls back to `src/assets/data`)
+- `CONTENT_RELEASE_DIR` (defaults to `dist/content-release`)
+- `CONTENT_BASE_URL` (defaults to `https://laoadventist-media.s3.us-west-2.amazonaws.com`)
+- `CONTENT_RELEASE_VERSION` (defaults to UTC timestamp)
+- `CONTENT_PUBLISHED_AT` (defaults to current ISO timestamp)
+
+### Publish release to S3
+
+Use the publish script (local operator path):
+
+```sh
+S3_BUCKET=laoadventist-media npm run content:publish
+```
+
+Optional publish environment variables:
+
+- `AWS_REGION` (default `us-west-2`)
+- `S3_PREFIX` (optional sub-path such as `staging/`)
+- `CONTENT_RELEASE_DIR` (if not using `dist/content-release`)
+
+The publish script uploads:
+
+- `*.json` with `Content-Type: application/json`
+- `*.json.gz` with `Content-Type: application/json` and `Content-Encoding: gzip`
+- `index.json` with short cache policy for quicker update detection
+
+### Retention and rollback
+
+This workflow assumes S3 bucket versioning is enabled so overwrites of stable keys keep historical object versions.
+
+Enable bucket versioning (one-time):
+
+```sh
+aws s3api put-bucket-versioning \
+	--bucket laoadventist-media \
+	--versioning-configuration Status=Enabled
+```
+
+Rollback can then be performed by restoring a prior object version for the affected key(s).
+
+### GitHub Actions publisher (recommended)
+
+Workflow file: `.github/workflows/publish-content.yml`
+
+Required GitHub environment/repository configuration:
+
+- Secret: `AWS_ROLE_ARN`
+- Variable: `CONTENT_S3_BUCKET`
+- Optional variables: `AWS_REGION`, `CONTENT_S3_PREFIX`, `CONTENT_BASE_URL`
+
+The workflow uses GitHub OIDC (`aws-actions/configure-aws-credentials`) so long-lived AWS keys are not required in GitHub.
+
+Detailed AWS + GitHub bootstrap guide:
+
+- `docs/content-publishing-aws-setup.md`
+- IAM templates: `scripts/aws/trust-policy.github-oidc.json` and `scripts/aws/policy.content-publisher.json`
+
 ## Presentation mode and slide export
 
 Each chapter now includes a **Presentation mode** entry. Presentation mode provides:

@@ -79,6 +79,10 @@ export interface MaterialSet {
   eng_name: string
   native_name: string
   url: string
+  url_gzip?: string
+  version?: string
+  published_at?: string
+  checksum_sha256?: string
   lang: Lang
   icon: string
   content_type?: SlideContentType
@@ -94,8 +98,22 @@ interface CachedSetEnvelope {
   data: ContentSet
   fetchedAt: string
   sourceUpdate: string | null
+  sourceVersion: string | null
   etag: string | null
   lastModified: string | null
+}
+
+interface LoadSetOptions {
+  forceRefresh?: boolean
+}
+
+interface ContentUpdateState {
+  hasUpdate: boolean
+  isChecking: boolean
+  lastChecked: string | null
+  localVersion: string | null
+  remoteVersion: string | null
+  lastError: string | null
 }
 
 const CONTENT_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 6
@@ -108,6 +126,8 @@ export const useContentStore = defineStore('content', () => {
   const currentSetData = ref<ContentSet | null>(null)
   const indexUpdate = ref<string | null>(null)
   const lastContentRefresh = ref<string | null>(null)
+  const usingRemoteIndex = ref(false)
+  const updateStateBySet = ref<Record<string, ContentUpdateState>>({})
 
   function _metaKey(setKey: string): string {
     return `${setKey}::__meta`
@@ -153,6 +173,56 @@ export const useContentStore = defineStore('content', () => {
     return new URL(normalizedPath, normalizedBase).toString()
   }
 
+  function _selectSourceUrl(material: MaterialSet): string {
+    const preferGzip = `${import.meta.env.VITE_PREFER_GZIP ?? 'true'}`.toLowerCase() !== 'false'
+    if (preferGzip && material.url_gzip) {
+      return _resolveContentUrl(material.url_gzip)
+    }
+    return _resolveContentUrl(material.url)
+  }
+
+  function _materialVersion(material: MaterialSet): string | null {
+    return material.version ?? material.published_at ?? indexUpdate.value
+  }
+
+  function _findSetByKey(setKey: string): MaterialSet | undefined {
+    return indexList.value.find(item => _keyFromUrl(item.url) === setKey)
+  }
+
+  function _defaultUpdateState(): ContentUpdateState {
+    return {
+      hasUpdate: false,
+      isChecking: false,
+      lastChecked: null,
+      localVersion: null,
+      remoteVersion: null,
+      lastError: null,
+    }
+  }
+
+  function _getUpdateState(setKey: string): ContentUpdateState {
+    return updateStateBySet.value[setKey] ?? _defaultUpdateState()
+  }
+
+  function _setUpdateState(setKey: string, patch: Partial<ContentUpdateState>): void {
+    updateStateBySet.value[setKey] = {
+      ..._getUpdateState(setKey),
+      ...patch,
+    }
+  }
+
+  function _isVersionNewer(localVersion: string | null, remoteVersion: string | null): boolean {
+    if (!remoteVersion) return false
+    if (!localVersion) return true
+
+    const localTime = Date.parse(localVersion)
+    const remoteTime = Date.parse(remoteVersion)
+    if (Number.isFinite(localTime) && Number.isFinite(remoteTime)) {
+      return remoteTime > localTime
+    }
+    return remoteVersion !== localVersion
+  }
+
   function _normalizeContentType(value: string | undefined): SlideContentType {
     if (!value) return 'default'
     const normalized = value.toLowerCase()
@@ -176,12 +246,34 @@ export const useContentStore = defineStore('content', () => {
 
   async function loadIndex(): Promise<void> {
     if (indexList.value.length > 0) return
-    indexUpdate.value = indexData.update ?? null
-    indexList.value = indexData.urls.map((item: {
+
+    let activeIndexData = indexData
+    const remoteIndexUrl = import.meta.env.VITE_REMOTE_INDEX_URL
+    if (remoteIndexUrl) {
+      try {
+        const res = await fetch(remoteIndexUrl, { cache: 'no-store' })
+        if (res.ok) {
+          const remote = await res.json()
+          if (remote && Array.isArray(remote.urls)) {
+            activeIndexData = remote
+            usingRemoteIndex.value = true
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load remote index. Falling back to bundled index.', err)
+      }
+    }
+
+    indexUpdate.value = activeIndexData.update ?? null
+    indexList.value = activeIndexData.urls.map((item: {
       id: number
       eng_name: string
       native_name: string
       url: string
+      url_gzip?: string
+      version?: string
+      published_at?: string
+      checksum_sha256?: string
       lang: string | Lang
       icon: string
       content_type?: string
@@ -194,13 +286,13 @@ export const useContentStore = defineStore('content', () => {
     }))
   }
 
-  async function loadContentSet(setKey: string): Promise<void> {
+  async function loadContentSet(setKey: string, options: LoadSetOptions = {}): Promise<void> {
     currentSetKey.value = null
     currentSetData.value = null
 
-    const match = indexList.value.find(item => _keyFromUrl(item.url) === setKey)
+    const match = _findSetByKey(setKey)
     if (!match) throw new Error(`Material set "${setKey}" not found in index`)
-    const sourceUrl = _resolveContentUrl(match.url)
+    const sourceUrl = _selectSourceUrl(match)
 
     const cachedRaw = await localforage.getItem<ContentSet | CachedSetEnvelope>(setKey)
     const cachedMeta = await localforage.getItem<CachedSetEnvelope>(_metaKey(setKey))
@@ -208,6 +300,7 @@ export const useContentStore = defineStore('content', () => {
     let cachedData: ContentSet | null = null
     let fetchedAt: string | null = null
     let sourceUpdate: string | null = null
+    let sourceVersion: string | null = null
     let etag: string | null = null
     let lastModified: string | null = null
 
@@ -216,6 +309,7 @@ export const useContentStore = defineStore('content', () => {
         cachedData = cachedRaw.data
         fetchedAt = cachedRaw.fetchedAt
         sourceUpdate = cachedRaw.sourceUpdate
+        sourceVersion = cachedRaw.sourceVersion ?? null
         etag = cachedRaw.etag
         lastModified = cachedRaw.lastModified
       } else {
@@ -226,6 +320,7 @@ export const useContentStore = defineStore('content', () => {
     if (cachedMeta) {
       fetchedAt = cachedMeta.fetchedAt
       sourceUpdate = cachedMeta.sourceUpdate
+      sourceVersion = cachedMeta.sourceVersion ?? null
       etag = cachedMeta.etag
       lastModified = cachedMeta.lastModified
     }
@@ -235,7 +330,8 @@ export const useContentStore = defineStore('content', () => {
       currentSetData.value = cachedData
     }
 
-    const shouldRefresh = !cachedData ||
+    const shouldRefresh = options.forceRefresh ||
+      !cachedData ||
       !fetchedAt ||
       _isStale(fetchedAt) ||
       _isCatalogUpdateNewer(sourceUpdate, indexUpdate.value)
@@ -259,6 +355,7 @@ export const useContentStore = defineStore('content', () => {
           data: cachedData,
           fetchedAt: new Date().toISOString(),
           sourceUpdate: indexUpdate.value,
+          sourceVersion,
           etag,
           lastModified,
         }
@@ -275,6 +372,7 @@ export const useContentStore = defineStore('content', () => {
         data,
         fetchedAt: new Date().toISOString(),
         sourceUpdate: indexUpdate.value,
+        sourceVersion: _materialVersion(match),
         etag: res.headers.get('etag'),
         lastModified: res.headers.get('last-modified'),
       }
@@ -285,6 +383,13 @@ export const useContentStore = defineStore('content', () => {
       currentSetKey.value = setKey
       currentSetData.value = data
       lastContentRefresh.value = freshEnvelope.fetchedAt
+      _setUpdateState(setKey, {
+        hasUpdate: false,
+        lastChecked: new Date().toISOString(),
+        localVersion: freshEnvelope.sourceVersion,
+        remoteVersion: _materialVersion(match),
+        lastError: null,
+      })
       return
     } catch (err) {
       if (cachedData) {
@@ -294,6 +399,67 @@ export const useContentStore = defineStore('content', () => {
       }
       throw err
     }
+  }
+
+  async function checkForContentUpdate(setKey: string): Promise<ContentUpdateState> {
+    await loadIndex()
+    const material = _findSetByKey(setKey)
+    if (!material) throw new Error(`Material set "${setKey}" not found in index`)
+
+    _setUpdateState(setKey, { isChecking: true, lastError: null })
+
+    const cachedMeta = await localforage.getItem<CachedSetEnvelope>(_metaKey(setKey))
+    const remoteVersion = _materialVersion(material)
+    const localVersion = cachedMeta?.sourceVersion ?? cachedMeta?.sourceUpdate ?? null
+    let hasUpdate = _isVersionNewer(localVersion, remoteVersion)
+
+    const sourceUrl = _selectSourceUrl(material)
+    const headHeaders = new Headers()
+    if (cachedMeta?.etag) headHeaders.set('If-None-Match', cachedMeta.etag)
+    if (cachedMeta?.lastModified) headHeaders.set('If-Modified-Since', cachedMeta.lastModified)
+
+    try {
+      const headRes = await fetch(sourceUrl, {
+        method: 'HEAD',
+        cache: 'no-store',
+        headers: headHeaders,
+      })
+
+      if (headRes.status === 304) {
+        hasUpdate = false
+      } else if (headRes.ok) {
+        const remoteEtag = headRes.headers.get('etag')
+        const remoteLastModified = headRes.headers.get('last-modified')
+        if (cachedMeta?.etag && remoteEtag && cachedMeta.etag !== remoteEtag) {
+          hasUpdate = true
+        }
+        if (cachedMeta?.lastModified && remoteLastModified && cachedMeta.lastModified !== remoteLastModified) {
+          hasUpdate = true
+        }
+      }
+    } catch (err) {
+      console.warn(`HEAD update check failed for ${setKey}; falling back to version comparison`, err)
+    }
+
+    const nextState: ContentUpdateState = {
+      hasUpdate,
+      isChecking: false,
+      lastChecked: new Date().toISOString(),
+      localVersion,
+      remoteVersion,
+      lastError: null,
+    }
+    _setUpdateState(setKey, nextState)
+    return nextState
+  }
+
+  async function applyContentUpdate(setKey: string): Promise<void> {
+    await loadContentSet(setKey, { forceRefresh: true })
+    await checkForContentUpdate(setKey)
+  }
+
+  function getContentUpdateState(setKey: string): ContentUpdateState {
+    return _getUpdateState(setKey)
   }
 
   async function removeContentSet(setKey: string): Promise<void> {
@@ -327,11 +493,16 @@ export const useContentStore = defineStore('content', () => {
     currentSetData,
     indexUpdate,
     lastContentRefresh,
+    usingRemoteIndex,
+    updateStateBySet,
     loadIndex,
     loadContentSet,
+    checkForContentUpdate,
+    applyContentUpdate,
     removeContentSet,
     getSetById,
     getKeyFromId,
+    getContentUpdateState,
     getCurrentContentType,
   }
 })
