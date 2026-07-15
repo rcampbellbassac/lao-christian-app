@@ -35,6 +35,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
+
+      - name: Fetch source content from S3
+        run: |
+          set -euo pipefail
+          mkdir -p src/assets/data
+
+          prefix='${{ vars.CONTENT_S3_PREFIX }}'
+          if [ -n "$prefix" ] && [ "${prefix: -1}" != "/" ]; then
+            prefix="${prefix}/"
+          fi
+
+          for file in \
+            LaoBible.json \
+            LaoSongs.json \
+            LaoBibleStudies.json \
+            LaoEGW.json \
+            LaoHealthBooks.json \
+            LaoStories.json; do
+            aws s3 cp "s3://${{ vars.CONTENT_S3_BUCKET }}/${prefix}${file}" "src/assets/data/${file}"
+          done
+
       - name: Normalize data
         run: npm run normalize:data
 
@@ -44,12 +70,6 @@ jobs:
           CONTENT_BASE_URL: ${{ vars.CONTENT_BASE_URL }}
           CONTENT_RELEASE_VERSION: ${{ github.run_number }}
           CONTENT_PUBLISHED_AT: ${{ github.event.head_commit.timestamp || '' }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
 
       - name: Publish release to S3
         run: npm run content:publish
