@@ -213,8 +213,16 @@ Repeat for `index.json` and any other content keys in the same release.
 ## Troubleshooting
 
 - AccessDenied on GitHub workflow assume-role:
-  - Check trust policy `sub` matches repo and branch exactly.
-  - Confirm workflow runs on `main` or `master`.
+  - Check trust policy `sub` matches repo and branch/environment exactly.
+  - The publish job uses `environment: production`, so the OIDC `sub` claim is
+    `repo:rcampbellbassac/lao-christian-app:environment:production` (not a ref-based claim).
+    Ensure this value is present in the trust policy `StringLike` condition.
+  - After updating `trust-policy.github-oidc.json`, apply it with:
+    ```sh
+    aws iam update-assume-role-policy \
+      --role-name "$ROLE_NAME" \
+      --policy-document "file://scripts/aws/trust-policy.github-oidc.json"
+    ```
   - Confirm secret `AWS_ROLE_ARN` points to correct account/role.
 - AccessDenied on S3 upload:
   - Check policy resource uses correct bucket and prefix.

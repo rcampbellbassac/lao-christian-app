@@ -14,7 +14,8 @@
         "StringLike": {
           "token.actions.githubusercontent.com:sub": [
             "repo:rcampbellbassac/lao-christian-app:ref:refs/heads/main",
-            "repo:rcampbellbassac/lao-christian-app:ref:refs/heads/master"
+            "repo:rcampbellbassac/lao-christian-app:ref:refs/heads/master",
+            "repo:rcampbellbassac/lao-christian-app:environment:production"
           ]
         }
       }
