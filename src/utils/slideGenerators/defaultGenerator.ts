@@ -11,6 +11,7 @@ import type { SlideGenerator } from './types'
 import type { ParsedBlock } from './helpers'
 
 const blockLikeTags = new Set(['p', 'div', 'li', 'blockquote'])
+const listContainerTags = new Set(['ul', 'ol'])
 
 function escapeHtml(value: string): string {
   return value
@@ -22,6 +23,10 @@ function escapeHtml(value: string): string {
 function wrapFragment(fragment: string, tagName: string | null): string {
   const safeTag = tagName && blockLikeTags.has(tagName) ? tagName : 'p'
   return `<${safeTag}>${escapeHtml(fragment)}</${safeTag}>`
+}
+
+function wrapListItem(fragment: string): string {
+  return `<ul><li>${escapeHtml(fragment)}</li></ul>`
 }
 
 function splitLongText(value: string, maxChars: number): string[] {
@@ -76,14 +81,46 @@ function splitLongText(value: string, maxChars: number): string[] {
   return chunks
 }
 
+function createParsedBlockFromHtml(html: string, tagName: string | null, text: string): ParsedBlock {
+  return {
+    html,
+    text,
+    rawText: text,
+    tagName,
+    isElement: true,
+  }
+}
+
+function extractListItems(block: ParsedBlock): ParsedBlock[] {
+  if (!block.tagName || !listContainerTags.has(block.tagName)) return [block]
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(`<div id="root">${block.html}</div>`, 'text/html')
+  const root = doc.querySelector('#root')
+  if (!root) return [block]
+
+  const items = Array.from(root.querySelectorAll('li'))
+  if (items.length === 0) return [block]
+
+  return items.map((item) => {
+    const itemText = normalizeText(item.textContent || '')
+    return createParsedBlockFromHtml(wrapListItem(itemText), 'li', itemText)
+  })
+}
+
 function expandBlock(block: ParsedBlock, maxChars: number): ParsedBlock[] {
+  const listItems = extractListItems(block)
+  if (listItems.length > 1 || listItems[0] !== block) {
+    return listItems.flatMap(listItem => expandBlock(listItem, maxChars))
+  }
+
   if (block.html.length <= maxChars) return [block]
 
   const fragments = splitLongText(block.rawText || block.text, maxChars)
   if (fragments.length <= 1) return [block]
 
   return fragments.map((fragment) => ({
-    html: wrapFragment(fragment, block.tagName),
+    html: block.tagName === 'li' ? wrapListItem(fragment) : wrapFragment(fragment, block.tagName),
     text: fragment,
     rawText: fragment,
     tagName: block.tagName && blockLikeTags.has(block.tagName) ? block.tagName : 'p',

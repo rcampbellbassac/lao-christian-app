@@ -75,6 +75,9 @@ const progressLabel = computed(() => {
   return `${currentSlideIndex.value + 1} / ${slides.value.length}`
 })
 
+const contentSlideCount = computed(() => Math.max(slides.value.length - 1, 0))
+const hasAutoSplitSlides = computed(() => contentSlideCount.value > 1)
+
 function goNext(): void {
   if (currentSlideIndex.value < slides.value.length - 1) {
     currentSlideIndex.value += 1
@@ -170,6 +173,9 @@ function onFullscreenChange(): void {
         Exit
       </router-link>
       <span class="presentation-progress">{{ progressLabel }}</span>
+      <span v-if="hasAutoSplitSlides" class="presentation-split-badge">
+        Auto-split: {{ contentSlideCount }} slides
+      </span>
       <button class="presentation-btn" type="button" title="Previous slide (Left arrow, Page Up)" @click="goPrev">Prev</button>
       <button class="presentation-btn" type="button" title="Next slide (Right arrow, Page Down, Space)" @click="goNext">Next</button>
       <button class="presentation-btn" type="button" :title="isFullscreen ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)'" @click="toggleFullscreen">
@@ -214,6 +220,21 @@ function onFullscreenChange(): void {
   margin-left: 0.5rem;
   color: #cbd5e1;
   font-size: 0.9rem;
+}
+
+.presentation-split-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  margin-left: 0.25rem;
+  background: rgba(14, 165, 233, 0.18);
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  color: #cffafe;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .presentation-btn {

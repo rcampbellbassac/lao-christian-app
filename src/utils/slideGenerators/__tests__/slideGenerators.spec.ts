@@ -37,6 +37,32 @@ describe('slide generators', () => {
     expect(contentSlides.every(slide => slide.html.length <= 280)).toBe(true)
   })
 
+  it('splits list-heavy default content into readable slides', () => {
+    const generator = createSlideGenerator('default')
+    const html = [
+      '<h2>Checklist</h2>',
+      '<ul>',
+      '<li>First bullet with enough context to need its own readable chunk.</li>',
+      '<li>Second bullet with more supporting detail and a second sentence.</li>',
+      '<li>Third bullet keeps the content moving without overcrowding the slide.</li>',
+      '<li>Fourth bullet adds one more line to make the list intentionally long.</li>',
+      '</ul>',
+      '<blockquote>Long quoted material should remain readable and not feel like a wall of text. It needs to be split into smaller pieces.</blockquote>',
+    ].join('')
+
+    const slides = generator.generate(
+      { title: 'List Heavy', html },
+      { maxCharsPerSlide: 180, maxNodesPerSlide: 4 },
+    )
+
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(3)
+    expect(contentSlides.some(slide => slide.html.includes('<li>First bullet'))).toBe(true)
+    expect(contentSlides.some(slide => slide.html.includes('<blockquote>'))).toBe(true)
+    expect(contentSlides.every(slide => slide.html.length <= 260)).toBe(true)
+  })
+
   it('keeps verse groups bounded for bible content', () => {
     const generator = createSlideGenerator('bible')
     const fixture = representativeFixtures.find(item => item.setKey === 'LaoBible')
