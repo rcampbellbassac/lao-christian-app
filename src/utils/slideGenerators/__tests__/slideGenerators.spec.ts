@@ -14,6 +14,29 @@ describe('slide generators', () => {
     expect(slides[0].id).toBe('title')
   })
 
+  it('splits long default content into readable slides', () => {
+    const generator = createSlideGenerator('default')
+    const longParagraph = [
+      'This is a long paragraph that should not stay on a single dense slide.',
+      'It should be split into smaller readable pieces for presentation mode.',
+      'Each part needs to remain easy to scan from a distance.',
+    ].join(' ')
+
+    const slides = generator.generate(
+      {
+        title: 'Long Generic',
+        html: `<p>${longParagraph.repeat(4)}</p><p>Short closing paragraph.</p>`,
+      },
+      { maxCharsPerSlide: 220, maxNodesPerSlide: 10 },
+    )
+
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(2)
+    expect(contentSlides.some(slide => slide.html.includes('Short closing paragraph.'))).toBe(true)
+    expect(contentSlides.every(slide => slide.html.length <= 280)).toBe(true)
+  })
+
   it('keeps verse groups bounded for bible content', () => {
     const generator = createSlideGenerator('bible')
     const fixture = representativeFixtures.find(item => item.setKey === 'LaoBible')

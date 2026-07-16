@@ -73,6 +73,8 @@ Open `scripts/aws/policy.content-publisher.json` and replace:
 - `<S3_BUCKET_NAME>` with your bucket (example: `laoadventist-media`)
 - `<S3_PREFIX>` with your prefix (empty for bucket root)
 
+The publisher role needs read access to the source objects because the GitHub Actions workflow copies the latest JSON from S3 before building and publishing the release.
+
 Examples:
 - empty prefix -> `arn:aws:s3:::laoadventist-media/*`
 - prefix `content/` -> `arn:aws:s3:::laoadventist-media/content/*`

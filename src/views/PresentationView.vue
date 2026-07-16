@@ -165,17 +165,18 @@ function onFullscreenChange(): void {
       <router-link
         :to="`/content/${fileId}/${bookId}/${chapterId}`"
         class="presentation-btn"
+        title="Exit presentation (Esc)"
       >
         Exit
       </router-link>
       <span class="presentation-progress">{{ progressLabel }}</span>
-      <button class="presentation-btn" type="button" @click="goPrev">Prev</button>
-      <button class="presentation-btn" type="button" @click="goNext">Next</button>
-      <button class="presentation-btn" type="button" @click="toggleFullscreen">
+      <button class="presentation-btn" type="button" title="Previous slide (Left arrow, Page Up)" @click="goPrev">Prev</button>
+      <button class="presentation-btn" type="button" title="Next slide (Right arrow, Page Down, Space)" @click="goNext">Next</button>
+      <button class="presentation-btn" type="button" :title="isFullscreen ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)'" @click="toggleFullscreen">
         {{ isFullscreen ? 'Windowed' : 'Fullscreen' }}
       </button>
-      <button class="presentation-btn" type="button" @click="exportCurrentSlide">Export PNG</button>
-      <button class="presentation-btn" type="button" @click="exportAllSlides">Export All</button>
+      <button class="presentation-btn" type="button" title="Export current slide as PNG (E)" @click="exportCurrentSlide">Export PNG</button>
+      <button class="presentation-btn" type="button" title="Export all slides as PNG files" @click="exportAllSlides">Export All</button>
     </header>
 
     <section ref="slideCanvas" class="slide-canvas">

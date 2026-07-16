@@ -8,6 +8,7 @@ import {
 export interface ParsedBlock {
   html: string
   text: string
+  rawText: string
   tagName: string | null
   isElement: boolean
 }
@@ -57,6 +58,7 @@ export function parseBlocks(html: string): ParsedBlock[] {
     blocks.push({
       html: nodeToHtml(node),
       text: normalizeText(node.textContent || ''),
+      rawText: node.textContent || '',
       tagName,
       isElement: node.nodeType === Node.ELEMENT_NODE,
     })
