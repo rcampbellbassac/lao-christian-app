@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import zlib from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 import { JSDOM } from 'jsdom'
 
@@ -28,8 +29,8 @@ await fs.mkdir(outputDir, { recursive: true })
 for (const fileName of DATA_FILES) {
   const inputPath = path.join(sourceDir, fileName)
   const outputPath = path.join(outputDir, fileName)
-  const raw = await fs.readFile(inputPath, 'utf8')
-  const json = JSON.parse(raw)
+  const raw = await fs.readFile(inputPath)
+  const json = parseJsonMaybeGzip(raw, inputPath)
   const stats = {
     file: fileName,
     items: 0,
@@ -68,6 +69,19 @@ await fs.writeFile(path.join(outputDir, 'normalization-report.json'), `${JSON.st
 
 console.log('Normalization complete')
 console.table(report)
+
+function parseJsonMaybeGzip(buffer, inputPath) {
+  try {
+    return JSON.parse(buffer.toString('utf8'))
+  } catch (jsonErr) {
+    try {
+      const unzipped = zlib.gunzipSync(buffer)
+      return JSON.parse(unzipped.toString('utf8'))
+    } catch {
+      throw new Error(`Unable to parse JSON from ${inputPath}: ${jsonErr.message}`)
+    }
+  }
+}
 
 function walk(value, visit, parentKey = '') {
   if (!value || typeof value !== 'object') return
