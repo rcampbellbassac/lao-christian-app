@@ -335,6 +335,15 @@ function onFullscreenChange(): void {
         >
           +
         </button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          title="Reset slide font size to 100%"
+          :disabled="settings.presentationFontScale === 1"
+          @click="settings.resetPresentationFontScale"
+        >
+          ↺
+        </button>
       </div>
 
       <button

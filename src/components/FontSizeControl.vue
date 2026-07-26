@@ -44,5 +44,14 @@ function increase(): void {
     >
       +
     </button>
+    <button
+      type="button"
+      class="rounded-full px-1.5 py-0.5 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent dark:hover:bg-slate-700"
+      title="Reset text size to 100%"
+      :disabled="settings.contentFontScale === 1"
+      @click="settings.resetContentFontScale"
+    >
+      ↺
+    </button>
   </div>
 </template>

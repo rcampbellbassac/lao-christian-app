@@ -12,8 +12,10 @@ const settingsStorage = localforage.createInstance({
 
 const SETTINGS_KEY = 'preferences'
 
-export const FONT_SCALE_MIN = 0.75
-export const FONT_SCALE_MAX = 1.75
+// Bounds are chosen to stay on the same 10%-step grid as the 100% default
+// (60, 70, ... 100, ... 250), so +/- never drifts off-step at the edges.
+export const FONT_SCALE_MIN = 0.6
+export const FONT_SCALE_MAX = 2.5
 export const FONT_SCALE_STEP = 0.1
 
 interface PersistedSettings {
