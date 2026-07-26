@@ -4,7 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
 import { useContentStore } from '@/stores/content'
 import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } from '@/stores/settings'
-import { createSlideGenerator, type Slide } from '@/utils/slideGenerators'
+import { usePresentationSelectionStore } from '@/stores/presentationSelection'
+import { buildSlidesFromSelection, createSlideGenerator, parseBlocks, type Slide } from '@/utils/slideGenerators'
 import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/utils/aspectRatios'
 import { exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
 import { laoFontPresets, getLaoFontPreset, type LaoFontId } from '@/utils/laoFonts'
@@ -19,6 +20,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useContentStore()
 const settings = useSettingsStore()
+const selectionStore = usePresentationSelectionStore()
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
@@ -33,6 +35,11 @@ const isExporting = ref(false)
 const selectedSlideIds = ref<Set<string>>(new Set())
 const rangeStart = ref(1)
 const rangeEnd = ref(1)
+
+const hasSavedSelection = computed(() => selectionStore.hasSelectionFor(chapterId))
+const slideSourceMode = ref<'full' | 'selection'>(
+  selectionStore.hasSelectionFor(chapterId) ? 'selection' : 'full'
+)
 
 onMounted(async () => {
   await settings.load()
@@ -81,12 +88,20 @@ const slideGenerator = computed(() =>
 const slides = computed<Slide[]>(() => {
   if (!chapter.value) return []
 
+  const context = {
+    title: chapter.value.name,
+    html: chapter.value.content || '',
+    bookTitle: unit.value?.name,
+  }
+
   try {
-    return slideGenerator.value.generate({
-      title: chapter.value.name,
-      html: chapter.value.content || '',
-      bookTitle: unit.value?.name,
-    })
+    if (slideSourceMode.value === 'selection' && selectionStore.hasSelectionFor(chapterId)) {
+      const allBlocks = parseBlocks(context.html)
+      const selectedBlocks = allBlocks.filter((_, index) => selectionStore.selectedBlockIndices.has(index))
+      return buildSlidesFromSelection(context, selectedBlocks, selectionStore.groupingMode)
+    }
+
+    return slideGenerator.value.generate(context)
   } catch (err) {
     console.error('Failed to generate presentation slides', err)
     return []
@@ -359,6 +374,46 @@ function onFullscreenChange(): void {
       <span v-if="hasAutoSplitSlides" class="presentation-split-badge">
         {{ selectedContentSlideCount }} / {{ contentSlides.length }} slides selected
       </span>
+
+      <div v-if="hasSavedSelection" class="presentation-field">
+        <span class="presentation-field-label">Slides from</span>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': slideSourceMode === 'full' }"
+          @click="slideSourceMode = 'full'"
+        >
+          Full chapter
+        </button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': slideSourceMode === 'selection' }"
+          @click="slideSourceMode = 'selection'"
+        >
+          My selection
+        </button>
+      </div>
+
+      <div v-if="slideSourceMode === 'selection'" class="presentation-field">
+        <span class="presentation-field-label">Grouping</span>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': selectionStore.groupingMode === 'grouped' }"
+          @click="selectionStore.setGroupingMode('grouped')"
+        >
+          Grouped
+        </button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': selectionStore.groupingMode === 'split' }"
+          @click="selectionStore.setGroupingMode('split')"
+        >
+          Split
+        </button>
+      </div>
 
       <button class="presentation-btn" type="button" title="Previous slide (Left arrow, Page Up)" @click="goPrev">Prev</button>
       <button class="presentation-btn" type="button" title="Next slide (Right arrow, Page Down, Space)" @click="goNext">Next</button>

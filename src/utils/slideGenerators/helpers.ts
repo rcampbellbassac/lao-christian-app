@@ -227,6 +227,63 @@ export function expandOversizedBlocks(blocks: ParsedBlock[], maxChars: number): 
   return blocks.flatMap(block => expandBlock(block, maxChars))
 }
 
+export type SelectionGroupingMode = 'grouped' | 'split'
+
+/**
+ * Builds a slide deck directly from a user-picked subset of blocks (see
+ * ChapterView's paragraph-select mode), rather than the whole chapter.
+ * 'grouped' merges the selection into as few slides as fit maxCharsPerSlide,
+ * matching how the default generator chunks content; 'split' gives each
+ * block its own slide, still auto-splitting any block that's individually
+ * too long. Always includes a title slide first so the rest of Presentation
+ * mode (slide checklist, range picker, export) keeps working unchanged.
+ */
+export function buildSlidesFromSelection(
+  context: SlideGeneratorContext,
+  blocks: ParsedBlock[],
+  mode: SelectionGroupingMode,
+  config?: Partial<SlideGeneratorConfig>
+): Slide[] {
+  const resolvedConfig = normalizeConfig(config)
+  const expandedBlocks = expandOversizedBlocks(blocks, resolvedConfig.maxCharsPerSlide)
+  const headerLabel = buildHeaderLabel(context)
+  const slides = [createTitleSlide(context)]
+
+  if (mode === 'split') {
+    expandedBlocks.forEach((block, index) => {
+      slides.push(createContentSlide(index, block.html, headerLabel))
+    })
+    return slides
+  }
+
+  const chunks: string[] = []
+  let currentChunk: string[] = []
+  let currentCharCount = 0
+
+  const flushChunk = () => {
+    if (currentChunk.length === 0) return
+    chunks.push(currentChunk.join(''))
+    currentChunk = []
+    currentCharCount = 0
+  }
+
+  for (const block of expandedBlocks) {
+    const nextCharCount = currentCharCount + block.html.length
+    if (currentChunk.length > 0 && nextCharCount > resolvedConfig.maxCharsPerSlide) {
+      flushChunk()
+    }
+    currentChunk.push(block.html)
+    currentCharCount += block.html.length
+  }
+  flushChunk()
+
+  chunks.forEach((chunk, index) => {
+    slides.push(createContentSlide(index, chunk, headerLabel))
+  })
+
+  return slides
+}
+
 export function isHeadingTag(tagName: string | null): boolean {
   return Boolean(tagName && /^h[1-6]$/.test(tagName))
 }

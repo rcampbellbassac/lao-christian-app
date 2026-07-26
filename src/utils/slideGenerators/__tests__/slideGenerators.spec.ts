@@ -1,6 +1,58 @@
 import { describe, expect, it } from 'vitest'
 import { createSlideGenerator } from '../index'
+import { buildSlidesFromSelection, parseBlocks } from '../helpers'
 import { representativeFixtures } from '../__fixtures__/representativeContent'
+
+describe('buildSlidesFromSelection', () => {
+  const html = '<p>Alpha</p><p>Beta</p><h2>Header</h2><p>Gamma</p><p>Delta</p>'
+  const context = { title: 'Chapter One', bookTitle: 'Genesis', html }
+
+  it('always includes a title slide first, matching the normal generators', () => {
+    const blocks = parseBlocks(html)
+    const slides = buildSlidesFromSelection(context, blocks, 'grouped')
+    expect(slides[0].id).toBe('title')
+    expect(slides[0].title).toBe('Chapter One')
+    expect(slides[0].html).toBe('Genesis')
+  })
+
+  it('grouped mode merges the selection into as few slides as fit maxCharsPerSlide', () => {
+    const allBlocks = parseBlocks(html)
+    const selected = [allBlocks[0], allBlocks[1], allBlocks[3]] // Alpha, Beta, Gamma (skip Header/Delta)
+    const slides = buildSlidesFromSelection(context, selected, 'grouped', { maxCharsPerSlide: 1000 })
+
+    const contentSlides = slides.slice(1)
+    expect(contentSlides.length).toBe(1)
+    expect(contentSlides[0].html).toContain('Alpha')
+    expect(contentSlides[0].html).toContain('Beta')
+    expect(contentSlides[0].html).toContain('Gamma')
+    expect(contentSlides[0].html).not.toContain('Delta')
+    expect(contentSlides[0].title).toBe('Genesis — Chapter One')
+  })
+
+  it('split mode gives each selected block its own slide', () => {
+    const allBlocks = parseBlocks(html)
+    const selected = [allBlocks[0], allBlocks[1], allBlocks[3]]
+    const slides = buildSlidesFromSelection(context, selected, 'split', { maxCharsPerSlide: 1000 })
+
+    const contentSlides = slides.slice(1)
+    expect(contentSlides.length).toBe(3)
+    expect(contentSlides[0].html).toContain('Alpha')
+    expect(contentSlides[1].html).toContain('Beta')
+    expect(contentSlides[2].html).toContain('Gamma')
+  })
+
+  it('split mode still auto-splits an individually oversized selected block', () => {
+    const longSentence = 'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
+    const oversizedHtml = `<p>${longSentence.repeat(20)}</p>`
+    const blocks = parseBlocks(oversizedHtml)
+
+    const slides = buildSlidesFromSelection(context, blocks, 'split', { maxCharsPerSlide: 200 })
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(1)
+    expect(contentSlides.every((slide) => slide.html.length <= 260)).toBe(true)
+  })
+})
 
 describe('slide generators', () => {
   it('uses default generator for generic content', () => {

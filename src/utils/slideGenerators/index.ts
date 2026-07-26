@@ -20,3 +20,5 @@ export function getRegisteredSlideGeneratorTypes(): SlideContentType[] {
 }
 
 export * from './types'
+export { parseBlocks, expandOversizedBlocks, buildSlidesFromSelection } from './helpers'
+export type { ParsedBlock, SelectionGroupingMode } from './helpers'
