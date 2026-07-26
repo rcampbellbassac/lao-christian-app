@@ -4,6 +4,7 @@ import { RouterView } from 'vue-router'
 import MainToolbar from './components/MainToolbar.vue'
 import MainFooter from './components/MainFooter.vue'
 import { useSettingsStore } from '@/stores/settings'
+import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 const settings = useSettingsStore()
 
@@ -18,6 +19,33 @@ watch(
   },
   { immediate: true }
 )
+
+// registerType: 'autoUpdate' (vite.config.ts) makes this reload the page
+// automatically once a new service worker activates, instead of leaving
+// visitors stuck on stale precached assets until they happen to refresh
+// twice. The interval + visibility check make that detection prompt
+// instead of waiting on the browser's own lazy update-check timing.
+const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000
+
+useRegisterSW({
+  immediate: true,
+  onRegisteredSW(_swUrl, registration) {
+    if (!registration) return
+
+    setInterval(() => {
+      void registration.update()
+    }, UPDATE_CHECK_INTERVAL_MS)
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        void registration.update()
+      }
+    })
+  },
+  onRegisterError(error) {
+    console.error('Service worker registration failed', error)
+  },
+})
 </script>
 
 <template>

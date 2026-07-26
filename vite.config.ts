@@ -20,6 +20,20 @@ export default defineConfig(({ mode }) => {
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registration is handled explicitly in App.vue via useRegisterSW(),
+      // so a client actually reloads when a new version activates instead
+      // of silently sitting on stale precached assets until a 2nd refresh.
+      injectRegister: false,
+      // vite-plugin-pwa only auto-sets these when it manages registration
+      // itself (injectRegister !== false), so with manual registration
+      // above they must be set explicitly -- otherwise the generated SW
+      // falls back to waiting for an explicit skip-waiting postMessage
+      // that never arrives, and a new version just sits in "waiting"
+      // forever instead of activating and taking over the page.
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       devOptions: {
         enabled: true
       }
