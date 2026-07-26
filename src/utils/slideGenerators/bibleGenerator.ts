@@ -1,6 +1,7 @@
 import {
   createContentSlide,
   createTitleSlide,
+  expandOversizedBlocks,
   isHeadingTag,
   normalizeConfig,
   parseBlocks,
@@ -29,7 +30,7 @@ export const bibleSlideGenerator: SlideGenerator = {
   type: 'bible',
   generate(context, config) {
     const resolvedConfig = normalizeConfig(config)
-    const blocks = parseBlocks(context.html)
+    const blocks = expandOversizedBlocks(parseBlocks(context.html), resolvedConfig.maxCharsPerSlide)
     const slides = [createTitleSlide(context)]
 
     const verseGroups: VerseGroup[] = []
@@ -62,6 +63,15 @@ export const bibleSlideGenerator: SlideGenerator = {
       if (currentVerseParts.length === 0) {
         currentVerseParts = [...pendingPrefixParts, block.html]
         pendingPrefixParts = []
+        currentIsVerse = false
+      } else if (
+        !currentIsVerse
+        && currentVerseParts.join('').length + block.html.length > resolvedConfig.maxCharsPerSlide
+      ) {
+        // Continuation text (no verse marker) can otherwise grow without bound
+        // once oversized blocks are split into several plain fragments.
+        flushVerseGroup()
+        currentVerseParts = [block.html]
         currentIsVerse = false
       } else {
         currentVerseParts.push(block.html)

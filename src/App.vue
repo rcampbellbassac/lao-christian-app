@@ -1,7 +1,23 @@
 <script setup lang="ts">
+import { onMounted, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import MainToolbar from './components/MainToolbar.vue'
 import MainFooter from './components/MainFooter.vue'
+import { useSettingsStore } from '@/stores/settings'
+
+const settings = useSettingsStore()
+
+onMounted(async () => {
+  await settings.load()
+})
+
+watch(
+  () => settings.contentFontScale,
+  (scale) => {
+    document.documentElement.style.setProperty('--app-content-font-scale', String(scale))
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

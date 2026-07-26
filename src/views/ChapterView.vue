@@ -50,7 +50,7 @@ const chapter = computed(() =>
         </router-link>
       </div>
       <h1 class="app-section-title mb-3"><span v-html="chapter.name"></span></h1>
-      <div class="prose prose-slate max-w-none dark:prose-invert" v-html="chapter.content" />
+      <div class="prose prose-slate max-w-none dark:prose-invert app-content-scale" v-html="chapter.content" />
       <div v-if="chapter.audioembed || chapter.videoembed" class="mt-5 rounded-xl border border-slate-300/70 bg-white/75 p-3 dark:border-slate-500/50 dark:bg-slate-950/86">
         <div v-if="chapter.audioembed" v-html="chapter.audioembed" />
         <div v-if="chapter.videoembed" v-html="chapter.videoembed" />

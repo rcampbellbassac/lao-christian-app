@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import DarkToggle from './DarkToggle.vue'
+import FontSizeControl from './FontSizeControl.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faHouse, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faCircleInfo, faGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-library.add(faHouse, faCircleInfo)
+library.add(faHouse, faCircleInfo, faGear)
 
 const menuItems = [
   { name: 'Home', to: '/', icon: 'fa-solid fa-house'},
   { name: 'About', to: '/about', icon: 'fa-solid fa-circle-info' },
+  { name: 'Settings', to: '/settings', icon: 'fa-solid fa-gear' },
 ]
 </script>
 
 <template>
   <header class="sticky top-0 z-40 px-2 pb-1 pt-2 sm:px-4 sm:pb-1 lg:pb-1">
-    <nav class="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/85 px-3 py-2 shadow-lg backdrop-blur dark:border-slate-500/45 dark:bg-slate-950/92">
+    <nav class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/85 px-3 py-2 shadow-lg backdrop-blur dark:border-slate-500/45 dark:bg-slate-950/92">
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <RouterLink
           v-for="item in menuItems"
@@ -36,7 +38,10 @@ const menuItems = [
           </span>
         </RouterLink>
       </div>
-      <DarkToggle />
+      <div class="flex items-center gap-2">
+        <FontSizeControl />
+        <DarkToggle />
+      </div>
     </nav>
   </header>
 </template>

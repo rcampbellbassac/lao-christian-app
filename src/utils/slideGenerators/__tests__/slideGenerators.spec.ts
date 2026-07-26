@@ -63,6 +63,70 @@ describe('slide generators', () => {
     expect(contentSlides.every(slide => slide.html.length <= 260)).toBe(true)
   })
 
+  it('splits a chapter wrapped in a single outer div into multiple verse-bounded slides', () => {
+    // Real LaoBible.json data wraps every chapter's content in one outer <div>,
+    // e.g. <div><h1>...</h1><p><sup>1</sup>...</p><p><sup>2</sup>...</p>...</div>.
+    // Without unwrapping this container, parseBlocks() sees one giant block
+    // instead of one block per verse, and the whole chapter collapses into a
+    // single unreadable slide.
+    const generator = createSlideGenerator('bible')
+    const verses = Array.from({ length: 10 }, (_, i) => {
+      const verseNumber = i + 1
+      return `<p><sup><span class="verse">${verseNumber}</span></sup> This is verse number ${verseNumber} with enough text to be meaningful.</p>`
+    }).join('')
+    const html = `<div><h1>Genesis Chapter 1</h1>${verses}</div>`
+
+    const slides = generator.generate({ title: 'Genesis 1', html }, { versesPerSlide: 3 })
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(1)
+    expect(contentSlides.every(slide => slide.html.length < html.length)).toBe(true)
+
+    const verse1Slide = contentSlides.find(slide => slide.html.includes('verse number 1 '))
+    const verse10Slide = contentSlides.find(slide => slide.html.includes('verse number 10 '))
+    expect(verse1Slide).toBeDefined()
+    expect(verse10Slide).toBeDefined()
+    expect(verse1Slide).not.toBe(verse10Slide)
+  })
+
+  it('unwraps nested single-child section/div wrappers for default content too', () => {
+    const generator = createSlideGenerator('default')
+    const html = '<div><section><div><p>One</p><p>Two</p><h2>Header</h2><p>Three</p></div></section></div>'
+
+    const slides = generator.generate({ title: 'Nested', html }, { maxNodesPerSlide: 1 })
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(1)
+    expect(contentSlides.some(slide => slide.html.includes('One'))).toBe(true)
+    expect(contentSlides.some(slide => slide.html.includes('Header'))).toBe(true)
+  })
+
+  it('does not unwrap a wrapper div that carries its own attributes', () => {
+    const generator = createSlideGenerator('default')
+    const html = '<div class="chapter"><p>One</p><p>Two</p></div>'
+
+    const slides = generator.generate({ title: 'Attributed wrapper', html })
+    const contentSlides = slides.slice(1)
+
+    expect(contentSlides.length).toBeGreaterThan(0)
+    expect(contentSlides.some(slide => slide.html.includes('One') && slide.html.includes('Two'))).toBe(true)
+  })
+
+  it.each(['bible', 'songs', 'studies'] as const)(
+    'splits an oversized single block for %s content as a defense-in-depth fallback',
+    (type) => {
+      const generator = createSlideGenerator(type)
+      const longSentence = 'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
+      const html = `<p>${longSentence.repeat(20)}</p>`
+
+      const slides = generator.generate({ title: 'Oversized block', html }, { maxCharsPerSlide: 200 })
+      const contentSlides = slides.slice(1)
+
+      expect(contentSlides.length).toBeGreaterThan(1)
+      expect(contentSlides.every(slide => slide.html.length <= 260)).toBe(true)
+    }
+  )
+
   it('keeps verse groups bounded for bible content', () => {
     const generator = createSlideGenerator('bible')
     const fixture = representativeFixtures.find(item => item.setKey === 'LaoBible')

@@ -1,13 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import AboutView from '../views/AboutView.vue'
-import CookiePolicyView from '../views/CookiePolicyView.vue'
-import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
-import TermsOfServiceView from '../views/TermsOfServiceView.vue'
-import FileView from '../views/FileView.vue'
-import BookView from '../views/BookView.vue'
-import ChapterView from '../views/ChapterView.vue'
-import PresentationView from '../views/PresentationView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,43 +12,50 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: AboutView,
+      component: () => import('../views/AboutView.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../views/SettingsView.vue'),
     },
     {
       path: '/cookie-policy',
       name: 'cookie-policy',
-      component: CookiePolicyView,
+      component: () => import('../views/CookiePolicyView.vue'),
     },
     {
       path: '/privacy-policy',
       name: 'privacy-policy',
-      component: PrivacyPolicyView,
+      component: () => import('../views/PrivacyPolicyView.vue'),
     },
     {
       path: '/terms-of-service',
       name: 'terms-of-service',
-      component: TermsOfServiceView,
+      component: () => import('../views/TermsOfServiceView.vue'),
     },
 
     {
       path: '/content/:fileid',
-      component: FileView, // This loads the JSON file
+      component: () => import('../views/FileView.vue'), // This loads the JSON file
     },
 
     {
       path: '/content/:fileid/:bookid',
-      component: BookView, // This loads the indiivudal books withint the JSON file
+      component: () => import('../views/BookView.vue'), // This loads the indiivudal books withint the JSON file
     },
 
     {
       path: '/content/:fileid/:bookid/:chapterid',
-      component: ChapterView,  // This loads the individual chapters within the book
+      component: () => import('../views/ChapterView.vue'), // This loads the individual chapters within the book
     },
 
     {
       path: '/present/:fileid/:bookid/:chapterid',
       name: 'presentation',
-      component: PresentationView,
+      // Lazy-loaded: keeps pptxgenjs/jszip (used only by presentation export)
+      // out of the main bundle for everyone just reading content.
+      component: () => import('../views/PresentationView.vue'),
     },
 
   ],

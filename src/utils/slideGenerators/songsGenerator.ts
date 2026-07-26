@@ -1,6 +1,7 @@
 import {
   createContentSlide,
   createTitleSlide,
+  expandOversizedBlocks,
   isBlankText,
   isHeadingTag,
   normalizeConfig,
@@ -24,7 +25,7 @@ export const songsSlideGenerator: SlideGenerator = {
   type: 'songs',
   generate(context, config) {
     const resolvedConfig = normalizeConfig(config)
-    const blocks = parseBlocks(context.html)
+    const blocks = expandOversizedBlocks(parseBlocks(context.html), resolvedConfig.maxCharsPerSlide)
     const slides = [createTitleSlide(context)]
 
     const stanzas: StanzaGroup[] = []
@@ -47,6 +48,15 @@ export const songsSlideGenerator: SlideGenerator = {
       if (isStanzaBoundary(block)) {
         flushStanza()
         continue
+      }
+
+      if (
+        stanzaParts.length > 0
+        && stanzaParts.join('').length + block.html.length > resolvedConfig.maxCharsPerSlide
+      ) {
+        // Prevents an unbounded run of blocks (e.g. fragments from an
+        // oversized block) from merging into a single giant stanza.
+        flushStanza()
       }
 
       if (pendingHeadingHtml) {

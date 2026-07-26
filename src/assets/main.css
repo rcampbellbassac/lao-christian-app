@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+Lao:wght@100..900&display=swap');
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -16,6 +17,18 @@
     --app-panel: rgba(255, 255, 255, 0.93);
     --app-panel-border: rgba(15, 23, 42, 0.08);
     --app-panel-shadow: 0 18px 40px rgba(2, 6, 23, 0.16);
+    --app-content-font-scale: 1;
+}
+
+/* User-adjustable base font size for reading content (ChapterView, etc.),
+   persisted via the settings store. !important is needed here because
+   @tailwindcss/typography's own `.prose` rule sets font-size at the same
+   specificity and lands later in Tailwind's cascade-layer order, so it
+   would otherwise always win the tie. Typography's nested heading/paragraph
+   rules use em units relative to this element, so overriding it here still
+   scales all of them proportionally. */
+.app-content-scale {
+    font-size: calc(1rem * var(--app-content-font-scale)) !important;
 }
 
 body {

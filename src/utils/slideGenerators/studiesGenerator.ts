@@ -1,6 +1,7 @@
 import {
   createContentSlide,
   createTitleSlide,
+  expandOversizedBlocks,
   isHeadingTag,
   normalizeConfig,
   parseBlocks,
@@ -15,7 +16,7 @@ export const studiesSlideGenerator: SlideGenerator = {
   type: 'studies',
   generate(context, config) {
     const resolvedConfig = normalizeConfig(config)
-    const blocks = parseBlocks(context.html)
+    const blocks = expandOversizedBlocks(parseBlocks(context.html), resolvedConfig.maxCharsPerSlide)
     const slides = [createTitleSlide(context)]
 
     const sections: SectionGroup[] = []
@@ -34,11 +35,16 @@ export const studiesSlideGenerator: SlideGenerator = {
         continue
       }
 
-      if (currentSectionParts.length === 0) {
-        currentSectionParts.push(block.html)
-      } else {
-        currentSectionParts.push(block.html)
+      if (
+        currentSectionParts.length > 0
+        && currentSectionParts.join('').length + block.html.length > resolvedConfig.maxCharsPerSlide
+      ) {
+        // Prevents an unbounded run of non-heading blocks (e.g. fragments
+        // from an oversized block) from merging into a single giant section.
+        flushSection()
       }
+
+      currentSectionParts.push(block.html)
     }
 
     flushSection()
