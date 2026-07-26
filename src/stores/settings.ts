@@ -3,6 +3,10 @@ import { defineStore } from 'pinia'
 import localforage from 'localforage'
 import type { AspectRatioId } from '@/utils/aspectRatios'
 import { DEFAULT_ASPECT_RATIO_ID } from '@/utils/aspectRatios'
+import type { LaoFontId } from '@/utils/laoFonts'
+import { DEFAULT_LAO_FONT_ID } from '@/utils/laoFonts'
+import type { PresentationThemeId } from '@/utils/presentationThemes'
+import { DEFAULT_PRESENTATION_THEME_ID } from '@/utils/presentationThemes'
 
 const settingsStorage = localforage.createInstance({
   name: 'lao-christian-app',
@@ -18,16 +22,24 @@ export const FONT_SCALE_MIN = 0.6
 export const FONT_SCALE_MAX = 2.5
 export const FONT_SCALE_STEP = 0.1
 
+export type PresentationTextAlign = 'left' | 'center'
+
 interface PersistedSettings {
   contentFontScale: number
   presentationFontScale: number
   presentationAspectRatio: AspectRatioId
+  presentationTheme: PresentationThemeId
+  presentationTextAlign: PresentationTextAlign
+  presentationFontFamily: LaoFontId
 }
 
 const defaultSettings: PersistedSettings = {
   contentFontScale: 1,
   presentationFontScale: 1,
   presentationAspectRatio: DEFAULT_ASPECT_RATIO_ID,
+  presentationTheme: DEFAULT_PRESENTATION_THEME_ID,
+  presentationTextAlign: 'left',
+  presentationFontFamily: DEFAULT_LAO_FONT_ID,
 }
 
 function clampScale(value: number): number {
@@ -38,6 +50,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const contentFontScale = ref(defaultSettings.contentFontScale)
   const presentationFontScale = ref(defaultSettings.presentationFontScale)
   const presentationAspectRatio = ref<AspectRatioId>(defaultSettings.presentationAspectRatio)
+  const presentationTheme = ref<PresentationThemeId>(defaultSettings.presentationTheme)
+  const presentationTextAlign = ref<PresentationTextAlign>(defaultSettings.presentationTextAlign)
+  const presentationFontFamily = ref<LaoFontId>(defaultSettings.presentationFontFamily)
   const isLoaded = ref(false)
 
   async function persist(): Promise<void> {
@@ -45,6 +60,9 @@ export const useSettingsStore = defineStore('settings', () => {
       contentFontScale: contentFontScale.value,
       presentationFontScale: presentationFontScale.value,
       presentationAspectRatio: presentationAspectRatio.value,
+      presentationTheme: presentationTheme.value,
+      presentationTextAlign: presentationTextAlign.value,
+      presentationFontFamily: presentationFontFamily.value,
     }
     await settingsStorage.setItem(SETTINGS_KEY, snapshot)
   }
@@ -57,6 +75,9 @@ export const useSettingsStore = defineStore('settings', () => {
       contentFontScale.value = clampScale(stored.contentFontScale ?? defaultSettings.contentFontScale)
       presentationFontScale.value = clampScale(stored.presentationFontScale ?? defaultSettings.presentationFontScale)
       presentationAspectRatio.value = stored.presentationAspectRatio ?? defaultSettings.presentationAspectRatio
+      presentationTheme.value = stored.presentationTheme ?? defaultSettings.presentationTheme
+      presentationTextAlign.value = stored.presentationTextAlign ?? defaultSettings.presentationTextAlign
+      presentationFontFamily.value = stored.presentationFontFamily ?? defaultSettings.presentationFontFamily
     }
 
     isLoaded.value = true
@@ -77,6 +98,21 @@ export const useSettingsStore = defineStore('settings', () => {
     void persist()
   }
 
+  function setPresentationTheme(value: PresentationThemeId): void {
+    presentationTheme.value = value
+    void persist()
+  }
+
+  function setPresentationTextAlign(value: PresentationTextAlign): void {
+    presentationTextAlign.value = value
+    void persist()
+  }
+
+  function setPresentationFontFamily(value: LaoFontId): void {
+    presentationFontFamily.value = value
+    void persist()
+  }
+
   function resetContentFontScale(): void {
     setContentFontScale(defaultSettings.contentFontScale)
   }
@@ -89,11 +125,17 @@ export const useSettingsStore = defineStore('settings', () => {
     contentFontScale,
     presentationFontScale,
     presentationAspectRatio,
+    presentationTheme,
+    presentationTextAlign,
+    presentationFontFamily,
     isLoaded,
     load,
     setContentFontScale,
     setPresentationFontScale,
     setPresentationAspectRatio,
+    setPresentationTheme,
+    setPresentationTextAlign,
+    setPresentationFontFamily,
     resetContentFontScale,
     resetPresentationFontScale,
   }

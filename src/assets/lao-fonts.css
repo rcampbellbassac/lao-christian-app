@@ -1,0 +1,31 @@
+/* Self-hosted Lao fonts from https://laoscript.net/download/ (SIL Open Font
+   License -- see public/fonts/OFL.txt). Paths are relative so Vite resolves
+   and base-prefixes them correctly regardless of deploy target (root vs.
+   the /lao-christian-app/ GitHub Pages subpath). @font-face rules are
+   metadata only: browsers don't fetch the actual font file until something
+   is rendered with that font-family, so declaring these upfront costs
+   nothing for users who never change the default font. */
+
+@font-face {
+  font-family: 'Saysettha';
+  src: url('./fonts/saysettha_v.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SengBuhan';
+  src: url('./fonts/sengbuhan_v.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Saysettha Mai';
+  src: url('./fonts/saysetthamai_v.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SengPathom';
+  src: url('./fonts/sengpathom.ttf') format('truetype');
+  font-display: swap;
+}

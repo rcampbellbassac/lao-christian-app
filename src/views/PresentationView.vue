@@ -7,6 +7,13 @@ import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } fro
 import { createSlideGenerator, type Slide } from '@/utils/slideGenerators'
 import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/utils/aspectRatios'
 import { exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
+import { laoFontPresets, getLaoFontPreset, type LaoFontId } from '@/utils/laoFonts'
+import {
+  presentationThemePresets,
+  getPresentationThemePreset,
+  type PresentationThemeId,
+} from '@/utils/presentationThemes'
+import type { PresentationTextAlign } from '@/stores/settings'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +28,7 @@ const currentSlideIndex = ref(0)
 const isFullscreen = ref(false)
 const slideCanvas = ref<HTMLElement | null>(null)
 const isSelectionPanelOpen = ref(false)
+const isCustomizePanelOpen = ref(false)
 const isExporting = ref(false)
 const selectedSlideIds = ref<Set<string>>(new Set())
 const rangeStart = ref(1)
@@ -152,6 +160,8 @@ const selectedContentSlideCount = computed(
 )
 
 const currentPreset = computed(() => getAspectRatioPreset(settings.presentationAspectRatio))
+const currentTheme = computed(() => getPresentationThemePreset(settings.presentationTheme))
+const currentFont = computed(() => getLaoFontPreset(settings.presentationFontFamily))
 
 function goNext(): void {
   if (currentSlideIndex.value < activeSlides.value.length - 1) {
@@ -229,6 +239,18 @@ function applyRange(): void {
 
 function setAspectRatio(id: AspectRatioId): void {
   settings.setPresentationAspectRatio(id)
+}
+
+function setTheme(id: PresentationThemeId): void {
+  settings.setPresentationTheme(id)
+}
+
+function setTextAlign(value: PresentationTextAlign): void {
+  settings.setPresentationTextAlign(value)
+}
+
+function setFontFamily(id: LaoFontId): void {
+  settings.setPresentationFontFamily(id)
 }
 
 function increaseFontScale(): void {
@@ -395,6 +417,15 @@ function onFullscreenChange(): void {
         {{ isSelectionPanelOpen ? 'Close selection' : 'Select slides' }}
       </button>
 
+      <button
+        class="presentation-btn"
+        type="button"
+        title="Customize theme, alignment, and font"
+        @click="isCustomizePanelOpen = !isCustomizePanelOpen"
+      >
+        {{ isCustomizePanelOpen ? 'Close customize' : 'Customize' }}
+      </button>
+
       <button class="presentation-btn" type="button" :title="isFullscreen ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)'" @click="toggleFullscreen">
         {{ isFullscreen ? 'Windowed' : 'Fullscreen' }}
       </button>
@@ -440,9 +471,65 @@ function onFullscreenChange(): void {
       </ul>
     </section>
 
+    <section v-if="isCustomizePanelOpen" class="selection-panel">
+      <div class="selection-panel-row">
+        <span class="presentation-field-label">Theme</span>
+        <select
+          class="presentation-select"
+          :value="settings.presentationTheme"
+          @change="setTheme(($event.target as HTMLSelectElement).value as PresentationThemeId)"
+        >
+          <option v-for="preset in presentationThemePresets" :key="preset.id" :value="preset.id">
+            {{ preset.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="selection-panel-row">
+        <span class="presentation-field-label">Text align</span>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': settings.presentationTextAlign === 'left' }"
+          @click="setTextAlign('left')"
+        >
+          Left
+        </button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          :class="{ 'presentation-btn-active': settings.presentationTextAlign === 'center' }"
+          @click="setTextAlign('center')"
+        >
+          Center
+        </button>
+      </div>
+
+      <div class="selection-panel-row">
+        <span class="presentation-field-label">Font</span>
+        <select
+          class="presentation-select"
+          :value="settings.presentationFontFamily"
+          @change="setFontFamily(($event.target as HTMLSelectElement).value as LaoFontId)"
+        >
+          <option v-for="preset in laoFontPresets" :key="preset.id" :value="preset.id">
+            {{ preset.label }}
+          </option>
+        </select>
+      </div>
+    </section>
+
     <section
       class="slide-canvas"
-      :style="{ '--slide-ratio': currentPreset.ratio, '--slide-font-scale': settings.presentationFontScale * fitScale }"
+      :style="{
+        '--slide-ratio': currentPreset.ratio,
+        '--slide-font-scale': settings.presentationFontScale * fitScale,
+        '--slide-background': currentTheme.background,
+        '--slide-text-color': currentTheme.textColor,
+        '--slide-muted-color': currentTheme.mutedColor,
+        '--slide-text-align': settings.presentationTextAlign,
+        '--slide-font-family': currentFont.cssFamily,
+      }"
     >
       <article
         v-if="currentSlide"
@@ -524,6 +611,11 @@ function onFullscreenChange(): void {
 .presentation-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.presentation-btn-active {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(125, 211, 252, 0.5);
 }
 
 .presentation-btn-compact {
@@ -644,7 +736,10 @@ function onFullscreenChange(): void {
 .slide-content {
   aspect-ratio: var(--slide-ratio, 1.7778);
   width: min(1200px, 96vw, calc(78vh * var(--slide-ratio, 1.7778)));
-  background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95));
+  background: var(--slide-background, radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95)));
+  color: var(--slide-text-color, #f8fafc);
+  font-family: var(--slide-font-family, inherit);
+  text-align: var(--slide-text-align, left);
   border: 2px solid rgba(148, 163, 184, 0.3);
   border-radius: 1rem;
   padding: 2.5rem;
@@ -677,14 +772,14 @@ function onFullscreenChange(): void {
 .slide-title--header {
   font-size: calc(clamp(1rem, 1.6vw, 1.4rem) * var(--slide-font-scale, 1));
   font-weight: 600;
-  color: #cbd5e1;
+  color: var(--slide-muted-color, #cbd5e1);
   opacity: 0.85;
 }
 
 .slide-subtitle {
   margin-top: 0.75rem;
   font-size: calc(clamp(1rem, 1.6vw, 1.5rem) * var(--slide-font-scale, 1));
-  color: #cbd5e1;
+  color: var(--slide-muted-color, #cbd5e1);
 }
 
 .slide-body {
