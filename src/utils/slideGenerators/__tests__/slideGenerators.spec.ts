@@ -14,6 +14,36 @@ describe('slide generators', () => {
     expect(slides[0].id).toBe('title')
   })
 
+  it('shows book name as the title-slide subtitle and "Book — Chapter" on content slides', () => {
+    const generator = createSlideGenerator('default')
+    const slides = generator.generate({
+      title: 'Chapter One',
+      bookTitle: 'Genesis',
+      html: '<p>One</p><p>Two</p><h2>Header</h2><p>Three</p>',
+    })
+
+    expect(slides[0].id).toBe('title')
+    expect(slides[0].title).toBe('Chapter One')
+    expect(slides[0].html).toBe('Genesis')
+
+    const contentSlides = slides.slice(1)
+    expect(contentSlides.length).toBeGreaterThan(0)
+    contentSlides.forEach((slide) => {
+      expect(slide.title).toBe('Genesis — Chapter One')
+    })
+  })
+
+  it('falls back to just the chapter title when no book name is given', () => {
+    const generator = createSlideGenerator('default')
+    const slides = generator.generate({
+      title: 'Chapter One',
+      html: '<p>One</p><p>Two</p>',
+    })
+
+    expect(slides[0].html).toBe('')
+    expect(slides[1].title).toBe('Chapter One')
+  })
+
   it('splits long default content into readable slides', () => {
     const generator = createSlideGenerator('default')
     const longParagraph = [

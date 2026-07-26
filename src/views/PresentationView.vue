@@ -45,12 +45,18 @@ onMounted(async () => {
 
   document.addEventListener('keydown', handleKeydown)
   document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener('resize', handleResize)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener('resize', handleResize)
 })
+
+function handleResize(): void {
+  void measureFit()
+}
 
 const unit = computed(() =>
   store.currentSetData?.unit.find((entry) => entry.id === bookId)
@@ -71,6 +77,7 @@ const slides = computed<Slide[]>(() => {
     return slideGenerator.value.generate({
       title: chapter.value.name,
       html: chapter.value.content || '',
+      bookTitle: unit.value?.name,
     })
   } catch (err) {
     console.error('Failed to generate presentation slides', err)
@@ -99,6 +106,39 @@ watch(activeSlides, (list) => {
 })
 
 const currentSlide = computed(() => activeSlides.value[currentSlideIndex.value] || null)
+
+// Auto-shrinks slide text to fit the fixed slide box instead of scrolling --
+// a scrollbar would mean the PNG/PPTX export (which renders at a fixed pixel
+// size) silently crops whatever doesn't fit on screen.
+const fitScale = ref(1)
+const MIN_FIT_SCALE = 0.4
+
+async function measureFit(): Promise<void> {
+  fitScale.value = 1
+  await nextTick()
+
+  const el = slideCanvas.value
+  if (!el) return
+
+  let iterations = 0
+  while (el.scrollHeight > el.clientHeight + 1 && fitScale.value > MIN_FIT_SCALE && iterations < 6) {
+    const ratio = el.clientHeight / el.scrollHeight
+    fitScale.value = Math.max(MIN_FIT_SCALE, fitScale.value * ratio * 0.97)
+    await nextTick()
+    iterations += 1
+  }
+}
+
+watch(
+  [currentSlide, () => settings.presentationAspectRatio, () => settings.presentationFontScale],
+  () => {
+    void measureFit()
+  }
+)
+
+watch(slideCanvas, (el) => {
+  if (el) void measureFit()
+})
 
 const progressLabel = computed(() => {
   if (activeSlides.value.length === 0) return '0 / 0'
@@ -402,11 +442,21 @@ function onFullscreenChange(): void {
 
     <section
       class="slide-canvas"
-      :style="{ '--slide-ratio': currentPreset.ratio, '--slide-font-scale': settings.presentationFontScale }"
+      :style="{ '--slide-ratio': currentPreset.ratio, '--slide-font-scale': settings.presentationFontScale * fitScale }"
     >
-      <article v-if="currentSlide" ref="slideCanvas" class="slide-content">
-        <h1 class="slide-title" v-html="currentSlide.title"></h1>
-        <div class="slide-body" v-html="currentSlide.html"></div>
+      <article
+        v-if="currentSlide"
+        ref="slideCanvas"
+        class="slide-content"
+        :class="{ 'slide-content--title': currentSlide.id === 'title' }"
+      >
+        <h1
+          class="slide-title"
+          :class="{ 'slide-title--header': currentSlide.id !== 'title' }"
+          v-html="currentSlide.title"
+        ></h1>
+        <div v-if="currentSlide.id === 'title'" class="slide-subtitle" v-html="currentSlide.html"></div>
+        <div v-else class="slide-body" v-html="currentSlide.html"></div>
       </article>
       <article v-else-if="!chapter" class="slide-empty">Loading chapter...</article>
       <article v-else class="slide-empty">No slides selected — use "Select slides" to choose which slides to include.</article>
@@ -599,13 +649,42 @@ function onFullscreenChange(): void {
   border-radius: 1rem;
   padding: 2.5rem;
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.55);
-  overflow: auto;
+  /* Text is auto-shrunk to fit (see fitScale) instead of scrolling, so a
+     PNG/PPTX export never silently crops content that doesn't fit. */
+  overflow: hidden;
+}
+
+.slide-content--title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.slide-content--title .slide-title {
+  text-align: center;
 }
 
 .slide-title {
   margin: 0;
   font-size: calc(clamp(1.6rem, 3vw, 3rem) * var(--slide-font-scale, 1));
   line-height: 1.1;
+}
+
+/* Content slides show "Book — Chapter" as a running header rather than a
+   dominant title, so it doesn't compete with the actual slide content. */
+.slide-title--header {
+  font-size: calc(clamp(1rem, 1.6vw, 1.4rem) * var(--slide-font-scale, 1));
+  font-weight: 600;
+  color: #cbd5e1;
+  opacity: 0.85;
+}
+
+.slide-subtitle {
+  margin-top: 0.75rem;
+  font-size: calc(clamp(1rem, 1.6vw, 1.5rem) * var(--slide-font-scale, 1));
+  color: #cbd5e1;
 }
 
 .slide-body {

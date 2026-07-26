@@ -18,6 +18,10 @@ export interface SlideGeneratorConfig {
 export interface SlideGeneratorContext {
   title: string
   html: string
+  /** Book/unit name, shown alongside the chapter title on the title slide
+   *  and as the running header on content slides instead of a generic
+   *  "Slide N" label. */
+  bookTitle?: string
 }
 
 export interface SlideGenerator {

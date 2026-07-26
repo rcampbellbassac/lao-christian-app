@@ -1,4 +1,5 @@
 import {
+  buildHeaderLabel,
   createContentSlide,
   createTitleSlide,
   expandOversizedBlocks,
@@ -51,8 +52,9 @@ export const defaultSlideGenerator: SlideGenerator = {
 
     flushChunk()
 
+    const headerLabel = buildHeaderLabel(context)
     chunks.forEach((chunk, index) => {
-      slides.push(createContentSlide(index, chunk))
+      slides.push(createContentSlide(index, chunk, headerLabel))
     })
 
     return slides

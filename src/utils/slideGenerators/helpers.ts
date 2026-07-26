@@ -28,14 +28,20 @@ export function createTitleSlide(context: SlideGeneratorContext): Slide {
   return {
     id: 'title',
     title: context.title,
-    html: context.title,
+    html: context.bookTitle ?? '',
   }
 }
 
-export function createContentSlide(index: number, html: string): Slide {
+/** "{Book} — {Chapter}", or just the chapter title if no book name is known. */
+export function buildHeaderLabel(context: SlideGeneratorContext): string {
+  const bookTitle = context.bookTitle?.trim()
+  return bookTitle ? `${bookTitle} — ${context.title}` : context.title
+}
+
+export function createContentSlide(index: number, html: string, headerLabel: string): Slide {
   return {
     id: `slide-${index + 1}`,
-    title: `Slide ${index + 1}`,
+    title: headerLabel,
     html,
   }
 }
