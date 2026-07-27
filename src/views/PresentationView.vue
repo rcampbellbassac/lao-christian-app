@@ -802,13 +802,16 @@ function onFullscreenChange(): void {
   /* Text is auto-shrunk to fit (see fitScale) instead of scrolling, so a
      PNG/PPTX export never silently crops content that doesn't fit. */
   overflow: hidden;
+  /* Every slide's content is vertically centered in the box, not just the
+     title slide -- horizontal alignment stays independently controlled by
+     --slide-text-align. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .slide-content--title {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
 }
 

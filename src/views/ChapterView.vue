@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faDisplay, faHighlighter, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useContentStore } from '@/stores/content'
 import { usePresentationSelectionStore } from '@/stores/presentationSelection'
 import { parseBlocks } from '@/utils/slideGenerators'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
+
+library.add(faDisplay, faHighlighter, faPlay)
 
 const route = useRoute()
 const router = useRouter()
@@ -49,6 +54,12 @@ watch(blocks, () => {
   selectedIndices.value = new Set()
 })
 
+function isSelectableBlock(block: { text: string }): boolean {
+  // Some content uses empty paragraphs purely as visual spacers (e.g.
+  // between song stanzas) -- there's nothing meaningful to select there.
+  return block.text.length > 0
+}
+
 function toggleSelectMode(): void {
   isSelectMode.value = !isSelectMode.value
   if (!isSelectMode.value) {
@@ -80,24 +91,32 @@ function presentSelection(): void {
       <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
         <button
           type="button"
-          class="inline-flex items-center rounded-full border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 dark:border-teal-400 dark:text-teal-300 dark:hover:bg-teal-950/40"
+          class="icon-btn"
+          :class="{ 'icon-btn--active': isSelectMode }"
+          title="Select paragraphs"
+          aria-label="Select paragraphs"
           @click="toggleSelectMode"
         >
-          {{ isSelectMode ? 'Done selecting' : 'Select paragraphs' }}
+          <font-awesome-icon icon="highlighter" />
         </button>
         <button
           v-if="isSelectMode && selectedIndices.size > 0"
           type="button"
-          class="inline-flex items-center rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-teal-800"
+          class="icon-btn icon-btn--primary"
+          title="Present selection"
+          aria-label="Present selection"
           @click="presentSelection"
         >
-          Present selection ({{ selectedIndices.size }})
+          <font-awesome-icon icon="play" />
+          <span class="icon-btn-count">{{ selectedIndices.size }}</span>
         </button>
         <router-link
           :to="`/present/${fileId}/${bookId}/${chapterId}`"
-          class="inline-flex items-center rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-teal-800"
+          class="icon-btn icon-btn--primary"
+          title="Presentation mode"
+          aria-label="Presentation mode"
         >
-          Presentation mode
+          <font-awesome-icon icon="display" />
         </router-link>
       </div>
       <h1 class="app-section-title mb-3"><span v-html="chapter.name"></span></h1>
@@ -106,15 +125,16 @@ function presentSelection(): void {
           v-for="(block, index) in blocks"
           :key="index"
           class="content-block"
-          :class="{ 'content-block--selectable': isSelectMode }"
+          :class="{
+            'content-block--selectable': isSelectMode && isSelectableBlock(block),
+            'content-block--selected': isSelectMode && selectedIndices.has(index),
+          }"
+          :role="isSelectMode && isSelectableBlock(block) ? 'button' : undefined"
+          :tabindex="isSelectMode && isSelectableBlock(block) ? 0 : undefined"
+          @click="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
+          @keydown.enter.prevent="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
+          @keydown.space.prevent="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
         >
-          <label v-if="isSelectMode" class="content-block-checkbox">
-            <input
-              type="checkbox"
-              :checked="selectedIndices.has(index)"
-              @change="toggleBlockSelection(index)"
-            />
-          </label>
           <div class="content-block-body" v-html="block.html"></div>
         </div>
       </div>
@@ -133,33 +153,106 @@ function presentSelection(): void {
 </template>
 
 <style scoped>
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  width: 2.5rem;
+  height: 2.5rem;
+  justify-content: center;
+  border: 1px solid rgb(15 118 110 / 0.6);
+  color: rgb(15 118 110);
+  background: transparent;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: rgb(240 253 250);
+}
+
+.icon-btn--active {
+  background: rgb(15 118 110);
+  color: white;
+}
+
+.icon-btn--active:hover {
+  background: rgb(15 118 110 / 0.9);
+}
+
+.icon-btn--primary {
+  width: auto;
+  padding: 0 0.9rem;
+  background: rgb(15 118 110);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+}
+
+.icon-btn--primary:hover {
+  background: rgb(15 118 110 / 0.9);
+}
+
+.icon-btn-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+:global(.dark) .icon-btn {
+  border-color: rgb(45 212 191 / 0.5);
+  color: rgb(94 234 212);
+}
+
+:global(.dark) .icon-btn:hover {
+  background: rgb(19 78 74 / 0.4);
+}
+
 .content-block {
   display: contents;
 }
 
 .content-block--selectable {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
+  display: block;
+  cursor: pointer;
   border-radius: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background-color 0.15s ease, outline-color 0.15s ease;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .content-block--selectable:hover {
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.content-block--selectable:focus-visible {
+  outline-color: rgb(15 118 110 / 0.6);
+}
+
+/* Highlighter-marker look: a warm translucent highlight behind the text,
+   like the paragraph has been marked with a highlighter pen. */
+.content-block--selected {
+  background: rgba(250, 204, 21, 0.4);
+}
+
+.content-block--selected:hover {
+  background: rgba(250, 204, 21, 0.5);
 }
 
 :global(.dark) .content-block--selectable:hover {
   background: rgba(226, 232, 240, 0.06);
 }
 
-.content-block-checkbox {
-  margin-top: 0.4rem;
-  flex-shrink: 0;
+:global(.dark) .content-block--selected {
+  background: rgba(250, 204, 21, 0.22);
+}
+
+:global(.dark) .content-block--selected:hover {
+  background: rgba(250, 204, 21, 0.3);
 }
 
 .content-block-body {
-  flex: 1;
   min-width: 0;
 }
 </style>
