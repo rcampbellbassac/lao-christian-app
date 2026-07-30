@@ -4,7 +4,7 @@
 # automatic same-tag security patching for a reproducible build; the repo's
 # .github/dependabot.yml (docker ecosystem) opens a PR to bump these digests
 # on a schedule so the pin doesn't go stale.
-FROM cgr.dev/chainguard/node:latest-dev@sha256:e5c561501b1cd1f83471e932d3cd49d8fbbba998031273e04380b1f3e4199381 AS base
+FROM cgr.dev/chainguard/node:latest-dev@sha256:576199e9510d2c40c75374ed80c15b3113a479d19ac061d998c3318adbaf75d8 AS base
 # Already the base image's own default (uid 65532); set explicitly so it's
 # visible in this file rather than only implied by the upstream image.
 USER 65532
