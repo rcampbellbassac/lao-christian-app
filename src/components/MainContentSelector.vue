@@ -57,7 +57,7 @@ function openSet(fileId: number) {
         <div class="min-w-0">
           <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
             {{ item.native_name }}
-            <span class="block text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline sm:text-sm">({{ item.eng_name }})</span>
+            <span v-if="text.bilingual.value" class="block text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline sm:text-sm">({{ item.eng_name }})</span>
           </h3>
           <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
             {{ getLangDetails(item.lang)?.emoji_flag }} {{ getLangDetails(item.lang)?.native_name }}

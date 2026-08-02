@@ -4,6 +4,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faHouse, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { faFacebook, faYoutube } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useStaticText, type StaticTextKey } from '@/composables/useStaticText'
 
 library.add(faHouse, faCircleInfo, faFacebook, faYoutube)
 
@@ -12,10 +13,11 @@ const socialItems = [
   { name: 'YouTube', to: 'https://www.youtube.com/@SiengKhaenLaoGospel', icon: 'fa-brands fa-youtube'}
 ]
 
-const policies = [
-  { name: 'Cookie Policy', to: '/cookie-policy' },
-  { name: 'Privacy Policy', to: '/privacy-policy' },
-  { name: 'Terms of Service', to: '/terms-of-service' },
+const copy = useStaticText()
+const policies: Array<{ name: StaticTextKey; to: string }> = [
+  { name: 'policy.cookies', to: '/cookie-policy' },
+  { name: 'policy.privacy', to: '/privacy-policy' },
+  { name: 'policy.terms', to: '/terms-of-service' },
 ]
 </script>
 
@@ -43,7 +45,7 @@ const policies = [
       <div class="mt-4 text-xs text-slate-300 sm:text-sm">
         <span v-for="(policy, index) in policies" :key="policy.name">
           <RouterLink :to="policy.to" class="hover:underline">
-            {{ policy.name }}
+            {{ copy.text(policy.name) }}
           </RouterLink>
           <span v-if="index < policies.length - 1"> | </span>
         </span>
