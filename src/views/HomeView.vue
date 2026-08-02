@@ -27,23 +27,6 @@ const copy = useStaticText()
     </section>
 
     <section class="app-panel mt-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 class="app-section-title">{{ text.lao('myStudy') }}</h2>
-          <p class="app-muted">{{ copy.text('home.studyHelp') }}</p>
-        </div>
-        <router-link to="/study" class="lc-btn-link">→</router-link>
-      </div>
-    </section>
-
-    <section class="app-panel mt-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 class="app-section-title">{{ copy.text('home.slideStudio') }}</h2><p class="app-muted">{{ copy.text('home.slideHelp') }}</p></div>
-        <router-link to="/decks" class="lc-btn-link">→</router-link>
-      </div>
-    </section>
-
-    <section class="app-panel mt-4">
       <h2 class="app-section-title">{{ copy.text('home.resources') }}</h2>
       <p class="app-muted mt-2 italic">
         {{ copy.text('home.resourcesHelp') }}
