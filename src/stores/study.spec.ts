@@ -53,6 +53,23 @@ describe('study store', () => {
     expect(restored.notes[0]?.body).toBe('Private note')
   })
 
+  it('stores paragraph and precise text highlights independently', async () => {
+    const study = useStudyStore()
+    const paragraph = { ...location, blockIndex: 4, quote: 'A complete paragraph' }
+
+    await study.toggleParagraphHighlight(paragraph)
+    await study.addTextHighlight(paragraph, 'complete', 'A ', ' paragraph')
+
+    expect(study.isParagraphHighlighted(paragraph)).toBe(true)
+    expect(study.textHighlights(paragraph)).toMatchObject([
+      { scope: 'text', exact: 'complete', prefix: 'A ', suffix: ' paragraph' },
+    ])
+
+    await study.toggleParagraphHighlight(paragraph)
+    expect(study.isParagraphHighlighted(paragraph)).toBe(false)
+    expect(study.textHighlights(paragraph)).toHaveLength(1)
+  })
+
   it('rejects files that are not study backups', async () => {
     const study = useStudyStore()
     await expect(study.importBackup({ schemaVersion: 1 } as StudyBackupV1)).rejects.toThrow(

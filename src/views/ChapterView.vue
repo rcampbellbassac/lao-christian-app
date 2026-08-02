@@ -9,7 +9,7 @@ import { usePresentationSelectionStore } from '@/stores/presentationSelection'
 import { parseBlocks } from '@/utils/slideGenerators'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { useStudyStore, type ContentLocation } from '@/stores/study'
-import { sanitizeContentHtml } from '@/utils/sanitize'
+import { applyInlineHighlights, sanitizeContentHtml } from '@/utils/sanitize'
 import SafeMediaLinks from '@/components/SafeMediaLinks.vue'
 
 library.add(faDisplay, faHighlighter, faPlay, faBookmark, faShareNodes, faNoteSticky)
@@ -56,6 +56,7 @@ const selectedIndices = ref<Set<number>>(new Set())
 const noteEditorOpen = ref(false)
 const noteDraft = ref('')
 const noteBlockIndex = ref<number | undefined>(undefined)
+const selectedPhrase = ref<{ blockIndex: number; exact: string; prefix: string; suffix: string } | null>(null)
 
 function chapterLocation(blockIndex?: number): ContentLocation {
   return {
@@ -90,6 +91,42 @@ async function saveNote(): Promise<void> {
   await studyStore.saveNote(chapterLocation(noteBlockIndex.value), noteDraft.value)
   noteEditorOpen.value = false
   noteDraft.value = ''
+}
+
+function renderedBlockHtml(index: number, html: string): string {
+  const phrases = studyStore.textHighlights(chapterLocation(index)).map(item => item.exact || '').filter(Boolean)
+  return applyInlineHighlights(html, phrases)
+}
+
+function captureTextSelection(index: number, event: MouseEvent): void {
+  if (isSelectMode.value) return
+  const selection = window.getSelection()
+  const exact = selection?.toString().trim() ?? ''
+  if (exact.length < 2) return
+  const body = (event.currentTarget as HTMLElement).querySelector('.content-block-body')
+  if (!body || !selection?.anchorNode || !selection.focusNode || !body.contains(selection.anchorNode) || !body.contains(selection.focusNode)) return
+  const full = body.textContent ?? ''
+  const offset = full.indexOf(exact)
+  selectedPhrase.value = {
+    blockIndex: index,
+    exact,
+    prefix: offset < 0 ? '' : full.slice(Math.max(0, offset - 40), offset),
+    suffix: offset < 0 ? '' : full.slice(offset + exact.length, offset + exact.length + 40),
+  }
+}
+
+async function saveSelectedPhrase(): Promise<void> {
+  if (!selectedPhrase.value) return
+  await studyStore.addTextHighlight(chapterLocation(selectedPhrase.value.blockIndex), selectedPhrase.value.exact, selectedPhrase.value.prefix, selectedPhrase.value.suffix)
+  selectedPhrase.value = null
+  window.getSelection()?.removeAllRanges()
+}
+
+async function shareSelectedPhrase(): Promise<void> {
+  if (!selectedPhrase.value) return
+  const payload = { title: chapterLocation().title, text: selectedPhrase.value.exact, url: window.location.href }
+  if (navigator.share) await navigator.share(payload)
+  else await navigator.clipboard.writeText(`${payload.text}\n${payload.url}`)
 }
 
 // A fresh chapter's blocks means any in-progress selection no longer applies.
@@ -184,15 +221,16 @@ function presentSelection(): void {
           :class="{
             'content-block--selectable': isSelectMode && isSelectableBlock(block),
             'content-block--selected': isSelectMode && selectedIndices.has(index),
-            'content-block--highlighted': studyStore.isHighlighted(chapterLocation(index)),
+            'content-block--highlighted': studyStore.isParagraphHighlighted(chapterLocation(index)),
           }"
           :role="isSelectMode && isSelectableBlock(block) ? 'button' : undefined"
           :tabindex="isSelectMode && isSelectableBlock(block) ? 0 : undefined"
           @click="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
           @keydown.enter.prevent="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
           @keydown.space.prevent="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
+          @mouseup="captureTextSelection(index, $event)"
         >
-          <div class="content-block-body" v-html="block.html"></div>
+          <div class="content-block-body" v-html="renderedBlockHtml(index, block.html)"></div>
           <div v-if="isSelectableBlock(block) && !isSelectMode" class="study-block-actions">
             <button type="button" :aria-label="studyStore.isHighlighted(chapterLocation(index)) ? 'Remove highlight' : 'Highlight paragraph'" title="Highlight paragraph" @click.stop="studyStore.toggleParagraphHighlight(chapterLocation(index))">
               <font-awesome-icon icon="highlighter" />
@@ -202,6 +240,13 @@ function presentSelection(): void {
             </button>
           </div>
         </div>
+      </div>
+      <div v-if="selectedPhrase" class="selection-actions" role="toolbar" aria-label="Selected text actions">
+        <span class="line-clamp-1 min-w-0 flex-1">“{{ selectedPhrase.exact }}”</span>
+        <button type="button" class="app-chip" @click="saveSelectedPhrase">Highlight</button>
+        <button type="button" class="app-chip" @click="openNote(selectedPhrase.blockIndex); noteDraft = selectedPhrase.exact + '\n\n'; selectedPhrase = null">Note</button>
+        <button type="button" class="app-chip" @click="shareSelectedPhrase">Share</button>
+        <button type="button" aria-label="Close" @click="selectedPhrase = null">×</button>
       </div>
       <form v-if="noteEditorOpen" class="note-editor" @submit.prevent="saveNote">
         <label for="study-note" class="font-semibold">ບັນທຶກ · Study note</label>
@@ -331,6 +376,8 @@ function presentSelection(): void {
 .study-block-actions button { width: 2rem; height: 2rem; border-radius: 999px; background: var(--app-panel); color: var(--lc-brand); border: 1px solid var(--lc-border); }
 .note-editor { position: sticky; bottom: 1rem; z-index: 20; display: grid; gap: .65rem; margin-top: 1rem; padding: 1rem; border-radius: .8rem; border: 1px solid var(--lc-border); background: var(--app-panel); box-shadow: var(--app-panel-shadow); }
 .note-editor textarea { width: 100%; border: 1px solid var(--lc-border); border-radius: .6rem; padding: .7rem; background: var(--lc-paper); color: var(--app-ink); }
+.selection-actions { position: sticky; bottom: 1rem; z-index: 21; display: flex; align-items: center; gap: .5rem; margin-top: 1rem; padding: .7rem; border: 1px solid var(--lc-border); border-radius: 999px; background: var(--app-panel); box-shadow: var(--app-panel-shadow); }
+:deep(mark.study-inline-highlight) { border-radius: .15em; background: color-mix(in srgb, var(--lc-gold), transparent 38%); color: inherit; padding: 0 .08em; }
 
 @media (hover: none) { .study-block-actions { position: static; justify-content: flex-end; opacity: 1; } }
 </style>

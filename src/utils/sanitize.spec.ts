@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractSafeEmbedLink, safeExternalUrl, sanitizeContentHtml } from './sanitize'
+import { applyInlineHighlights, extractSafeEmbedLink, safeExternalUrl, sanitizeContentHtml } from './sanitize'
 
 describe('content sanitization', () => {
   it('preserves reading markup while removing executable content', () => {
@@ -19,5 +19,11 @@ describe('content sanitization', () => {
 
   it('extracts a safe link from legacy embed HTML without rendering the embed', () => {
     expect(extractSafeEmbedLink('<iframe src="https://www.youtube.com/embed/abc"></iframe>')).toBe('https://www.youtube.com/embed/abc')
+  })
+
+  it('marks exact text without making stored HTML executable', () => {
+    const marked = applyInlineHighlights('<p>ພຣະເຈົ້າຊົງຮັກໂລກ<script>bad()</script></p>', ['ຊົງຮັກ'])
+    expect(marked).toContain('<mark class="study-inline-highlight">ຊົງຮັກ</mark>')
+    expect(marked).not.toContain('script')
   })
 })

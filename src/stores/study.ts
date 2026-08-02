@@ -20,6 +20,7 @@ export interface StudyRecord extends ContentLocation {
 
 export interface HighlightRecord extends StudyRecord {
   color: 'gold' | 'sage' | 'river' | 'clay'
+  scope?: 'paragraph' | 'text'
   exact?: string
   prefix?: string
   suffix?: string
@@ -121,10 +122,20 @@ export const useStudyStore = defineStore('study', () => {
     return data.value.highlights.some(item => locationKey(item) === key)
   }
 
+  function isParagraphHighlighted(location: ContentLocation): boolean {
+    const key = locationKey(location)
+    return data.value.highlights.some(item => locationKey(item) === key && item.scope !== 'text')
+  }
+
+  function textHighlights(location: ContentLocation): HighlightRecord[] {
+    const key = locationKey(location)
+    return data.value.highlights.filter(item => locationKey(item) === key && item.scope === 'text' && Boolean(item.exact))
+  }
+
   async function toggleParagraphHighlight(location: ContentLocation): Promise<boolean> {
     await load()
     const key = locationKey(location)
-    const existing = data.value.highlights.findIndex(item => locationKey(item) === key)
+    const existing = data.value.highlights.findIndex(item => locationKey(item) === key && item.scope !== 'text')
     if (existing >= 0) {
       data.value.highlights.splice(existing, 1)
       await persist()
@@ -135,12 +146,35 @@ export const useStudyStore = defineStore('study', () => {
       ...location,
       id: recordId('highlight'),
       color: 'gold',
+      scope: 'paragraph',
       exact: location.quote,
       createdAt: now,
       updatedAt: now,
     })
     await persist()
     return true
+  }
+
+  async function addTextHighlight(location: ContentLocation, exact: string, prefix = '', suffix = ''): Promise<void> {
+    await load()
+    const selected = exact.trim()
+    if (selected.length < 2) return
+    const key = locationKey(location)
+    if (data.value.highlights.some(item => locationKey(item) === key && item.exact === selected)) return
+    const now = new Date().toISOString()
+    data.value.highlights.unshift({
+      ...location,
+      quote: selected,
+      exact: selected,
+      scope: 'text',
+      prefix,
+      suffix,
+      id: recordId('highlight'),
+      color: 'gold',
+      createdAt: now,
+      updatedAt: now,
+    })
+    await persist()
   }
 
   async function saveNote(location: ContentLocation, body: string): Promise<void> {
@@ -216,7 +250,10 @@ export const useStudyStore = defineStore('study', () => {
     isBookmarked,
     toggleBookmark,
     isHighlighted,
+    isParagraphHighlighted,
+    textHighlights,
     toggleParagraphHighlight,
+    addTextHighlight,
     saveNote,
     removeRecord,
     recordVisit,
