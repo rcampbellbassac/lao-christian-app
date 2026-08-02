@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import localforage from 'localforage'
 import indexData from '@/assets/data/index.json'
 import type { SlideContentType } from '@/utils/slideGenerators'
+import { decodeVerifiedJson } from '@/utils/contentIntegrity'
 
 
 // LocalForage config
@@ -83,6 +84,7 @@ export interface MaterialSet {
   version?: string
   published_at?: string
   checksum_sha256?: string
+  checksum_sha256_gzip?: string
   lang: Lang
   icon: string
   content_type?: SlideContentType
@@ -287,6 +289,7 @@ export const useContentStore = defineStore('content', () => {
       version?: string
       published_at?: string
       checksum_sha256?: string
+      checksum_sha256_gzip?: string
       lang: string | Lang
       icon: string
       content_type?: string
@@ -379,7 +382,14 @@ export const useContentStore = defineStore('content', () => {
 
       if (!res.ok) throw new Error(`Failed to fetch ${sourceUrl}`)
 
-      const data = await res.json() as ContentSet
+      const bytes = await res.arrayBuffer()
+      const data = await decodeVerifiedJson<ContentSet>(bytes, {
+        raw: match.checksum_sha256,
+        gzip: match.checksum_sha256_gzip,
+      })
+      if (!data || typeof data !== 'object' || !Array.isArray(data.unit)) {
+        throw new Error('Downloaded content does not match the expected library format.')
+      }
 
       const freshEnvelope: CachedSetEnvelope = {
         data,
