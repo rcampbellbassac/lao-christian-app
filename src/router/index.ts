@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('../views/SettingsView.vue'),
     },
     {
+      path: '/study',
+      name: 'study',
+      component: () => import('../views/StudyView.vue'),
+    },
+    {
       path: '/cookie-policy',
       name: 'cookie-policy',
       component: () => import('../views/CookiePolicyView.vue'),

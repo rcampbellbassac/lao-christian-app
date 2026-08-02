@@ -25,6 +25,16 @@ const text = useUiText()
     </section>
 
     <section class="app-panel mt-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="app-section-title">{{ text.lao('myStudy') }}</h2>
+          <p class="app-muted" v-if="text.english('myStudy')">{{ text.english('myStudy') }} · bookmarks, highlights, notes, and recent reading</p>
+        </div>
+        <router-link to="/study" class="lc-btn-link">→</router-link>
+      </div>
+    </section>
+
+    <section class="app-panel mt-4">
       <h2 class="app-section-title">LaoChristian.org Other Digital Resources</h2>
       <p class="app-muted mt-2 italic">
         We also provide additional digital resources to help Lao communities study the Bible.

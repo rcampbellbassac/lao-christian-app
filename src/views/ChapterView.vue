@@ -2,25 +2,28 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDisplay, faHighlighter, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { faDisplay, faHighlighter, faPlay, faBookmark, faShareNodes, faNoteSticky } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useContentStore } from '@/stores/content'
 import { usePresentationSelectionStore } from '@/stores/presentationSelection'
 import { parseBlocks } from '@/utils/slideGenerators'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
+import { useStudyStore, type ContentLocation } from '@/stores/study'
 
-library.add(faDisplay, faHighlighter, faPlay)
+library.add(faDisplay, faHighlighter, faPlay, faBookmark, faShareNodes, faNoteSticky)
 
 const route = useRoute()
 const router = useRouter()
 const store = useContentStore()
 const selectionStore = usePresentationSelectionStore()
+const studyStore = useStudyStore()
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
 const chapterId = parseInt(route.params.chapterid as string, 10)
 
 onMounted(async () => {
+  await studyStore.load()
   await store.loadIndex()
   const key = store.getKeyFromId(fileId)
   if (!key) {
@@ -29,6 +32,7 @@ onMounted(async () => {
   }
   try {
     await store.loadContentSet(key)
+    if (chapter.value) await studyStore.recordVisit(chapterLocation())
   } catch (err) {
     console.error(err)
     router.push({ name: 'home' })
@@ -47,6 +51,44 @@ const blocks = computed(() => parseBlocks(chapter.value?.content || ''))
 
 const isSelectMode = ref(false)
 const selectedIndices = ref<Set<number>>(new Set())
+const noteEditorOpen = ref(false)
+const noteDraft = ref('')
+const noteBlockIndex = ref<number | undefined>(undefined)
+
+function chapterLocation(blockIndex?: number): ContentLocation {
+  return {
+    fileId,
+    bookId,
+    chapterId,
+    blockIndex,
+    title: chapter.value?.name.replace(/<[^>]*>/g, '') || 'Untitled chapter',
+    bookTitle: unit.value?.name,
+    quote: blockIndex === undefined ? undefined : blocks.value[blockIndex]?.text,
+  }
+}
+
+const chapterBookmarked = computed(() => studyStore.isBookmarked(chapterLocation()))
+
+async function shareChapter(): Promise<void> {
+  const shareData = { title: chapterLocation().title, url: window.location.href }
+  if (navigator.share) {
+    await navigator.share(shareData)
+  } else {
+    await navigator.clipboard.writeText(window.location.href)
+  }
+}
+
+function openNote(blockIndex?: number): void {
+  noteBlockIndex.value = blockIndex
+  noteDraft.value = ''
+  noteEditorOpen.value = true
+}
+
+async function saveNote(): Promise<void> {
+  await studyStore.saveNote(chapterLocation(noteBlockIndex.value), noteDraft.value)
+  noteEditorOpen.value = false
+  noteDraft.value = ''
+}
 
 // A fresh chapter's blocks means any in-progress selection no longer applies.
 watch(blocks, () => {
@@ -89,6 +131,18 @@ function presentSelection(): void {
       <BreadcrumbNav />
     <section v-if="chapter">
       <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <router-link to="/study" class="icon-btn" title="My Study" aria-label="My Study">
+          <font-awesome-icon icon="note-sticky" />
+        </router-link>
+        <button type="button" class="icon-btn" :class="{ 'icon-btn--active': chapterBookmarked }" title="Bookmark chapter" aria-label="Bookmark chapter" @click="studyStore.toggleBookmark(chapterLocation())">
+          <font-awesome-icon icon="bookmark" />
+        </button>
+        <button type="button" class="icon-btn" title="Add chapter note" aria-label="Add chapter note" @click="openNote()">
+          <font-awesome-icon icon="note-sticky" />
+        </button>
+        <button type="button" class="icon-btn" title="Share chapter" aria-label="Share chapter" @click="shareChapter">
+          <font-awesome-icon icon="share-nodes" />
+        </button>
         <button
           type="button"
           class="icon-btn"
@@ -128,6 +182,7 @@ function presentSelection(): void {
           :class="{
             'content-block--selectable': isSelectMode && isSelectableBlock(block),
             'content-block--selected': isSelectMode && selectedIndices.has(index),
+            'content-block--highlighted': studyStore.isHighlighted(chapterLocation(index)),
           }"
           :role="isSelectMode && isSelectableBlock(block) ? 'button' : undefined"
           :tabindex="isSelectMode && isSelectableBlock(block) ? 0 : undefined"
@@ -136,8 +191,22 @@ function presentSelection(): void {
           @keydown.space.prevent="isSelectMode && isSelectableBlock(block) && toggleBlockSelection(index)"
         >
           <div class="content-block-body" v-html="block.html"></div>
+          <div v-if="isSelectableBlock(block) && !isSelectMode" class="study-block-actions">
+            <button type="button" :aria-label="studyStore.isHighlighted(chapterLocation(index)) ? 'Remove highlight' : 'Highlight paragraph'" title="Highlight paragraph" @click.stop="studyStore.toggleParagraphHighlight(chapterLocation(index))">
+              <font-awesome-icon icon="highlighter" />
+            </button>
+            <button type="button" aria-label="Add note" title="Add note" @click.stop="openNote(index)">
+              <font-awesome-icon icon="note-sticky" />
+            </button>
+          </div>
         </div>
       </div>
+      <form v-if="noteEditorOpen" class="note-editor" @submit.prevent="saveNote">
+        <label for="study-note" class="font-semibold">ບັນທຶກ · Study note</label>
+        <p v-if="noteBlockIndex !== undefined" class="app-muted line-clamp-2 text-sm">{{ blocks[noteBlockIndex]?.text }}</p>
+        <textarea id="study-note" v-model="noteDraft" rows="4" required autofocus placeholder="Write a private note stored on this device…"></textarea>
+        <div class="flex justify-end gap-2"><button type="button" class="app-chip" @click="noteEditorOpen = false">Cancel</button><button type="submit" class="app-chip">Save</button></div>
+      </form>
       <div v-if="chapter.audioembed || chapter.videoembed" class="mt-5 rounded-xl border border-slate-300/70 bg-white/75 p-3 dark:border-slate-500/50 dark:bg-slate-950/86">
         <div v-if="chapter.audioembed" v-html="chapter.audioembed" />
         <div v-if="chapter.videoembed" v-html="chapter.videoembed" />
@@ -208,7 +277,8 @@ function presentSelection(): void {
 }
 
 .content-block {
-  display: contents;
+  display: block;
+  position: relative;
 }
 
 .content-block--selectable {
@@ -255,4 +325,13 @@ function presentSelection(): void {
 .content-block-body {
   min-width: 0;
 }
+
+.content-block--highlighted { display: block; background: color-mix(in srgb, var(--lc-gold), transparent 63%); border-radius: .45rem; padding: .15rem .5rem; margin: 0 -.5rem; }
+.study-block-actions { position: absolute; right: .2rem; top: .2rem; display: flex; gap: .2rem; opacity: 0; transition: opacity .15s ease; }
+.content-block:hover .study-block-actions, .study-block-actions:focus-within { opacity: 1; }
+.study-block-actions button { width: 2rem; height: 2rem; border-radius: 999px; background: var(--app-panel); color: var(--lc-brand); border: 1px solid var(--lc-border); }
+.note-editor { position: sticky; bottom: 1rem; z-index: 20; display: grid; gap: .65rem; margin-top: 1rem; padding: 1rem; border-radius: .8rem; border: 1px solid var(--lc-border); background: var(--app-panel); box-shadow: var(--app-panel-shadow); }
+.note-editor textarea { width: 100%; border: 1px solid var(--lc-border); border-radius: .6rem; padding: .7rem; background: var(--lc-paper); color: var(--app-ink); }
+
+@media (hover: none) { .study-block-actions { position: static; justify-content: flex-end; opacity: 1; } }
 </style>

@@ -175,6 +175,7 @@ body.dark .app-panel,
 .dark .lc-card-action { color: var(--lc-gold); }
 .lc-eyebrow { color: var(--lc-brand); font-size: 0.78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .dark .lc-eyebrow { color: var(--lc-gold); }
+.lc-btn-link { display: inline-flex; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; border-radius: 999px; background: var(--lc-brand); color: #f6f1e7; font-size: 1.25rem; }
 
 .lc-home-hero {
     position: relative;
