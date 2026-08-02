@@ -103,6 +103,11 @@ interface CachedSetEnvelope {
   lastModified: string | null
 }
 
+export interface CachedContentSet {
+  material: MaterialSet
+  data: ContentSet
+}
+
 interface LoadSetOptions {
   forceRefresh?: boolean
 }
@@ -471,6 +476,18 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
+  async function getCachedContentSets(): Promise<CachedContentSet[]> {
+    await loadIndex()
+    const cached: CachedContentSet[] = []
+    for (const material of indexList.value) {
+      const key = _keyFromUrl(material.url)
+      const value = await localforage.getItem<ContentSet | CachedSetEnvelope>(key)
+      if (!value) continue
+      cached.push({ material, data: _isEnvelope(value) ? value.data : value })
+    }
+    return cached
+  }
+
   function getSetById(id: number): MaterialSet | undefined {
     return indexList.value.find(item => item.id === id)
   }
@@ -500,6 +517,7 @@ export const useContentStore = defineStore('content', () => {
     checkForContentUpdate,
     applyContentUpdate,
     removeContentSet,
+    getCachedContentSets,
     getSetById,
     getKeyFromId,
     getContentUpdateState,

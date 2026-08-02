@@ -3,12 +3,12 @@ import { RouterLink } from 'vue-router'
 import DarkToggle from './DarkToggle.vue'
 import FontSizeControl from './FontSizeControl.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faHouse, faCircleInfo, faGear, faLanguage } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faCircleInfo, faGear, faLanguage, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUiText, type UiMessageKey } from '@/composables/useUiText'
 import { useSettingsStore } from '@/stores/settings'
 
-library.add(faHouse, faCircleInfo, faGear, faLanguage)
+library.add(faHouse, faCircleInfo, faGear, faLanguage, faMagnifyingGlass)
 
 const text = useUiText()
 const settings = useSettingsStore()
@@ -44,6 +44,9 @@ const menuItems: Array<{ name: UiMessageKey; to: string; icon: string }> = [
         </RouterLink>
       </div>
       <div class="flex items-center gap-2">
+        <RouterLink to="/search" class="lc-icon-control" :aria-label="text.accessible('search')" :title="text.accessible('search')">
+          <font-awesome-icon icon="magnifying-glass" />
+        </RouterLink>
         <button
           type="button"
           class="lc-icon-control"

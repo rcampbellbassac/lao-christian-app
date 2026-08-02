@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/StudyView.vue'),
     },
     {
+      path: '/search',
+      name: 'search',
+      component: () => import('../views/SearchView.vue'),
+    },
+    {
       path: '/cookie-policy',
       name: 'cookie-policy',
       component: () => import('../views/CookiePolicyView.vue'),
