@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import MainToolbar from './components/MainToolbar.vue'
 import MainFooter from './components/MainFooter.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 const settings = useSettingsStore()
+const route = useRoute()
 
 onMounted(async () => {
   await settings.load()
@@ -50,8 +51,8 @@ useRegisterSW({
 
 <template>
   <div class="app-shell relative min-h-screen overflow-x-hidden">
-    <MainToolbar />
+    <MainToolbar v-if="!route.meta.bare" />
     <RouterView class="pb-5 transition-all duration-300 ease-out" />
-    <MainFooter />
+    <MainFooter v-if="!route.meta.bare" />
   </div>
 </template>

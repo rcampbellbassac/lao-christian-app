@@ -72,6 +72,18 @@ const router = createRouter({
       // out of the main bundle for everyone just reading content.
       component: () => import('../views/PresentationView.vue'),
     },
+    {
+      path: '/present/deck/:deckId',
+      name: 'deck-presenter',
+      component: () => import('../views/DeckPresenterView.vue'),
+      meta: { bare: true },
+    },
+    {
+      path: '/audience/:deckId',
+      name: 'deck-audience',
+      component: () => import('../views/DeckAudienceView.vue'),
+      meta: { bare: true },
+    },
 
   ],
 })
