@@ -24,7 +24,7 @@ export const FONT_SCALE_STEP = 0.1
 
 export type PresentationTextAlign = 'left' | 'center'
 
-interface PersistedSettings {
+export interface PersistedSettings {
   bilingualUi: boolean
   contentFontScale: number
   presentationFontScale: number
@@ -131,6 +131,30 @@ export const useSettingsStore = defineStore('settings', () => {
     setPresentationFontScale(defaultSettings.presentationFontScale)
   }
 
+  function createBackupData(): PersistedSettings {
+    return {
+      bilingualUi: bilingualUi.value,
+      contentFontScale: contentFontScale.value,
+      presentationFontScale: presentationFontScale.value,
+      presentationAspectRatio: presentationAspectRatio.value,
+      presentationTheme: presentationTheme.value,
+      presentationTextAlign: presentationTextAlign.value,
+      presentationFontFamily: presentationFontFamily.value,
+    }
+  }
+
+  async function importBackupData(value: Partial<PersistedSettings>): Promise<void> {
+    if (!value || typeof value !== 'object') throw new Error('Invalid settings backup data.')
+    bilingualUi.value = value.bilingualUi ?? bilingualUi.value
+    contentFontScale.value = clampScale(value.contentFontScale ?? contentFontScale.value)
+    presentationFontScale.value = clampScale(value.presentationFontScale ?? presentationFontScale.value)
+    presentationAspectRatio.value = value.presentationAspectRatio ?? presentationAspectRatio.value
+    presentationTheme.value = value.presentationTheme ?? presentationTheme.value
+    presentationTextAlign.value = value.presentationTextAlign ?? presentationTextAlign.value
+    presentationFontFamily.value = value.presentationFontFamily ?? presentationFontFamily.value
+    await persist()
+  }
+
   return {
     bilingualUi,
     contentFontScale,
@@ -150,5 +174,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setPresentationFontFamily,
     resetContentFontScale,
     resetPresentationFontScale,
+    createBackupData,
+    importBackupData,
   }
 })

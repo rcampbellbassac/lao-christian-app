@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useStudyStore } from '@/stores/study'
+import { useDeckStore, type DeckDataV1 } from '@/stores/decks'
+import { useSettingsStore, type PersistedSettings } from '@/stores/settings'
+import type { StudyBackupV1 } from '@/stores/study'
 
 const study = useStudyStore()
+const decks = useDeckStore()
+const settings = useSettingsStore()
 const importInput = ref<HTMLInputElement | null>(null)
 const importMessage = ref('')
 const importMode = ref<'merge' | 'replace'>('merge')
 
-onMounted(() => study.load())
+onMounted(() => Promise.all([study.load(), decks.load(), settings.load()]))
 
 const hasItems = computed(() => study.bookmarks.length + study.highlights.length + study.notes.length > 0)
 
@@ -16,11 +21,19 @@ function contentPath(item: { fileId: number; bookId: number; chapterId: number }
 }
 
 function exportBackup(): void {
-  const blob = new Blob([JSON.stringify(study.createBackup(), null, 2)], { type: 'application/json' })
+  const backup = {
+    kind: 'laochristian-user-backup',
+    schemaVersion: 2,
+    exportedAt: new Date().toISOString(),
+    study: study.createBackup(),
+    decks: decks.createBackupData(),
+    settings: settings.createBackupData(),
+  }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `laochristian-study-backup-${new Date().toISOString().slice(0, 10)}.json`
+  link.download = `laochristian-user-backup-${new Date().toISOString().slice(0, 10)}.json`
   link.click()
   URL.revokeObjectURL(url)
 }
@@ -33,8 +46,21 @@ async function importBackup(event: Event): Promise<void> {
     return
   }
   try {
-    await study.importBackup(JSON.parse(await file.text()), importMode.value)
-    importMessage.value = importMode.value === 'merge' ? 'Backup merged successfully.' : 'Study data replaced successfully.'
+    const backup = JSON.parse(await file.text()) as {
+      kind?: string
+      study?: StudyBackupV1
+      decks?: DeckDataV1
+      settings?: Partial<PersistedSettings>
+    }
+    if (backup.kind === 'laochristian-user-backup' && backup.study && backup.decks && backup.settings) {
+      await study.importBackup(backup.study, importMode.value)
+      await decks.importBackupData(backup.decks, importMode.value)
+      await settings.importBackupData(backup.settings)
+    } else {
+      // Continue accepting the earlier study-only format.
+      await study.importBackup(backup, importMode.value)
+    }
+    importMessage.value = importMode.value === 'merge' ? 'Backup merged successfully.' : 'Local data replaced successfully.'
   } catch (error) {
     importMessage.value = error instanceof Error ? error.message : 'Import failed.'
   } finally {
@@ -52,7 +78,7 @@ async function importBackup(event: Event): Promise<void> {
           <p class="app-muted">My Study · Stored only on this device</p>
         </div>
         <div class="flex gap-2">
-          <button type="button" class="app-chip" @click="exportBackup">Export JSON</button>
+          <button type="button" class="app-chip" @click="exportBackup">Export all JSON</button>
           <select v-model="importMode" class="app-chip" aria-label="Import mode">
             <option value="merge">Merge import</option>
             <option value="replace">Replace all</option>
@@ -64,7 +90,7 @@ async function importBackup(event: Event): Promise<void> {
         </div>
       </div>
       <p class="mt-3 rounded-lg bg-[var(--lc-soft)] p-3 text-sm">
-        Privacy notice: exported files contain your private notes and reading activity and are not encrypted.
+        Privacy notice: exported files contain private notes, reading activity, slide decks, and preferences. They are not encrypted.
       </p>
       <p v-if="importMessage" class="mt-2 text-sm">{{ importMessage }}</p>
 

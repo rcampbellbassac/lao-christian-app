@@ -55,4 +55,17 @@ describe('deck store', () => {
     await store.duplicateSlide(deck, 0)
     expect(deck.slides.map(slide => slide.title)).toEqual(['Second', 'Second', 'First'])
   })
+
+  it('merges backups by deck id and newest update time', async () => {
+    const store = useDeckStore()
+    const deck = await store.createDeck('Original')
+    const backup = store.createBackupData()
+    backup.decks[0]!.name = 'Restored'
+    backup.decks[0]!.updatedAt = '9999-01-01T00:00:00.000Z'
+
+    await store.importBackupData(backup, 'merge')
+
+    expect(store.decks).toHaveLength(1)
+    expect(store.getDeck(deck.id)?.name).toBe('Restored')
+  })
 })

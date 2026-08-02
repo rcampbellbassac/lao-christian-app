@@ -24,7 +24,7 @@ export interface Deck {
   slides: DeckSlide[]
 }
 
-interface DeckDataV1 {
+export interface DeckDataV1 {
   schemaVersion: 1
   decks: Deck[]
 }
@@ -137,6 +137,25 @@ export const useDeckStore = defineStore('decks', () => {
     await persist()
   }
 
+  function createBackupData(): DeckDataV1 {
+    return snapshot(data.value)
+  }
+
+  async function importBackupData(value: DeckDataV1, mode: 'merge' | 'replace'): Promise<void> {
+    await load()
+    if (value?.schemaVersion !== 1 || !Array.isArray(value.decks)) throw new Error('Invalid slide deck backup data.')
+    if (mode === 'replace') data.value = snapshot(value)
+    else {
+      const merged = new Map(data.value.decks.map(deck => [deck.id, deck]))
+      for (const deck of value.decks) {
+        const current = merged.get(deck.id)
+        if (!current || deck.updatedAt > current.updatedAt) merged.set(deck.id, snapshot(deck))
+      }
+      data.value.decks = [...merged.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    }
+    await persist()
+  }
+
   return {
     decks: computed(() => data.value.decks),
     isLoaded,
@@ -150,5 +169,7 @@ export const useDeckStore = defineStore('decks', () => {
     moveSlide,
     removeSlide,
     removeDeck,
+    createBackupData,
+    importBackupData,
   }
 })
