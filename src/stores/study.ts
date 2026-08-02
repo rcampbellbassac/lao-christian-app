@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import localforage from 'localforage'
+import { reanchorText } from '@/utils/textAnchors'
 
 export interface ContentLocation {
   fileId: number
@@ -24,6 +25,7 @@ export interface HighlightRecord extends StudyRecord {
   exact?: string
   prefix?: string
   suffix?: string
+  unmatched?: boolean
 }
 
 export interface NoteRecord extends StudyRecord {
@@ -177,6 +179,33 @@ export const useStudyStore = defineStore('study', () => {
     await persist()
   }
 
+  async function reconcileTextHighlights(location: ContentLocation, blockTexts: string[]): Promise<void> {
+    await load()
+    let changed = false
+    for (const highlight of data.value.highlights) {
+      if (highlight.scope !== 'text' || highlight.fileId !== location.fileId || highlight.bookId !== location.bookId || highlight.chapterId !== location.chapterId || !highlight.exact) continue
+      const preferred = highlight.blockIndex ?? -1
+      const searchOrder = [preferred, ...blockTexts.map((_, index) => index).filter(index => index !== preferred)]
+      let match: { blockIndex: number; exact: string; prefix: string; suffix: string } | null = null
+      for (const blockIndex of searchOrder) {
+        const text = blockTexts[blockIndex]
+        if (text === undefined) continue
+        const anchored = reanchorText(text, { exact: highlight.exact, prefix: highlight.prefix ?? '', suffix: highlight.suffix ?? '' })
+        if (anchored) { match = { blockIndex, ...anchored }; break }
+      }
+      if (match) {
+        const itemChanged = highlight.blockIndex !== match.blockIndex || highlight.exact !== match.exact || Boolean(highlight.unmatched)
+        if (itemChanged) changed = true
+        Object.assign(highlight, match, { quote: match.exact, unmatched: false, updatedAt: itemChanged ? new Date().toISOString() : highlight.updatedAt })
+      } else if (!highlight.unmatched) {
+        highlight.unmatched = true
+        highlight.updatedAt = new Date().toISOString()
+        changed = true
+      }
+    }
+    if (changed) await persist()
+  }
+
   async function saveNote(location: ContentLocation, body: string): Promise<void> {
     await load()
     const trimmed = body.trim()
@@ -254,6 +283,7 @@ export const useStudyStore = defineStore('study', () => {
     textHighlights,
     toggleParagraphHighlight,
     addTextHighlight,
+    reconcileTextHighlights,
     saveNote,
     removeRecord,
     recordVisit,

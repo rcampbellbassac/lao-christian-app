@@ -70,6 +70,18 @@ describe('study store', () => {
     expect(study.textHighlights(paragraph)).toHaveLength(1)
   })
 
+  it('reanchors precise highlights and marks missing ones for review', async () => {
+    const study = useStudyStore()
+    const paragraph = { ...location, blockIndex: 0, quote: 'Before original words after the passage.' }
+    await study.addTextHighlight(paragraph, 'original words', 'Before ', ' after the passage.')
+
+    await study.reconcileTextHighlights(location, ['Before revised words after the passage.'])
+    expect(study.highlights[0]).toMatchObject({ exact: 'revised words', quote: 'revised words', unmatched: false })
+
+    await study.reconcileTextHighlights(location, ['Unrelated replacement content'])
+    expect(study.highlights[0]?.unmatched).toBe(true)
+  })
+
   it('rejects files that are not study backups', async () => {
     const study = useStudyStore()
     await expect(study.importBackup({ schemaVersion: 1 } as StudyBackupV1)).rejects.toThrow(

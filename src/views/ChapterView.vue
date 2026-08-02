@@ -94,7 +94,7 @@ async function saveNote(): Promise<void> {
 }
 
 function renderedBlockHtml(index: number, html: string): string {
-  const phrases = studyStore.textHighlights(chapterLocation(index)).map(item => item.exact || '').filter(Boolean)
+  const phrases = studyStore.textHighlights(chapterLocation(index)).filter(item => !item.unmatched).map(item => item.exact || '').filter(Boolean)
   return applyInlineHighlights(html, phrases)
 }
 
@@ -133,6 +133,7 @@ async function shareSelectedPhrase(): Promise<void> {
 watch(blocks, () => {
   isSelectMode.value = false
   selectedIndices.value = new Set()
+  void studyStore.reconcileTextHighlights(chapterLocation(), blocks.value.map(block => block.text))
 })
 
 function isSelectableBlock(block: { text: string }): boolean {

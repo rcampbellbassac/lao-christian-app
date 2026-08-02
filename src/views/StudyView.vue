@@ -120,8 +120,12 @@ async function importBackup(event: Event): Promise<void> {
         <h2 class="text-xl font-semibold">Highlights</h2>
         <ul class="mt-3 grid gap-2">
           <li v-for="item in study.highlights" :key="item.id" class="lc-card p-3">
-            <router-link :to="contentPath(item)" class="app-link">{{ item.title }}</router-link>
+            <div class="flex items-start justify-between gap-3">
+              <router-link :to="contentPath(item)" class="app-link">{{ item.title }}</router-link>
+              <button type="button" aria-label="Delete highlight" @click="study.removeRecord('highlights', item.id)">×</button>
+            </div>
             <p class="mt-2 line-clamp-3">{{ item.quote }}</p>
+            <p v-if="item.unmatched" class="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-300">Content changed · open the chapter to review this unmatched highlight.</p>
           </li>
         </ul>
       </section>
