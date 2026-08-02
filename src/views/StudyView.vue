@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useStudyStore } from '@/stores/study'
-import { useDeckStore, type DeckDataV1 } from '@/stores/decks'
-import { useSettingsStore, type PersistedSettings } from '@/stores/settings'
-import type { StudyBackupV1 } from '@/stores/study'
+import { createUserBackup, downloadUserBackup, importUserBackup } from '@/utils/userBackup'
 
 const study = useStudyStore()
-const decks = useDeckStore()
-const settings = useSettingsStore()
 const importInput = ref<HTMLInputElement | null>(null)
 const importMessage = ref('')
 const importMode = ref<'merge' | 'replace'>('merge')
 
-onMounted(() => Promise.all([study.load(), decks.load(), settings.load()]))
+onMounted(() => study.load())
 
 const hasItems = computed(() => study.bookmarks.length + study.highlights.length + study.notes.length > 0)
 
@@ -20,22 +16,8 @@ function contentPath(item: { fileId: number; bookId: number; chapterId: number }
   return `/content/${item.fileId}/${item.bookId}/${item.chapterId}`
 }
 
-function exportBackup(): void {
-  const backup = {
-    kind: 'laochristian-user-backup',
-    schemaVersion: 2,
-    exportedAt: new Date().toISOString(),
-    study: study.createBackup(),
-    decks: decks.createBackupData(),
-    settings: settings.createBackupData(),
-  }
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `laochristian-user-backup-${new Date().toISOString().slice(0, 10)}.json`
-  link.click()
-  URL.revokeObjectURL(url)
+async function exportBackup(): Promise<void> {
+  downloadUserBackup(await createUserBackup())
 }
 
 async function importBackup(event: Event): Promise<void> {
@@ -46,20 +28,7 @@ async function importBackup(event: Event): Promise<void> {
     return
   }
   try {
-    const backup = JSON.parse(await file.text()) as {
-      kind?: string
-      study?: StudyBackupV1
-      decks?: DeckDataV1
-      settings?: Partial<PersistedSettings>
-    }
-    if (backup.kind === 'laochristian-user-backup' && backup.study && backup.decks && backup.settings) {
-      await study.importBackup(backup.study, importMode.value)
-      await decks.importBackupData(backup.decks, importMode.value)
-      await settings.importBackupData(backup.settings)
-    } else {
-      // Continue accepting the earlier study-only format.
-      await study.importBackup(backup, importMode.value)
-    }
+    await importUserBackup(JSON.parse(await file.text()), importMode.value)
     importMessage.value = importMode.value === 'merge' ? 'Backup merged successfully.' : 'Local data replaced successfully.'
   } catch (error) {
     importMessage.value = error instanceof Error ? error.message : 'Import failed.'

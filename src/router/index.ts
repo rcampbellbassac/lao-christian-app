@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/SearchView.vue'),
     },
     {
+      path: '/migrate',
+      name: 'migrate',
+      component: () => import('../views/MigrationView.vue'),
+    },
+    {
       path: '/decks/:deckId?',
       name: 'decks',
       component: () => import('../views/SlideStudioView.vue'),

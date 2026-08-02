@@ -84,6 +84,7 @@ function onTextAlignChange(value: PresentationTextAlign): void {
           <p class="app-muted mt-1 text-sm">
             When the download-cloud icon appears in the top bar, select it to install. On iPhone or iPad, use Safari’s Share menu and choose “Add to Home Screen.” Download collections above before going offline.
           </p>
+          <router-link to="/migrate" class="app-link mt-2 inline-block">Domain migration and local-data transfer →</router-link>
         </section>
 
         <section>
