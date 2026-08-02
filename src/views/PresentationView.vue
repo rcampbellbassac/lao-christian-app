@@ -37,6 +37,7 @@ import { sanitizeContentHtml } from '@/utils/sanitize'
 import { useDeckStore } from '@/stores/decks'
 import { useStaticText } from '@/composables/useStaticText'
 import BilingualText from '@/components/BilingualText.vue'
+import DevelopmentNotice from '@/components/DevelopmentNotice.vue'
 
 library.add(faArrowLeft, faArrowRight, faCompress, faExpand, faFileImage, faFilePowerpoint, faFileZipper, faFloppyDisk, faListCheck, faSliders, faXmark)
 
@@ -529,6 +530,7 @@ function onFullscreenChange(): void {
       </button>
       <span class="presentation-export-status" role="status" aria-live="polite">{{ exportStatus }}</span>
     </header>
+    <DevelopmentNotice dark />
 
     <section v-if="isSelectionPanelOpen" class="selection-panel">
       <div class="selection-panel-row">

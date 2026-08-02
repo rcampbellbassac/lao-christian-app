@@ -231,6 +231,7 @@
   "presentation.textAlign": "ການຈັດລຽງຂໍ້ຄວາມ",
   "presentation.loading": "ກຳລັງໂຫຼດບົດ…",
   "presentation.noSlides": "ບໍ່ມີສະໄລ້ໃດຖືກເລືອກ. ໃຊ້ \"ເລືອກສະໄລ້\" ເພື່ອເລືອກສະໄລ້ທີ່ຈະລວມເຂົ້າ.",
+  "development.featuresNotice": "ການນຳສະເໜີ, ການແກ້ໄຂສະໄລ້, ສະຕູດິໂອສະໄລ້, ບັນທຶກຜູ້ບັນຍາຍ, ບຸກມາກ, ໄຮໄລທ໌ ແລະ ບັນທຶກການສຶກສາກຳລັງພັດທະນາ. ກະລຸນາສຳຮອງວຽກສຳຄັນໄວ້.",
   "presenter.edit": "ແກ້ໄຂຊຸດ",
   "presenter.openAudience": "ເປີດໜ້າຕ່າງຜູ້ຊົມ",
   "presenter.reconnectAudience": "ເຊື່ອມຕໍ່ໜ້າຈໍຜູ້ຊົມຄືນໃໝ່",

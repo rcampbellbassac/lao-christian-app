@@ -4,6 +4,7 @@ import { useStudyStore } from '@/stores/study'
 import { createUserBackup, downloadUserBackup, importUserBackup } from '@/utils/userBackup'
 import { useStaticText } from '@/composables/useStaticText'
 import BilingualText from '@/components/BilingualText.vue'
+import DevelopmentNotice from '@/components/DevelopmentNotice.vue'
 
 const study = useStudyStore()
 const importInput = ref<HTMLInputElement | null>(null)
@@ -44,6 +45,7 @@ async function importBackup(event: Event): Promise<void> {
 <template>
   <main class="app-page">
     <section class="app-panel">
+      <DevelopmentNotice />
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="app-section-title">ການສຶກສາຂອງຂ້ອຍ</h1>

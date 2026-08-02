@@ -7,6 +7,7 @@ import { getAspectRatioPreset } from '@/utils/aspectRatios'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
 import BilingualText from '@/components/BilingualText.vue'
+import DevelopmentNotice from '@/components/DevelopmentNotice.vue'
 import { useStaticText } from '@/composables/useStaticText'
 import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } from '@/stores/settings'
 import { laoFontPresets } from '@/utils/laoFonts'
@@ -116,6 +117,7 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
 <template>
   <main class="app-page">
     <section v-if="!deck" class="app-panel">
+      <DevelopmentNotice />
       <div class="flex items-center justify-between gap-3"><div><h1 class="app-section-title">ສະຕູດິໂອສະໄລ້</h1><p class="app-muted"><BilingualText text-key="studio.localHelp" /></p></div><button type="button" class="studio-primary" @click="newDeck">＋ {{ copy.text('studio.newDeck') }}</button></div>
       <ul class="mt-6 grid gap-3 sm:grid-cols-2">
         <li v-for="item in decks.decks" :key="item.id" class="lc-card p-4">
@@ -127,6 +129,7 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
     </section>
 
     <section v-else class="studio-shell">
+      <DevelopmentNotice />
       <header class="studio-toolbar">
         <router-link to="/decks" class="app-chip">← {{ copy.text('studio.back') }}</router-link>
         <input v-model="deck.name" class="studio-title" :aria-label="copy.text('studio.deckName')" @change="saveDeck">

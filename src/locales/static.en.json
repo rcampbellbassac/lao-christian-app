@@ -231,6 +231,7 @@
   "presentation.textAlign": "Text alignment",
   "presentation.loading": "Loading chapter…",
   "presentation.noSlides": "No slides are selected. Use Select slides to choose which slides to include.",
+  "development.featuresNotice": "Presentation, slide editing, Slide Studio, speaker notes, bookmarks, highlights, and study notes are in active development. Please keep local backups of important work.",
   "presenter.edit": "Edit deck",
   "presenter.openAudience": "Open audience window",
   "presenter.reconnectAudience": "Reconnect audience window",

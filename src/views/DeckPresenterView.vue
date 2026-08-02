@@ -5,6 +5,7 @@ import { useDeckStore } from '@/stores/decks'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import { deckChannelName, deckStorageKey, type DeckPresentationState } from '@/utils/deckBroadcast'
 import { useStaticText } from '@/composables/useStaticText'
+import DevelopmentNotice from '@/components/DevelopmentNotice.vue'
 
 const route = useRoute()
 const decks = useDeckStore()
@@ -64,6 +65,7 @@ onBeforeUnmount(() => { channel?.close(); window.removeEventListener('keydown', 
       <button type="button" class="controller-btn" @click="openAudience">▣ {{ audienceOpen ? copy.text('presenter.reconnectAudience') : copy.text('presenter.openAudience') }}</button>
       <button type="button" class="controller-btn" @click="blank = !blank">{{ blank ? '◉' : '●' }} {{ blank ? copy.text('presenter.showSlide') : copy.text('presenter.blackScreen') }}</button>
     </header>
+    <DevelopmentNotice dark />
     <section v-if="deck && currentSlide" class="controller-grid">
       <div class="controller-current"><DeckSlideCanvas :slide="currentSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" :blank="blank" /></div>
       <aside class="controller-notes">
