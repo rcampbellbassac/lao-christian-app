@@ -32,6 +32,8 @@ export interface PersistedSettings {
   presentationTheme: PresentationThemeId
   presentationTextAlign: PresentationTextAlign
   presentationFontFamily: LaoFontId
+  presentationBlocksPerSlide: number
+  presentationLinesPerSlide: number
 }
 
 const defaultSettings: PersistedSettings = {
@@ -42,6 +44,12 @@ const defaultSettings: PersistedSettings = {
   presentationTheme: DEFAULT_PRESENTATION_THEME_ID,
   presentationTextAlign: 'left',
   presentationFontFamily: DEFAULT_LAO_FONT_ID,
+  presentationBlocksPerSlide: 4,
+  presentationLinesPerSlide: 10,
+}
+
+function clampInteger(value: number, min: number, max: number): number {
+  return Math.round(Math.min(max, Math.max(min, value)))
 }
 
 function clampScale(value: number): number {
@@ -56,6 +64,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const presentationTheme = ref<PresentationThemeId>(defaultSettings.presentationTheme)
   const presentationTextAlign = ref<PresentationTextAlign>(defaultSettings.presentationTextAlign)
   const presentationFontFamily = ref<LaoFontId>(defaultSettings.presentationFontFamily)
+  const presentationBlocksPerSlide = ref(defaultSettings.presentationBlocksPerSlide)
+  const presentationLinesPerSlide = ref(defaultSettings.presentationLinesPerSlide)
   const isLoaded = ref(false)
 
   async function persist(): Promise<void> {
@@ -67,6 +77,8 @@ export const useSettingsStore = defineStore('settings', () => {
       presentationTheme: presentationTheme.value,
       presentationTextAlign: presentationTextAlign.value,
       presentationFontFamily: presentationFontFamily.value,
+      presentationBlocksPerSlide: presentationBlocksPerSlide.value,
+      presentationLinesPerSlide: presentationLinesPerSlide.value,
     }
     await settingsStorage.setItem(SETTINGS_KEY, snapshot)
   }
@@ -83,6 +95,8 @@ export const useSettingsStore = defineStore('settings', () => {
       presentationTheme.value = stored.presentationTheme ?? defaultSettings.presentationTheme
       presentationTextAlign.value = stored.presentationTextAlign ?? defaultSettings.presentationTextAlign
       presentationFontFamily.value = stored.presentationFontFamily ?? defaultSettings.presentationFontFamily
+      presentationBlocksPerSlide.value = clampInteger(stored.presentationBlocksPerSlide ?? defaultSettings.presentationBlocksPerSlide, 1, 10)
+      presentationLinesPerSlide.value = clampInteger(stored.presentationLinesPerSlide ?? defaultSettings.presentationLinesPerSlide, 3, 24)
     }
 
     isLoaded.value = true
@@ -123,6 +137,16 @@ export const useSettingsStore = defineStore('settings', () => {
     void persist()
   }
 
+  function setPresentationBlocksPerSlide(value: number): void {
+    presentationBlocksPerSlide.value = clampInteger(value, 1, 10)
+    void persist()
+  }
+
+  function setPresentationLinesPerSlide(value: number): void {
+    presentationLinesPerSlide.value = clampInteger(value, 3, 24)
+    void persist()
+  }
+
   function resetContentFontScale(): void {
     setContentFontScale(defaultSettings.contentFontScale)
   }
@@ -140,6 +164,8 @@ export const useSettingsStore = defineStore('settings', () => {
       presentationTheme: presentationTheme.value,
       presentationTextAlign: presentationTextAlign.value,
       presentationFontFamily: presentationFontFamily.value,
+      presentationBlocksPerSlide: presentationBlocksPerSlide.value,
+      presentationLinesPerSlide: presentationLinesPerSlide.value,
     }
   }
 
@@ -152,6 +178,8 @@ export const useSettingsStore = defineStore('settings', () => {
     presentationTheme.value = value.presentationTheme ?? presentationTheme.value
     presentationTextAlign.value = value.presentationTextAlign ?? presentationTextAlign.value
     presentationFontFamily.value = value.presentationFontFamily ?? presentationFontFamily.value
+    presentationBlocksPerSlide.value = clampInteger(value.presentationBlocksPerSlide ?? presentationBlocksPerSlide.value, 1, 10)
+    presentationLinesPerSlide.value = clampInteger(value.presentationLinesPerSlide ?? presentationLinesPerSlide.value, 3, 24)
     await persist()
   }
 
@@ -163,6 +191,8 @@ export const useSettingsStore = defineStore('settings', () => {
     presentationTheme,
     presentationTextAlign,
     presentationFontFamily,
+    presentationBlocksPerSlide,
+    presentationLinesPerSlide,
     isLoaded,
     load,
     setBilingualUi,
@@ -172,6 +202,8 @@ export const useSettingsStore = defineStore('settings', () => {
     setPresentationTheme,
     setPresentationTextAlign,
     setPresentationFontFamily,
+    setPresentationBlocksPerSlide,
+    setPresentationLinesPerSlide,
     resetContentFontScale,
     resetPresentationFontScale,
     createBackupData,

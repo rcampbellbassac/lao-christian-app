@@ -87,18 +87,12 @@ onMounted(async () => {
 
   document.addEventListener('keydown', handleKeydown)
   document.addEventListener('fullscreenchange', onFullscreenChange)
-  window.addEventListener('resize', handleResize)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
-  window.removeEventListener('resize', handleResize)
 })
-
-function handleResize(): void {
-  void measureFit()
-}
 
 const unit = computed(() =>
   store.currentSetData?.unit.find((entry) => entry.id === bookId)
@@ -111,6 +105,22 @@ const chapter = computed(() =>
 const slideGenerator = computed(() =>
   createSlideGenerator(store.getCurrentContentType())
 )
+
+const generatorConfig = computed(() => {
+  // Approximate Lao display lines before rendering. Larger requested text
+  // deliberately lowers the character budget and creates additional slides;
+  // it never shrinks the chosen font to conceal overflow.
+  const charsPerLine = Math.max(16, Math.round(48 / settings.presentationFontScale))
+  const maxCharsPerSlide = Math.max(80, charsPerLine * settings.presentationLinesPerSlide)
+  const blocks = settings.presentationBlocksPerSlide
+  return {
+    maxCharsPerSlide,
+    maxNodesPerSlide: blocks,
+    versesPerSlide: blocks,
+    stanzasPerSlide: blocks,
+    sectionsPerSlide: blocks,
+  }
+})
 
 const slides = computed<Slide[]>(() => {
   if (!chapter.value) return []
@@ -125,10 +135,10 @@ const slides = computed<Slide[]>(() => {
     if (slideSourceMode.value === 'selection' && selectionStore.hasSelectionFor(chapterId)) {
       const allBlocks = parseBlocks(context.html)
       const selectedBlocks = allBlocks.filter((_, index) => selectionStore.selectedBlockIndices.has(index))
-      return buildSlidesFromSelection(context, selectedBlocks, selectionStore.groupingMode)
+      return buildSlidesFromSelection(context, selectedBlocks, selectionStore.groupingMode, generatorConfig.value)
     }
 
-    return slideGenerator.value.generate(context)
+    return slideGenerator.value.generate(context, generatorConfig.value)
   } catch (err) {
     console.error('Failed to generate presentation slides', err)
     return []
@@ -156,39 +166,6 @@ watch(activeSlides, (list) => {
 })
 
 const currentSlide = computed(() => activeSlides.value[currentSlideIndex.value] || null)
-
-// Auto-shrinks slide text to fit the fixed slide box instead of scrolling --
-// a scrollbar would mean the PNG/PPTX export (which renders at a fixed pixel
-// size) silently crops whatever doesn't fit on screen.
-const fitScale = ref(1)
-const MIN_FIT_SCALE = 0.4
-
-async function measureFit(): Promise<void> {
-  fitScale.value = 1
-  await nextTick()
-
-  const el = slideCanvas.value
-  if (!el) return
-
-  let iterations = 0
-  while (el.scrollHeight > el.clientHeight + 1 && fitScale.value > MIN_FIT_SCALE && iterations < 6) {
-    const ratio = el.clientHeight / el.scrollHeight
-    fitScale.value = Math.max(MIN_FIT_SCALE, fitScale.value * ratio * 0.97)
-    await nextTick()
-    iterations += 1
-  }
-}
-
-watch(
-  [currentSlide, () => settings.presentationAspectRatio, () => settings.presentationFontScale],
-  () => {
-    void measureFit()
-  }
-)
-
-watch(slideCanvas, (el) => {
-  if (el) void measureFit()
-})
 
 const progressLabel = computed(() => {
   if (activeSlides.value.length === 0) return '0 / 0'
@@ -560,6 +537,31 @@ function onFullscreenChange(): void {
         <button class="presentation-btn presentation-btn-compact" type="button" @click="selectNoContentSlides">{{ copy.text('presentation.selectNone') }}</button>
       </div>
 
+      <div class="selection-panel-row">
+        <label class="presentation-field">
+          <span class="presentation-field-label">{{ copy.text('presentation.blocksPerSlide') }}</span>
+          <input
+            class="presentation-range-input"
+            type="number"
+            min="1"
+            max="10"
+            :value="settings.presentationBlocksPerSlide"
+            @change="settings.setPresentationBlocksPerSlide(Number(($event.target as HTMLInputElement).value))"
+          />
+        </label>
+        <label class="presentation-field">
+          <span class="presentation-field-label">{{ copy.text('presentation.linesPerSlide') }}</span>
+          <input
+            class="presentation-range-input"
+            type="number"
+            min="3"
+            max="24"
+            :value="settings.presentationLinesPerSlide"
+            @change="settings.setPresentationLinesPerSlide(Number(($event.target as HTMLInputElement).value))"
+          />
+        </label>
+      </div>
+
       <div v-if="contentSlides.length > 1" class="selection-panel-row">
         <span class="presentation-field-label">{{ copy.text('presentation.slides') }}</span>
         <input v-model.number="rangeStart" type="number" min="1" :max="contentSlides.length" class="presentation-range-input" />
@@ -631,7 +633,7 @@ function onFullscreenChange(): void {
       class="slide-canvas"
       :style="{
         '--slide-ratio': currentPreset.ratio,
-        '--slide-font-scale': settings.presentationFontScale * fitScale,
+        '--slide-font-scale': settings.presentationFontScale,
         '--slide-background': currentThemeBackground,
         '--slide-text-color': currentTheme.textColor,
         '--slide-muted-color': currentTheme.mutedColor,
@@ -857,8 +859,7 @@ function onFullscreenChange(): void {
   border-radius: 1rem;
   padding: 2.5rem;
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.55);
-  /* Text is auto-shrunk to fit (see fitScale) instead of scrolling, so a
-     PNG/PPTX export never silently crops content that doesn't fit. */
+  /* Generation adds slides to honor the user's font size; never auto-shrink. */
   overflow: hidden;
   /* Every slide's content is vertically centered in the box, not just the
      title slide -- horizontal alignment stays independently controlled by

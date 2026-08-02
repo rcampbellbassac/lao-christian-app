@@ -208,6 +208,8 @@
   "presentation.decreaseFont": "Decrease slide font size",
   "presentation.increaseFont": "Increase slide font size",
   "presentation.resetFont": "Reset slide font size to 100%",
+  "presentation.blocksPerSlide": "Paragraphs / blocks per slide",
+  "presentation.linesPerSlide": "Approx. lines per slide",
   "presentation.selectSlides": "Select slides",
   "presentation.closeSelection": "Close selection",
   "presentation.customize": "Customize",

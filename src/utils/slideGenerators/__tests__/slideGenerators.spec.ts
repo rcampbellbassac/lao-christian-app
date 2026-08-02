@@ -119,6 +119,21 @@ describe('slide generators', () => {
     expect(contentSlides.every(slide => slide.html.length <= 280)).toBe(true)
   })
 
+  it('keeps whole paragraphs together and marks unavoidable continuations', () => {
+    const generator = createSlideGenerator('default')
+    const longParagraph = 'A long sentence that cannot fit the requested slide budget. '.repeat(12)
+    const slides = generator.generate(
+      { title: 'Large text', html: `<p>Short first paragraph.</p><p>${longParagraph}</p><p>Short last paragraph.</p>` },
+      { maxCharsPerSlide: 120, maxNodesPerSlide: 2 },
+    )
+    const content = slides.slice(1)
+
+    expect(content.length).toBeGreaterThan(3)
+    expect(content.some(slide => slide.html.includes('Short first paragraph.') && slide.html.includes('Short last paragraph.'))).toBe(false)
+    expect(content.some(slide => slide.html.includes(' …</p>'))).toBe(true)
+    expect(content.some(slide => slide.html.includes('<p>… '))).toBe(true)
+  })
+
   it('splits list-heavy default content into readable slides', () => {
     const generator = createSlideGenerator('default')
     const html = [

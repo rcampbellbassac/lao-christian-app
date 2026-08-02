@@ -214,13 +214,16 @@ export function expandBlock(block: ParsedBlock, maxChars: number): ParsedBlock[]
   const fragments = splitLongText(block.rawText || block.text, maxChars)
   if (fragments.length <= 1) return [block]
 
-  return fragments.map((fragment) => ({
-    html: block.tagName === 'li' ? wrapListItem(fragment) : wrapFragment(fragment, block.tagName),
-    text: fragment,
-    rawText: fragment,
+  return fragments.map((fragment, index) => {
+    const continuation = `${index > 0 ? '… ' : ''}${fragment}${index < fragments.length - 1 ? ' …' : ''}`
+    return {
+    html: block.tagName === 'li' ? wrapListItem(continuation) : wrapFragment(continuation, block.tagName),
+    text: continuation,
+    rawText: continuation,
     tagName: block.tagName && blockLikeTags.has(block.tagName) ? block.tagName : 'p',
     isElement: true,
-  }))
+    }
+  })
 }
 
 export function expandOversizedBlocks(blocks: ParsedBlock[], maxChars: number): ParsedBlock[] {

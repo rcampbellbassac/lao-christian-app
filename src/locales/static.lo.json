@@ -208,6 +208,8 @@
   "presentation.decreaseFont": "ຫຼຸດຂະໜາດຕົວອັກສອນສະໄລ້",
   "presentation.increaseFont": "ເພີ່ມຂະໜາດຕົວອັກສອນສະໄລ້",
   "presentation.resetFont": "ຕັ້ງຄ່າຂະໜາດຕົວອັກສອນສະໄລ້ຄືນໃໝ່ເປັນ 100%",
+  "presentation.blocksPerSlide": "ວັກ / ສ່ວນຕໍ່ສະໄລ້",
+  "presentation.linesPerSlide": "ຈຳນວນແຖວໂດຍປະມານຕໍ່ສະໄລ້",
   "presentation.selectSlides": "ເລືອກສະໄລ້",
   "presentation.closeSelection": "ປິດການເລືອກ",
   "presentation.customize": "ປັບແຕ່ງ",
