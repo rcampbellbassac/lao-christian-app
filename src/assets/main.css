@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+Lao:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao+Looped:wght@100..900&family=Noto+Serif+Lao:wght@100..900&family=Phetsarath:wght@400;700&display=swap');
 @import './lao-fonts.css';
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
@@ -11,14 +9,25 @@
 }
 
 :root {
-    --app-bg-soft: #eaf1f7;
-    --app-ink: #0f172a;
-    --app-muted: #475569;
-    --app-brand: #0f766e;
-    --app-accent: #0369a1;
-    --app-panel: rgba(255, 255, 255, 0.93);
-    --app-panel-border: rgba(15, 23, 42, 0.08);
-    --app-panel-shadow: 0 18px 40px rgba(2, 6, 23, 0.16);
+    --lc-paper: #f6f1e7;
+    --lc-ink: #173b38;
+    --lc-brand: #2e675e;
+    --lc-sage: #789b83;
+    --lc-river: #88a7b0;
+    --lc-gold: #e5b957;
+    --lc-clay: #b86f50;
+    --lc-dark-bg: #102b34;
+    --lc-dark-paper: #172f35;
+    --lc-border: color-mix(in srgb, var(--lc-ink), transparent 86%);
+    --lc-soft: color-mix(in srgb, var(--lc-sage), var(--lc-paper) 80%);
+    --app-bg-soft: var(--lc-paper);
+    --app-ink: var(--lc-ink);
+    --app-muted: color-mix(in srgb, var(--lc-ink), transparent 28%);
+    --app-brand: var(--lc-brand);
+    --app-accent: var(--lc-clay);
+    --app-panel: color-mix(in srgb, var(--lc-paper), white 18%);
+    --app-panel-border: var(--lc-border);
+    --app-panel-shadow: 0 2px 18px color-mix(in srgb, var(--lc-ink), transparent 88%);
     --app-content-font-scale: 1;
 }
 
@@ -38,21 +47,32 @@ body {
     min-height: 100vh;
     font-family: var(--font-noto-sans-lao), var(--font-noto-color-emoji), sans-serif;
     color: var(--app-ink);
-    background: radial-gradient(circle at 10% 10%, rgba(15, 118, 110, 0.12), transparent 30%),
-        radial-gradient(circle at 90% 20%, rgba(3, 105, 161, 0.12), transparent 35%),
-        var(--app-bg-soft);
+    background: var(--lc-paper);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0.055;
+    background-image: url('./img/paper-grain.svg');
+    mix-blend-mode: multiply;
 }
 
 body.dark,
 .dark {
     --app-ink: #f8fafc;
     --app-muted: #dbe5f5;
-    --app-panel: #020617;
+    --lc-paper: #102b34;
+    --lc-ink: #f6f1e7;
+    --lc-border: color-mix(in srgb, #f6f1e7, transparent 84%);
+    --lc-soft: #203f43;
+    --app-panel: #172f35;
     --app-panel-border: rgba(148, 163, 184, 0.34);
     --app-panel-shadow: 0 26px 56px rgba(0, 0, 0, 0.58);
-    background: radial-gradient(circle at 10% 10%, rgba(20, 184, 166, 0.12), transparent 28%),
-        radial-gradient(circle at 88% 20%, rgba(56, 189, 248, 0.08), transparent 35%),
-        #00030c;
+    background: var(--lc-dark-bg);
 }
 
 .app-page {
@@ -71,22 +91,22 @@ body.dark,
 .app-panel {
     background: var(--app-panel);
     border: 1px solid var(--app-panel-border);
-    border-radius: 1.25rem;
+    border-radius: 0.95rem;
     padding: clamp(1rem, 2vw, 1.6rem);
     box-shadow: var(--app-panel-shadow);
-    backdrop-filter: blur(6px);
 }
 
 body.dark .app-panel,
 .dark .app-panel {
-    background: linear-gradient(180deg, rgba(10, 18, 40, 0.96) 0%, rgba(2, 6, 23, 0.98) 100%);
+    background: var(--lc-dark-paper);
 }
 
 .app-section-title {
     font-size: clamp(1.45rem, 1.8vw, 2rem);
     line-height: 1.15;
-    font-weight: 800;
-    color: color-mix(in srgb, var(--app-ink), #075985 24%);
+    font-family: "Noto Serif Lao", "Noto Serif", serif;
+    font-weight: 600;
+    color: var(--app-ink);
 }
 
 .app-muted {
@@ -120,6 +140,59 @@ body.dark .app-panel,
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 0.75rem;
 }
+
+.app-shell { background: transparent; }
+
+.lc-nav-link { color: var(--app-muted); }
+.lc-nav-link:hover { background: var(--lc-soft); color: var(--app-ink); }
+.lc-nav-link--active { background: var(--lc-brand); color: #f6f1e7; }
+.dark .lc-nav-link--active { background: var(--lc-gold); color: #102b34; }
+.lc-icon-control {
+    display: inline-flex;
+    width: 2.35rem;
+    height: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--lc-border);
+    border-radius: 999px;
+    color: var(--app-muted);
+    background: var(--app-panel);
+}
+.lc-icon-control:hover, .lc-icon-control--active { background: var(--lc-soft); color: var(--lc-brand); }
+.dark .lc-icon-control--active { color: var(--lc-gold); }
+
+.lc-card {
+    display: block;
+    position: relative;
+    border: 1px solid var(--lc-border);
+    border-radius: 0.95rem;
+    background: var(--app-panel);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--app-ink), transparent 93%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.lc-card:hover { transform: translateY(-2px); box-shadow: var(--app-panel-shadow); }
+.lc-card-action { color: var(--lc-brand); }
+.dark .lc-card-action { color: var(--lc-gold); }
+.lc-eyebrow { color: var(--lc-brand); font-size: 0.78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.dark .lc-eyebrow { color: var(--lc-gold); }
+
+.lc-home-hero {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: clamp(1.25rem, 3vw, 2.25rem);
+}
+.lc-home-hero::before {
+    content: '';
+    display: block;
+    height: clamp(7rem, 22vw, 13rem);
+    margin: calc(-1 * clamp(1rem, 2vw, 1.6rem));
+    margin-bottom: 1.25rem;
+    background: linear-gradient(90deg, transparent 35%, color-mix(in srgb, var(--lc-paper), transparent 35%)), url('./img/apps-light.webp') center/cover;
+}
+.dark .lc-home-hero::before { background-image: linear-gradient(90deg, transparent 35%, rgba(16,43,52,.2)), url('./img/apps-dark.webp'); }
+
+button, a, select, input, textarea { accent-color: var(--lc-brand); }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--lc-gold), transparent 20%); outline-offset: 2px; }
 
 .app-divider {
     border: 0;

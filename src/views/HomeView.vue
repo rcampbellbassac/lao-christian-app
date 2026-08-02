@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import MainContentSelector from '@/components/MainContentSelector.vue';
+import { useUiText } from '@/composables/useUiText'
+const text = useUiText()
 </script>
 <template>
   <main class="app-page">
-    <section class="app-panel">
+    <section class="lc-home-hero app-panel">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="app-section-title flex items-center gap-3">
           <img src="../assets/img/logo 2-black.png" alt="LaoChristian.org Logo" class="h-12 inline dark:hidden sm:h-14" />
           <img src="../assets/img/logo 2-white.png" alt="LaoChristian.org Logo" class="h-12 hidden dark:inline sm:h-14" />
-          <span>LaoChristian.org App Platform</span>
+          <span lang="lo">ລາວຄຣິສຕຽນ</span>
         </h1>
-        <span class="app-chip">PWA-ready</span>
+        <span class="app-chip">LaoChristian.org</span>
       </div>
       <p class="app-muted mt-2 italic">
-        We are migrating our SEA-SDA.org Apps to the new LaoChristian.org App platform.
+        ພຣະຄຳພີ, ເພງນະມັດສະການ ແລະ ແຫຼ່ງຂໍ້ມູນຄຣິສຕຽນສຳລັບຊຸມຊົນລາວ.
       </p>
       <hr class="app-divider" />
       <article class="space-y-4 text-slate-700 dark:text-slate-200">
-        <p class="text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Choose an application</p>
+        <p class="lc-eyebrow">{{ text.lao('chooseApplication') }} <span v-if="text.english('chooseApplication')">· {{ text.english('chooseApplication') }}</span></p>
         <MainContentSelector />
       </article>
     </section>

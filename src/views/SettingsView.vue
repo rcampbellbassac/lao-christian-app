@@ -13,8 +13,10 @@ import type { LaoFontId } from '@/utils/laoFonts'
 import { presentationThemePresets } from '@/utils/presentationThemes'
 import type { PresentationThemeId } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
+import { useUiText } from '@/composables/useUiText'
 
 const settings = useSettingsStore()
+const text = useUiText()
 
 onMounted(async () => {
   await settings.load()
@@ -60,6 +62,20 @@ function onTextAlignChange(value: PresentationTextAlign): void {
       <hr class="app-divider" />
 
       <article class="space-y-8">
+        <section>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ text.lao('bilingual') }}</h2>
+          <p class="app-muted mt-1 mb-3 text-sm">
+            ສະແດງຄຳອະທິບາຍພາສາອັງກິດຂະໜາດນ້ອຍສຳລັບເມນູ. Content remains in Lao.
+          </p>
+          <button
+            type="button"
+            class="app-chip"
+            @click="settings.setBilingualUi(!settings.bilingualUi)"
+          >
+            {{ settings.bilingualUi ? text.accessible('laoOnly') : text.accessible('bilingual') }}
+          </button>
+        </section>
+
         <section>
           <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Reading text size</h2>
           <p class="app-muted mt-1 mb-3 text-sm">

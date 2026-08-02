@@ -3,21 +3,25 @@ import { RouterLink } from 'vue-router'
 import DarkToggle from './DarkToggle.vue'
 import FontSizeControl from './FontSizeControl.vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faHouse, faCircleInfo, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faCircleInfo, faGear, faLanguage } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useUiText, type UiMessageKey } from '@/composables/useUiText'
+import { useSettingsStore } from '@/stores/settings'
 
-library.add(faHouse, faCircleInfo, faGear)
+library.add(faHouse, faCircleInfo, faGear, faLanguage)
 
-const menuItems = [
-  { name: 'Home', to: '/', icon: 'fa-solid fa-house'},
-  { name: 'About', to: '/about', icon: 'fa-solid fa-circle-info' },
-  { name: 'Settings', to: '/settings', icon: 'fa-solid fa-gear' },
+const text = useUiText()
+const settings = useSettingsStore()
+const menuItems: Array<{ name: UiMessageKey; to: string; icon: string }> = [
+  { name: 'home', to: '/', icon: 'fa-solid fa-house'},
+  { name: 'about', to: '/about', icon: 'fa-solid fa-circle-info' },
+  { name: 'settings', to: '/settings', icon: 'fa-solid fa-gear' },
 ]
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 px-2 pb-1 pt-2 sm:px-4 sm:pb-1 lg:pb-1">
-    <nav class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/85 px-3 py-2 shadow-lg backdrop-blur dark:border-slate-500/45 dark:bg-slate-950/92">
+  <header class="sticky top-0 z-40 border-b border-[var(--lc-border)] bg-[var(--lc-paper)]/95 px-2 py-2 backdrop-blur sm:px-4">
+    <nav class="mx-auto flex w-full max-w-6xl items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <RouterLink
           v-for="item in menuItems"
@@ -27,18 +31,29 @@ const menuItems = [
         >
           <span
             :class="[
-              'inline-flex items-center rounded-full px-3 py-1.5 text-xs font-bold tracking-wide transition',
+              'lc-nav-link inline-flex items-center rounded-full px-3 py-2 text-sm font-semibold transition',
               isActive
-                ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-100'
-                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/70'
+                ? 'lc-nav-link--active'
+                : ''
             ]"
           >
             <font-awesome-icon v-if="item.icon" :icon="item.icon" class="pr-1" />
-            {{ item.name }}
+            <span>{{ text.lao(item.name) }}</span>
+            <span v-if="text.english(item.name)" class="ml-1 hidden text-[0.68rem] font-normal opacity-70 sm:inline">{{ text.english(item.name) }}</span>
           </span>
         </RouterLink>
       </div>
       <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="lc-icon-control"
+          :class="{ 'lc-icon-control--active': settings.bilingualUi }"
+          :aria-label="text.accessible('bilingual')"
+          :title="settings.bilingualUi ? text.accessible('laoOnly') : text.accessible('bilingual')"
+          @click="settings.setBilingualUi(!settings.bilingualUi)"
+        >
+          <font-awesome-icon icon="language" />
+        </button>
         <FontSizeControl />
         <DarkToggle />
       </div>

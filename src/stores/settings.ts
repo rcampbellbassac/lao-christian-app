@@ -25,6 +25,7 @@ export const FONT_SCALE_STEP = 0.1
 export type PresentationTextAlign = 'left' | 'center'
 
 interface PersistedSettings {
+  bilingualUi: boolean
   contentFontScale: number
   presentationFontScale: number
   presentationAspectRatio: AspectRatioId
@@ -34,6 +35,7 @@ interface PersistedSettings {
 }
 
 const defaultSettings: PersistedSettings = {
+  bilingualUi: false,
   contentFontScale: 1,
   presentationFontScale: 1,
   presentationAspectRatio: DEFAULT_ASPECT_RATIO_ID,
@@ -47,6 +49,7 @@ function clampScale(value: number): number {
 }
 
 export const useSettingsStore = defineStore('settings', () => {
+  const bilingualUi = ref(defaultSettings.bilingualUi)
   const contentFontScale = ref(defaultSettings.contentFontScale)
   const presentationFontScale = ref(defaultSettings.presentationFontScale)
   const presentationAspectRatio = ref<AspectRatioId>(defaultSettings.presentationAspectRatio)
@@ -57,6 +60,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
   async function persist(): Promise<void> {
     const snapshot: PersistedSettings = {
+      bilingualUi: bilingualUi.value,
       contentFontScale: contentFontScale.value,
       presentationFontScale: presentationFontScale.value,
       presentationAspectRatio: presentationAspectRatio.value,
@@ -72,6 +76,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     const stored = await settingsStorage.getItem<Partial<PersistedSettings>>(SETTINGS_KEY)
     if (stored) {
+      bilingualUi.value = stored.bilingualUi ?? defaultSettings.bilingualUi
       contentFontScale.value = clampScale(stored.contentFontScale ?? defaultSettings.contentFontScale)
       presentationFontScale.value = clampScale(stored.presentationFontScale ?? defaultSettings.presentationFontScale)
       presentationAspectRatio.value = stored.presentationAspectRatio ?? defaultSettings.presentationAspectRatio
@@ -85,6 +90,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
   function setContentFontScale(value: number): void {
     contentFontScale.value = clampScale(value)
+    void persist()
+  }
+
+  function setBilingualUi(value: boolean): void {
+    bilingualUi.value = value
     void persist()
   }
 
@@ -122,6 +132,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   return {
+    bilingualUi,
     contentFontScale,
     presentationFontScale,
     presentationAspectRatio,
@@ -130,6 +141,7 @@ export const useSettingsStore = defineStore('settings', () => {
     presentationFontFamily,
     isLoaded,
     load,
+    setBilingualUi,
     setContentFontScale,
     setPresentationFontScale,
     setPresentationAspectRatio,

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import indexData from '@/assets/data/index.json'
+import { useUiText } from '@/composables/useUiText'
 
 interface UrlItem {
   id: number
@@ -21,6 +22,7 @@ interface LangItem {
 const urls = ref<UrlItem[]>([])
 const langs = ref<LangItem[]>([])
 const router = useRouter()
+const text = useUiText()
 
 onMounted(() => {
   const data = indexData as {
@@ -47,11 +49,11 @@ function openSet(fileId: number) {
     <li
       v-for="item in urls"
       :key="item.id"
-      class="group cursor-pointer rounded-2xl border border-slate-300/70 bg-white/92 p-4 shadow transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-500/55 dark:bg-slate-950/90"
+      class="lc-card group cursor-pointer p-4"
       @click="openSet(item.id)"
     >
       <div class="flex items-start gap-3">
-        <img :src="item.icon" alt="Set icon" class="h-14 w-14 shrink-0 rounded-xl bg-slate-100 p-2 object-contain dark:bg-slate-700" />
+        <img :src="item.icon" alt="" class="h-14 w-14 shrink-0 rounded-xl bg-[var(--lc-soft)] p-2 object-contain" />
         <div class="min-w-0">
           <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
             {{ item.native_name }}
@@ -60,7 +62,7 @@ function openSet(fileId: number) {
           <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
             {{ getLangDetails(item.lang)?.emoji_flag }} {{ getLangDetails(item.lang)?.native_name }}
           </p>
-          <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-teal-700 group-hover:text-teal-600 dark:text-teal-300 dark:group-hover:text-teal-200">Open collection</p>
+          <p class="lc-card-action mt-2 text-sm font-semibold">{{ text.lao('openCollection') }} <span v-if="text.english('openCollection')" class="font-normal">· {{ text.english('openCollection') }}</span> →</p>
         </div>
       </div>
     </li>
