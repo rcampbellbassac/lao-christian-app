@@ -298,12 +298,17 @@ Detailed AWS + GitHub bootstrap guide:
 
 ## Presentation mode and slide export
 
-Each chapter now includes a **Presentation mode** entry. Presentation mode provides:
+Each chapter includes a **Presentation mode** entry. Presentation mode provides:
 
 - Full-screen slide-style rendering
 - Keyboard navigation (`Left` / `Right`, `PageUp` / `PageDown`, `Space`)
-- Quick PNG export for the current slide
-- Batch PNG export for all generated slides
+- Selectable paragraph ranges and content-aware slide generation
+- Responsive 16:9, 4:3, square, and A4 presentation layouts
+- Lao font, text-size, alignment, and illustrated theme controls
+- PNG export for the current slide
+- ZIP export containing PNGs for all selected slides
+- PowerPoint (`.pptx`) export for all selected slides
+- Saving generated material as an editable local Slide Studio deck
 
 Route format:
 
@@ -311,12 +316,35 @@ Route format:
 /present/:fileid/:bookid/:chapterid
 ```
 
+## Slide Studio and presenter windows
+
+Slide Studio is available at `/decks`. Decks are saved locally on the device and
+can be edited, duplicated, reordered, hidden, exported, or opened in presenter
+mode. Presenter mode can open a separate audience window and keeps it synchronized
+using browser-local messaging; no user content is uploaded to a server.
+
+## Study workspace and sharing
+
+The local study workspace at `/study` includes bookmarks, paragraph and precise
+text highlights, private notes, and recent-reading history. Chapter and selection
+sharing use the device share sheet where available and fall back to copying a link.
+Complete workspace backups include study records, decks, and preferences, with
+merge and replace restore options.
+
+## Interface language policy
+
+Lao is the default interface language. Users may enable bilingual Lao/English UI
+in Settings. Only static application copy is translated; titles and content loaded
+from the content JSON files remain exactly as published. Static translations live
+in `src/locales/static.*.json` and can be refreshed with `npm run translate:static`
+when Google Cloud Translation credentials are configured.
+
 ## Notes for maintainers
 
 - Keep Lao text and source JSON schema stable unless intentionally versioned.
 - Prefer `npm ci` in CI/CD and Docker builds.
 - Avoid global npm package installs inside Docker images.
-- For future feature work (advanced slide theming, templates, PPTX export, diff feeds), add dedicated utilities/modules instead of overloading view components.
+- For future feature work (additional templates, editable PPTX elements, diff feeds), add dedicated utilities/modules instead of overloading view components.
 
 ## Verification checklist
 
