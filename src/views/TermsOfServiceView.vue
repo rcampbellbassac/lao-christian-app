@@ -5,6 +5,8 @@ import BilingualText from '@/components/BilingualText.vue'
 <template>
   <main class="app-page">
     <article class="app-panel policy-page">
+      <img src="../assets/img/legal-terms-v2.webp" alt="" class="policy-illustration" />
+      <hr class="app-divider" />
       <h1 class="app-section-title"><BilingualText text-key="policy.terms" /></h1>
       <section>
         <h2><BilingualText text-key="terms.acceptTitle" /></h2>
@@ -24,6 +26,7 @@ import BilingualText from '@/components/BilingualText.vue'
 
 <style scoped>
 .policy-page { display: grid; gap: 1.5rem; }
+.policy-illustration { width: min(18rem, 72vw); margin-inline: auto; }
 .policy-page section { display: grid; gap: .45rem; }
 .policy-page h2 { font-size: 1.35rem; font-weight: 700; color: var(--lc-brand); }
 .dark .policy-page h2 { color: var(--lc-gold); }

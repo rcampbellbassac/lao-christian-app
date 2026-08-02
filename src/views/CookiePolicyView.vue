@@ -5,7 +5,7 @@ import BilingualText from '@/components/BilingualText.vue'
 <template>
   <main class="app-page">
     <article class="app-panel policy-page">
-      <img src="../assets/img/cookie-web-fast.webp" alt="" class="policy-illustration" />
+      <img src="../assets/img/legal-cookies-v2.webp" alt="" class="policy-illustration" />
       <hr class="app-divider" />
       <h1 class="app-section-title"><BilingualText text-key="policy.cookies" /></h1>
       <p class="policy-intro"><BilingualText text-key="cookies.intro" /></p>
