@@ -1,45 +1,90 @@
-# Custom-domain migration runbook
+# LaoChristian.org DNS cutover runbook
 
-Target: `https://apps.laochristian.org/`
+## Final hosting topology
 
-Browser storage is isolated by origin. GitHub Pages data under `https://rcampbellbassac.github.io` cannot automatically appear under `https://apps.laochristian.org` after a DNS change. The app therefore includes `/migrate`, an origin-checked, browser-to-browser transfer that never uploads notes or decks to a server, plus JSON export/import as a fallback.
+| Host | GitHub Pages repository | Purpose |
+| --- | --- | --- |
+| `www.laochristian.org` | `rcampbellbassac/laochristian.org` | Canonical public website |
+| `laochristian.org` | `rcampbellbassac/laochristian.org` | Apex; GitHub redirects to `www` |
+| `apps.laochristian.org` | `rcampbellbassac/lao-christian-app` | Bible and resource application |
+| `web.laochristian.org` | none | Retired; delete the Google Sites CNAME |
 
-## Hosting prerequisite
+Both repositories deploy with GitHub Actions. The main site has the Pages
+custom domain `www.laochristian.org`; this repository has
+`apps.laochristian.org`. GitHub domain verification for `laochristian.org`
+must complete before the routing cutover.
 
-Automatic transfer requires the old and new origins to be reachable at the same time. Assigning a custom domain directly to this same GitHub Pages site normally redirects its `github.io` URL, so it does **not** provide a long overlap window. Before DNS cutover, deploy the same verified artifact to the target platform at `apps.laochristian.org` while leaving this GitHub Pages project URL intact. A separate Pages deployment repository is also suitable. If dual-origin hosting is not available, use the JSON export/import fallback and announce the export step before cutover.
+## Before changing routing
 
-## Stage 1 — preflight
+1. Export the complete GoDaddy DNS zone from the domain-owner account. A PAT
+   created by a delegate account does not expose the owner's zone through the
+   API.
+2. Preserve all MX, TXT, CAA, SRV, NS, DKIM, SPF, and DMARC records unchanged.
+3. Confirm both Pages workflows succeed after their custom domains are saved.
+4. Confirm the app's custom-domain build uses `VITE_BASE_PATH=/`, with root
+   manifest, service-worker, icons, SPA 404 shim, and deep links.
+5. Confirm the `laoadventist-media` S3 CORS policy permits
+   `https://apps.laochristian.org` and `https://laochristian.org`.
+6. Encourage existing project-URL users to export a JSON backup. Browser data
+   is origin-bound and the same Pages repository redirects its project URL
+   after a custom domain is assigned, so a long dual-origin transfer window is
+   not available.
 
-1. Keep GitHub Pages on the project URL and verify the production workflow, deep links, offline libraries, presentation pop-outs, and JSON backup restore.
-2. Deploy the verified build to the target platform and add `apps.laochristian.org` to the S3 content bucket CORS allowlist.
-3. Lower the DNS TTL at least one day before cutover.
-4. Set the GitHub Pages environment variable `VITE_MIGRATION_TARGET_URL=https://apps.laochristian.org/` and deploy while the project URL is still canonical. This activates the transfer button on the old origin.
-5. Confirm `/migrate` opens only the configured target and that the target accepts messages only from `https://rcampbellbassac.github.io`.
+## Intended routing records
 
-## Stage 2 — custom-domain cutover
+Replace only the website-routing records. Use a short TTL such as 600 seconds
+during the transition.
 
-1. Add the DNS CNAME: `apps` → `rcampbellbassac.github.io`.
-2. Configure `apps.laochristian.org` on the selected target platform. If a separate GitHub Pages deployment hosts the target, wait for its DNS check and enforce HTTPS.
-3. Keep this repository’s project-site deployment unchanged throughout the overlap window.
-4. Confirm the deployment builds with `VITE_BASE_PATH=/` and that the generated manifest, service worker, icons, root route, and deep links use the root base.
-5. Test `/migrate?receive=1` from the old-origin transfer window before publicizing the new URL.
+### Apex (`@`)
 
-## Stage 3 — transition window
+Create the four GitHub Pages IPv4 records:
 
-Keep the old-origin deployment and migration path available for at least 30 days. Announce the new address and ask existing users to use **Move app data** before clearing the old site’s browser storage. The transfer merges by record/deck identity and newest update timestamp; it does not overwrite newer target-origin data. Only retire or redirect the old Pages project after that window.
+- `185.199.108.153`
+- `185.199.109.153`
+- `185.199.110.153`
+- `185.199.111.153`
+
+The previous apex value is `159.89.208.44`; retain it in the private rollback
+snapshot, then remove it from the active record set at cutover.
+
+### Subdomains
+
+- `CNAME www` → `rcampbellbassac.github.io`
+- `CNAME apps` → `rcampbellbassac.github.io`
+- delete `CNAME web` → `ghs.googlehosted.com`
+
+Do not include a repository path in either CNAME value.
+
+## Cutover validation
+
+1. Read the affected records back from GoDaddy immediately after the API call.
+2. Query GoDaddy's authoritative nameservers and at least two public resolvers.
+3. Confirm GitHub reports the correct custom domain on each repository.
+4. Wait for both TLS certificates, then enable **Enforce HTTPS** on both Pages
+   sites.
+5. Verify:
+   - apex redirects to `https://www.laochristian.org/`;
+   - the main site's representative pages and language routes load;
+   - the app root and direct `/content/...` routes load;
+   - manifest and service worker return 200 with the correct content types;
+   - all six S3 libraries load and reopen offline;
+   - PNG, ZIP, and PPTX exports work;
+   - presenter and audience windows synchronize;
+   - browser console has no CORS, mixed-content, manifest, or asset 404 errors;
+   - `web.laochristian.org` no longer resolves after caches expire.
 
 ## Rollback
 
-If validation fails, remove the Pages custom domain and restore the previous CNAME state. Do not delete either origin’s browser data. Users can continue on the project URL while the issue is corrected, and JSON backups remain portable in either direction.
+If either site fails before DNS caches settle:
 
-## Final checks
+1. Restore the exact routing records from the pre-cutover zone snapshot,
+   including apex `A` → `159.89.208.44`, `www` → `laochristian.org`,
+   `apps` → `laochristian.org`, and `web` → `ghs.googlehosted.com`.
+2. Read the restored records back through the API and authoritative DNS.
+3. Remove the affected Pages custom domain only if the project URL also needs
+   to become directly reachable again.
+4. Never replace the entire zone from a hand-written list; preserve unrelated
+   mail and verification records.
 
-- HTTPS and certificate valid
-- root and representative deep links load directly
-- service worker installs and updates
-- online/offline indicator behaves correctly
-- all six libraries download and reopen offline
-- bookmarks, highlights, notes, history, decks, and preferences transfer
-- presenter/audience windows synchronize
-- S3 content CORS and integrity checks pass
-- GitHub Actions, Dependabot, and `npm audit` are clean
+After a successful observation window, restore normal TTLs, remove the
+temporary PAT file, and revoke the migration PAT in GoDaddy.
