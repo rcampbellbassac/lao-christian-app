@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faCloudArrowDown, faCloudBolt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useStaticText } from '@/composables/useStaticText'
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -12,6 +13,7 @@ interface InstallPromptEvent extends Event {
 library.add(faCloudArrowDown, faCloudBolt)
 const online = ref(typeof navigator === 'undefined' ? true : navigator.onLine)
 const installPrompt = ref<InstallPromptEvent | null>(null)
+const copy = useStaticText()
 
 function updateOnlineState(): void { online.value = navigator.onLine }
 function captureInstallPrompt(event: Event): void {
@@ -42,11 +44,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span v-if="!online" class="lc-status-pill" role="status" title="Offline · ອອບລາຍ">
+  <span v-if="!online" class="lc-status-pill" role="status" :title="copy.text('pwa.offline')">
     <font-awesome-icon icon="cloud-bolt" />
     <span class="hidden md:inline">ອອບລາຍ</span>
   </span>
-  <button v-else-if="installPrompt" type="button" class="lc-icon-control" aria-label="ຕິດຕັ້ງແອັບ — Install app" title="ຕິດຕັ້ງແອັບ — Install app" @click="install">
+  <button v-else-if="installPrompt" type="button" class="lc-icon-control" :aria-label="copy.text('pwa.install')" :title="copy.text('pwa.install')" @click="install">
     <font-awesome-icon icon="cloud-arrow-down" />
   </button>
 </template>

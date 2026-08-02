@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { createUserBackup, importUserBackup, type UserBackupV2 } from '@/utils/userBackup'
+import { useStaticText } from '@/composables/useStaticText'
+import BilingualText from '@/components/BilingualText.vue'
 
 type MigrationMessage =
   | { type: 'laochristian-migration-ready' }
@@ -10,6 +12,7 @@ type MigrationMessage =
 
 const route = useRoute()
 const status = ref('')
+const copy = useStaticText()
 const targetUrl = `${import.meta.env.VITE_MIGRATION_TARGET_URL ?? ''}`.trim()
 const trustedSourceOrigin = `${import.meta.env.VITE_MIGRATION_SOURCE_ORIGIN ?? 'https://rcampbellbassac.github.io'}`.replace(/\/$/, '')
 const receiving = computed(() => route.query.receive === '1')
@@ -22,26 +25,26 @@ let targetWindow: Window | null = null
 
 async function sendBackup(event: MessageEvent<MigrationMessage>): Promise<void> {
   if (!targetWindow || event.source !== targetWindow || event.origin !== new URL(targetUrl).origin || event.data?.type !== 'laochristian-migration-ready') return
-  status.value = 'Sending local data securely between the two app windows…'
+  status.value = copy.text('migration.sending')
   const backup = await createUserBackup()
   targetWindow.postMessage({ type: 'laochristian-migration-data', backup } satisfies MigrationMessage, event.origin)
 }
 
 async function receiveBackup(event: MessageEvent<MigrationMessage>): Promise<void> {
   if (!receiving.value || event.source !== window.opener || event.origin !== trustedSourceOrigin || event.data?.type !== 'laochristian-migration-data') return
-  status.value = 'Importing local data…'
+  status.value = copy.text('migration.importing')
   try {
     await importUserBackup(event.data.backup, 'merge')
-    status.value = 'Transfer complete. Your bookmarks, highlights, notes, decks, and preferences are available here.'
+    status.value = copy.text('migration.received')
     window.opener?.postMessage({ type: 'laochristian-migration-complete' } satisfies MigrationMessage, trustedSourceOrigin)
   } catch (error) {
-    status.value = error instanceof Error ? error.message : 'Transfer failed.'
+    status.value = error instanceof Error ? error.message : copy.text('migration.failed')
   }
 }
 
 function receiveComplete(event: MessageEvent<MigrationMessage>): void {
   if (!targetWindow || event.source !== targetWindow || event.origin !== new URL(targetUrl).origin || event.data?.type !== 'laochristian-migration-complete') return
-  status.value = 'Transfer complete. You can continue in the new app window.'
+  status.value = copy.text('migration.completeOld')
 }
 
 function beginTransfer(): void {
@@ -50,14 +53,14 @@ function beginTransfer(): void {
   window.addEventListener('message', receiveComplete)
   const destination = new URL('migrate?receive=1', targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`)
   targetWindow = window.open(destination, 'laochristian-domain-migration')
-  status.value = targetWindow ? 'Waiting for the new app window…' : 'Allow pop-ups for this one-time transfer, then try again.'
+  status.value = targetWindow ? copy.text('migration.waitingNew') : copy.text('migration.popup')
 }
 
 onMounted(() => {
   if (!receiving.value || !window.opener) return
   window.addEventListener('message', receiveBackup)
   window.opener.postMessage({ type: 'laochristian-migration-ready' } satisfies MigrationMessage, trustedSourceOrigin)
-  status.value = 'Connected to the previous app. Waiting for local data…'
+  status.value = copy.text('migration.connected')
 })
 
 onBeforeUnmount(() => {
@@ -70,18 +73,18 @@ onBeforeUnmount(() => {
 <template>
   <main class="app-page">
     <section class="app-panel">
-      <h1 class="app-section-title">ຍ້າຍຂໍ້ມູນແອັບ <span class="app-muted text-base font-normal">· Move app data</span></h1>
-      <p class="app-muted mt-3">Bookmarks, notes, highlights, and slide decks are private and remain in your browser. A domain change creates a new protected storage area, so this one-time transfer keeps them available.</p>
+      <h1 class="app-section-title"><BilingualText text-key="migration.title" /></h1>
+      <p class="app-muted mt-3"><BilingualText text-key="migration.help" /></p>
 
       <div v-if="receiving" class="mt-6 rounded-xl bg-[var(--lc-soft)] p-4" role="status">{{ status }}</div>
       <template v-else>
-        <button v-if="canTransfer" type="button" class="lc-migration-action mt-6" @click="beginTransfer">Move my local data →</button>
-        <p v-else class="mt-6 rounded-xl bg-[var(--lc-soft)] p-4">Automatic transfer will become available shortly before the custom-domain switch.</p>
+        <button v-if="canTransfer" type="button" class="lc-migration-action mt-6" @click="beginTransfer">{{ copy.text('migration.move') }} →</button>
+        <p v-else class="mt-6 rounded-xl bg-[var(--lc-soft)] p-4"><BilingualText text-key="migration.notReady" /></p>
         <p v-if="status" class="mt-3 text-sm" role="status">{{ status }}</p>
         <hr class="app-divider">
-        <h2 class="text-lg font-semibold">Manual fallback</h2>
-        <p class="app-muted mt-1 text-sm">Export one JSON backup from My Study on the old address, then import it on the new address. The file is not encrypted; keep it private.</p>
-        <router-link to="/study" class="app-link mt-3 inline-block">Open My Study backup tools →</router-link>
+        <h2 class="text-lg font-semibold"><BilingualText text-key="migration.manual" /></h2>
+        <p class="app-muted mt-1 text-sm"><BilingualText text-key="migration.manualHelp" /></p>
+        <router-link to="/study" class="app-link mt-3 inline-block">{{ copy.text('migration.openBackup') }} →</router-link>
       </template>
     </section>
   </main>

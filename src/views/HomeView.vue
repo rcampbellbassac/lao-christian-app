@@ -57,7 +57,7 @@ const copy = useStaticText()
             </a>
             <span class="app-muted"> — {{ copy.text('home.fontDescription') }} </span>
             <span class="italic">{{ copy.text('action.preview') }}
-              <a class="app-link" href="https://htmlpreview.github.io/?https://github.com/rober42539/KouangSiWaterfall/blob/master/example.html">here</a>.
+              <a class="app-link" href="https://htmlpreview.github.io/?https://github.com/rober42539/KouangSiWaterfall/blob/master/example.html">{{ copy.text('action.open') }}</a>.
             </span>
           </li>
         </ul>

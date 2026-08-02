@@ -2,9 +2,13 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContentStore } from '@/stores/content'
+import { useStaticText } from '@/composables/useStaticText'
+import { useUiText } from '@/composables/useUiText'
 
 const route = useRoute()
 const store = useContentStore()
+const copy = useStaticText()
+const ui = useUiText()
 
 const fileId = computed(() => parseInt(route.params.fileid as string))
 const bookId = computed(() => parseInt(route.params.bookid as string))
@@ -49,10 +53,10 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="mb-4 rounded-xl border border-slate-300/60 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-500/50 dark:bg-slate-950/82 dark:text-slate-200">
+  <nav :aria-label="copy.text('navigation.breadcrumb')" class="mb-4 rounded-xl border border-slate-300/60 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-500/50 dark:bg-slate-950/82 dark:text-slate-200">
     <ul class="flex flex-wrap items-center gap-x-2 gap-y-1">
       <li>
-        <router-link to="/" class="font-semibold text-teal-700 hover:underline dark:text-teal-300">🏠 Home</router-link>
+        <router-link to="/" class="font-semibold text-teal-700 hover:underline dark:text-teal-300">🏠 {{ ui.lao('home') }}<span v-if="ui.english('home')" class="ml-1 text-xs font-normal opacity-70">{{ ui.english('home') }}</span></router-link>
       </li>
       <li v-for="(crumb) in breadcrumbs" :key="crumb.path" class="flex items-center gap-2">
         <span class="text-slate-400">/</span>

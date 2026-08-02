@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { useUiText } from '@/composables/useUiText'
 
 library.add(faMoon, faSun)
 
@@ -10,6 +11,7 @@ const prefersDark = typeof window !== 'undefined' && typeof window.matchMedia ==
   ? window.matchMedia('(prefers-color-scheme: dark)')
   : { matches: false }
 const isDark = ref(false)
+const text = useUiText()
 
 onMounted(() => {
   const saved = window.localStorage.getItem('theme')
@@ -23,7 +25,7 @@ onMounted(() => {
   applyTheme()
 })
 
-const label = computed(() => (isDark.value ? 'Light mode' : 'Dark mode'))
+const label = computed(() => isDark.value ? text.accessible('lightMode') : text.accessible('darkMode'))
 
 function toggleTheme(): void {
   isDark.value = !isDark.value
@@ -40,10 +42,10 @@ function applyTheme(): void {
   <button
     type="button"
     :aria-label="label"
-    class="inline-flex items-center gap-1 rounded-full border border-slate-300/70 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark:border-slate-500 dark:bg-slate-800/85 dark:text-amber-300 dark:hover:bg-slate-700"
+    :title="label"
+    class="lc-icon-control"
     @click="toggleTheme"
   >
-    <font-awesome-icon :icon="isDark ? 'sun' : 'moon'" class="text-xs" />
-    <span>{{ isDark ? 'Light' : 'Dark' }}</span>
+    <font-awesome-icon :icon="isDark ? 'sun' : 'moon'" />
   </button>
 </template>

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useContentStore } from '@/stores/content'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { sanitizeContentHtml } from '@/utils/sanitize'
+import BilingualText from '@/components/BilingualText.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,7 +43,7 @@ const book = computed(() =>
       <h1 class="app-section-title mb-2">{{ book.name }}</h1>
       <p v-if="book.content" v-html="sanitizeContentHtml(book.content)" class="mb-4 text-sm text-slate-600 dark:text-slate-300"></p>
       <div>
-        <h2 class="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">Chapters</h2>
+        <h2 class="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100"><BilingualText text-key="library.chapters" /></h2>
         <ul class="app-card-list">
           <li
             v-for="content in book.contents"
@@ -61,7 +62,7 @@ const book = computed(() =>
     </section>
 
     <section v-else>
-      <p class="text-center text-slate-600 dark:text-slate-300">Loading book...</p>
+      <p class="text-center text-slate-600 dark:text-slate-300"><BilingualText text-key="library.loadingBook" /></p>
     </section>
     </section>
   </main>
