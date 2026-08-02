@@ -15,6 +15,7 @@ import {
   type PresentationThemeId,
 } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
+import { sanitizeContentHtml } from '@/utils/sanitize'
 
 const route = useRoute()
 const router = useRouter()
@@ -89,9 +90,9 @@ const slides = computed<Slide[]>(() => {
   if (!chapter.value) return []
 
   const context = {
-    title: chapter.value.name,
-    html: chapter.value.content || '',
-    bookTitle: unit.value?.name,
+    title: sanitizeContentHtml(chapter.value.name),
+    html: sanitizeContentHtml(chapter.value.content),
+    bookTitle: sanitizeContentHtml(unit.value?.name),
   }
 
   try {

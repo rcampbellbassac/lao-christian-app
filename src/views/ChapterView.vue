@@ -9,6 +9,8 @@ import { usePresentationSelectionStore } from '@/stores/presentationSelection'
 import { parseBlocks } from '@/utils/slideGenerators'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { useStudyStore, type ContentLocation } from '@/stores/study'
+import { sanitizeContentHtml } from '@/utils/sanitize'
+import SafeMediaLinks from '@/components/SafeMediaLinks.vue'
 
 library.add(faDisplay, faHighlighter, faPlay, faBookmark, faShareNodes, faNoteSticky)
 
@@ -47,7 +49,7 @@ const chapter = computed(() =>
   unit.value?.contents.find((c) => c.id === chapterId)
 )
 
-const blocks = computed(() => parseBlocks(chapter.value?.content || ''))
+const blocks = computed(() => parseBlocks(sanitizeContentHtml(chapter.value?.content)))
 
 const isSelectMode = ref(false)
 const selectedIndices = ref<Set<number>>(new Set())
@@ -173,7 +175,7 @@ function presentSelection(): void {
           <font-awesome-icon icon="display" />
         </router-link>
       </div>
-      <h1 class="app-section-title mb-3"><span v-html="chapter.name"></span></h1>
+      <h1 class="app-section-title mb-3"><span v-html="sanitizeContentHtml(chapter.name)"></span></h1>
       <div class="prose prose-slate max-w-none dark:prose-invert app-content-scale">
         <div
           v-for="(block, index) in blocks"
@@ -207,10 +209,7 @@ function presentSelection(): void {
         <textarea id="study-note" v-model="noteDraft" rows="4" required autofocus placeholder="Write a private note stored on this device…"></textarea>
         <div class="flex justify-end gap-2"><button type="button" class="app-chip" @click="noteEditorOpen = false">Cancel</button><button type="submit" class="app-chip">Save</button></div>
       </form>
-      <div v-if="chapter.audioembed || chapter.videoembed" class="mt-5 rounded-xl border border-slate-300/70 bg-white/75 p-3 dark:border-slate-500/50 dark:bg-slate-950/86">
-        <div v-if="chapter.audioembed" v-html="chapter.audioembed" />
-        <div v-if="chapter.videoembed" v-html="chapter.videoembed" />
-      </div>
+      <SafeMediaLinks :audio-url="chapter.audiourl" :video-url="chapter.videourl" :audio-embed="chapter.audioembed" :video-embed="chapter.videoembed" />
     </section>
     <section v-else>
       <p class="text-center text-slate-500 dark:text-slate-300">

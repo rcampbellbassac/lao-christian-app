@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useContentStore } from '@/stores/content'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
+import { sanitizeContentHtml } from '@/utils/sanitize'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,7 +40,7 @@ const book = computed(() =>
       <BreadcrumbNav />
     <section v-if="book">
       <h1 class="app-section-title mb-2">{{ book.name }}</h1>
-      <p v-if="book.content" v-html="book.content" class="mb-4 text-sm text-slate-600 dark:text-slate-300"></p>
+      <p v-if="book.content" v-html="sanitizeContentHtml(book.content)" class="mb-4 text-sm text-slate-600 dark:text-slate-300"></p>
       <div>
         <h2 class="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">Chapters</h2>
         <ul class="app-card-list">
@@ -52,7 +53,7 @@ const book = computed(() =>
               :to="`/content/${fileId}/${bookId}/${content.id}`"
               class="app-link"
             >
-              📄 <span v-html="content.name"></span>
+              📄 <span v-html="sanitizeContentHtml(content.name)"></span>
             </router-link>
           </li>
         </ul>
