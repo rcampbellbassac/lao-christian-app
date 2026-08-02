@@ -14,33 +14,33 @@ export interface LaoFontPreset {
   /** Value used directly in the CSS font-family declaration. */
   cssFamily: string
   /** Where the font is loaded from -- affects how main.css pulls it in. */
-  source: 'google' | 'local'
+  source: 'package' | 'local'
 }
 
 export const laoFontPresets: LaoFontPreset[] = [
   {
     id: 'noto-sans-lao',
     label: 'Noto Sans Lao (default)',
-    cssFamily: '"Noto Sans Lao"',
-    source: 'google',
+    cssFamily: '"Noto Sans Lao Variable"',
+    source: 'package',
   },
   {
     id: 'noto-sans-lao-looped',
     label: 'Noto Sans Lao Looped',
-    cssFamily: '"Noto Sans Lao Looped"',
-    source: 'google',
+    cssFamily: '"Noto Sans Lao Looped Variable"',
+    source: 'package',
   },
   {
     id: 'noto-serif-lao',
     label: 'Noto Serif Lao',
-    cssFamily: '"Noto Serif Lao"',
-    source: 'google',
+    cssFamily: '"Noto Serif Lao Variable"',
+    source: 'package',
   },
   {
     id: 'phetsarath',
     label: 'Phetsarath',
     cssFamily: '"Phetsarath"',
-    source: 'google',
+    source: 'package',
   },
   {
     id: 'saysettha',

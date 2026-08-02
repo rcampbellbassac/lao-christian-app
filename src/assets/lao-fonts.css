@@ -1,3 +1,9 @@
+@import '@fontsource-variable/noto-sans-lao/wght.css';
+@import '@fontsource-variable/noto-sans-lao-looped/wght.css';
+@import '@fontsource-variable/noto-serif-lao/wght.css';
+@import '@fontsource/phetsarath/400.css';
+@import '@fontsource/phetsarath/700.css';
+
 /* Self-hosted Lao fonts from https://laoscript.net/download/ (SIL Open Font
    License -- see public/fonts/OFL.txt). Paths are relative so Vite resolves
    and base-prefixes them correctly regardless of deploy target (root vs.

@@ -4,7 +4,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-noto-sans-lao: "Noto Sans Lao", sans-serif;
+  --font-noto-sans-lao: "Noto Sans Lao Variable", sans-serif;
   --font-noto-color-emoji: "Noto Color Emoji", sans-serif;
 }
 
@@ -104,7 +104,7 @@ body.dark .app-panel,
 .app-section-title {
     font-size: clamp(1.45rem, 1.8vw, 2rem);
     line-height: 1.15;
-    font-family: "Noto Serif Lao", "Noto Serif", serif;
+    font-family: "Noto Serif Lao Variable", "Noto Serif", serif;
     font-weight: 600;
     color: var(--app-ink);
 }
