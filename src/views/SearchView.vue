@@ -2,12 +2,15 @@
 import { onMounted, ref } from 'vue'
 import { useContentStore } from '@/stores/content'
 import { searchContentSets, type CachedSearchSet, type ContentSearchResult } from '@/utils/contentSearch'
+import { useStaticText } from '@/composables/useStaticText'
+import BilingualText from '@/components/BilingualText.vue'
 
 const content = useContentStore()
 const query = ref('')
 const results = ref<ContentSearchResult[]>([])
 const cachedSets = ref<CachedSearchSet[]>([])
 const loading = ref(true)
+const copy = useStaticText()
 
 onMounted(async () => {
   cachedSets.value = await content.getCachedContentSets()
@@ -23,16 +26,16 @@ function runSearch(): void {
   <main class="app-page">
     <section class="app-panel">
       <h1 class="app-section-title">ຄົ້ນຫາ</h1>
-      <p class="app-muted">Search downloaded Lao content and existing English titles. No content is translated.</p>
+      <p class="app-muted"><BilingualText text-key="search.help" /></p>
       <form class="mt-5 flex gap-2" @submit.prevent="runSearch">
-        <input v-model="query" type="search" minlength="2" required autofocus class="search-input" placeholder="ຄົ້ນຫາ…" aria-label="Search">
+        <input v-model="query" type="search" minlength="2" required autofocus class="search-input" :placeholder="copy.lao('search.placeholder')" :aria-label="copy.text('search.placeholder')">
         <button type="submit" class="search-submit">ຄົ້ນຫາ</button>
       </form>
       <p class="app-muted mt-3 text-sm">
-        {{ loading ? 'Loading local indexes…' : `${cachedSets.length} downloaded libraries available to search.` }}
+        {{ loading ? copy.text('search.loading') : `${cachedSets.length} ${copy.text('search.libraries')}` }}
       </p>
       <div v-if="!loading && cachedSets.length === 0" class="mt-6 rounded-lg bg-[var(--lc-soft)] p-4">
-        Open a library while online to download it. It will then be searchable here, including offline.
+        <BilingualText text-key="search.emptyLibrary" />
       </div>
       <ol class="mt-6 grid gap-3">
         <li v-for="result in results" :key="`${result.fileId}:${result.bookId}:${result.chapterId}`" class="lc-card p-4">
@@ -41,7 +44,7 @@ function runSearch(): void {
           <p class="mt-2 line-clamp-3">{{ result.snippet }}</p>
         </li>
       </ol>
-      <p v-if="query.length >= 2 && !results.length && !loading" class="app-muted mt-8 text-center">No matching downloaded content.</p>
+      <p v-if="query.length >= 2 && !results.length && !loading" class="app-muted mt-8 text-center"><BilingualText text-key="search.noResults" /></p>
     </section>
   </main>
 </template>

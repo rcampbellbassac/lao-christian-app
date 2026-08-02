@@ -11,6 +11,8 @@ import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { useStudyStore, type ContentLocation } from '@/stores/study'
 import { applyInlineHighlights, sanitizeContentHtml } from '@/utils/sanitize'
 import SafeMediaLinks from '@/components/SafeMediaLinks.vue'
+import { useStaticText } from '@/composables/useStaticText'
+import BilingualText from '@/components/BilingualText.vue'
 
 library.add(faDisplay, faHighlighter, faPlay, faBookmark, faShareNodes, faNoteSticky)
 
@@ -19,6 +21,7 @@ const router = useRouter()
 const store = useContentStore()
 const selectionStore = usePresentationSelectionStore()
 const studyStore = useStudyStore()
+const copy = useStaticText()
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
@@ -171,24 +174,24 @@ function presentSelection(): void {
       <BreadcrumbNav />
     <section v-if="chapter">
       <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
-        <router-link to="/study" class="icon-btn" title="My Study" aria-label="My Study">
+        <router-link to="/study" class="icon-btn" :title="copy.text('reader.myStudy')" :aria-label="copy.text('reader.myStudy')">
           <font-awesome-icon icon="note-sticky" />
         </router-link>
-        <button type="button" class="icon-btn" :class="{ 'icon-btn--active': chapterBookmarked }" title="Bookmark chapter" aria-label="Bookmark chapter" @click="studyStore.toggleBookmark(chapterLocation())">
+        <button type="button" class="icon-btn" :class="{ 'icon-btn--active': chapterBookmarked }" :title="copy.text('reader.bookmark')" :aria-label="copy.text('reader.bookmark')" @click="studyStore.toggleBookmark(chapterLocation())">
           <font-awesome-icon icon="bookmark" />
         </button>
-        <button type="button" class="icon-btn" title="Add chapter note" aria-label="Add chapter note" @click="openNote()">
+        <button type="button" class="icon-btn" :title="copy.text('reader.note')" :aria-label="copy.text('reader.note')" @click="openNote()">
           <font-awesome-icon icon="note-sticky" />
         </button>
-        <button type="button" class="icon-btn" title="Share chapter" aria-label="Share chapter" @click="shareChapter">
+        <button type="button" class="icon-btn" :title="copy.text('reader.share')" :aria-label="copy.text('reader.share')" @click="shareChapter">
           <font-awesome-icon icon="share-nodes" />
         </button>
         <button
           type="button"
           class="icon-btn"
           :class="{ 'icon-btn--active': isSelectMode }"
-          title="Select paragraphs"
-          aria-label="Select paragraphs"
+          :title="copy.text('reader.select')"
+          :aria-label="copy.text('reader.select')"
           @click="toggleSelectMode"
         >
           <font-awesome-icon icon="highlighter" />
@@ -197,8 +200,8 @@ function presentSelection(): void {
           v-if="isSelectMode && selectedIndices.size > 0"
           type="button"
           class="icon-btn icon-btn--primary"
-          title="Present selection"
-          aria-label="Present selection"
+          :title="copy.text('reader.presentSelection')"
+          :aria-label="copy.text('reader.presentSelection')"
           @click="presentSelection"
         >
           <font-awesome-icon icon="play" />
@@ -207,8 +210,8 @@ function presentSelection(): void {
         <router-link
           :to="`/present/${fileId}/${bookId}/${chapterId}`"
           class="icon-btn icon-btn--primary"
-          title="Presentation mode"
-          aria-label="Presentation mode"
+          :title="copy.text('reader.presentation')"
+          :aria-label="copy.text('reader.presentation')"
         >
           <font-awesome-icon icon="display" />
         </router-link>
@@ -233,33 +236,33 @@ function presentSelection(): void {
         >
           <div class="content-block-body" v-html="renderedBlockHtml(index, block.html)"></div>
           <div v-if="isSelectableBlock(block) && !isSelectMode" class="study-block-actions">
-            <button type="button" :aria-label="studyStore.isHighlighted(chapterLocation(index)) ? 'Remove highlight' : 'Highlight paragraph'" title="Highlight paragraph" @click.stop="studyStore.toggleParagraphHighlight(chapterLocation(index))">
+            <button type="button" :aria-label="studyStore.isHighlighted(chapterLocation(index)) ? copy.text('reader.removeHighlight') : copy.text('reader.highlightParagraph')" :title="copy.text('reader.highlightParagraph')" @click.stop="studyStore.toggleParagraphHighlight(chapterLocation(index))">
               <font-awesome-icon icon="highlighter" />
             </button>
-            <button type="button" aria-label="Add note" title="Add note" @click.stop="openNote(index)">
+            <button type="button" :aria-label="copy.text('reader.addNote')" :title="copy.text('reader.addNote')" @click.stop="openNote(index)">
               <font-awesome-icon icon="note-sticky" />
             </button>
           </div>
         </div>
       </div>
-      <div v-if="selectedPhrase" class="selection-actions" role="toolbar" aria-label="Selected text actions">
+      <div v-if="selectedPhrase" class="selection-actions" role="toolbar" :aria-label="copy.text('reader.selectedActions')">
         <span class="line-clamp-1 min-w-0 flex-1">“{{ selectedPhrase.exact }}”</span>
-        <button type="button" class="app-chip" @click="saveSelectedPhrase">Highlight</button>
-        <button type="button" class="app-chip" @click="openNote(selectedPhrase.blockIndex); noteDraft = selectedPhrase.exact + '\n\n'; selectedPhrase = null">Note</button>
-        <button type="button" class="app-chip" @click="shareSelectedPhrase">Share</button>
-        <button type="button" aria-label="Close" @click="selectedPhrase = null">×</button>
+        <button type="button" class="app-chip" :title="copy.text('reader.highlight')" :aria-label="copy.text('reader.highlight')" @click="saveSelectedPhrase"><font-awesome-icon icon="highlighter" /></button>
+        <button type="button" class="app-chip" :title="copy.text('reader.addNote')" :aria-label="copy.text('reader.addNote')" @click="openNote(selectedPhrase.blockIndex); noteDraft = selectedPhrase.exact + '\n\n'; selectedPhrase = null"><font-awesome-icon icon="note-sticky" /></button>
+        <button type="button" class="app-chip" :title="copy.text('reader.shareSelection')" :aria-label="copy.text('reader.shareSelection')" @click="shareSelectedPhrase"><font-awesome-icon icon="share-nodes" /></button>
+        <button type="button" :aria-label="copy.text('reader.close')" :title="copy.text('reader.close')" @click="selectedPhrase = null">×</button>
       </div>
       <form v-if="noteEditorOpen" class="note-editor" @submit.prevent="saveNote">
-        <label for="study-note" class="font-semibold">ບັນທຶກ · Study note</label>
+        <label for="study-note" class="font-semibold"><BilingualText text-key="reader.studyNote" /></label>
         <p v-if="noteBlockIndex !== undefined" class="app-muted line-clamp-2 text-sm">{{ blocks[noteBlockIndex]?.text }}</p>
-        <textarea id="study-note" v-model="noteDraft" rows="4" required autofocus placeholder="Write a private note stored on this device…"></textarea>
-        <div class="flex justify-end gap-2"><button type="button" class="app-chip" @click="noteEditorOpen = false">Cancel</button><button type="submit" class="app-chip">Save</button></div>
+        <textarea id="study-note" v-model="noteDraft" rows="4" required autofocus :placeholder="copy.lao('reader.notePlaceholder')"></textarea>
+        <div class="flex justify-end gap-2"><button type="button" class="app-chip" @click="noteEditorOpen = false">{{ copy.text('action.cancel') }}</button><button type="submit" class="app-chip">{{ copy.text('action.save') }}</button></div>
       </form>
       <SafeMediaLinks :audio-url="chapter.audiourl" :video-url="chapter.videourl" :audio-embed="chapter.audioembed" :video-embed="chapter.videoembed" />
     </section>
     <section v-else>
       <p class="text-center text-slate-500 dark:text-slate-300">
-        Loading chapter...
+        <BilingualText text-key="reader.loading" />
       </p>
     </section>
     </section>
