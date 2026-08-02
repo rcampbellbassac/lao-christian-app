@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDeckStore, type Deck, type DeckSlide } from '@/stores/decks'
 import { aspectRatioPresets } from '@/utils/aspectRatios'
 import { presentationThemePresets } from '@/utils/presentationThemes'
 import { sanitizeContentHtml } from '@/utils/sanitize'
+import { getAspectRatioPreset } from '@/utils/aspectRatios'
+import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 
 const route = useRoute()
 const router = useRouter()
 const decks = useDeckStore()
 const selectedSlideId = ref<string | null>(null)
 const status = ref('')
+const isExporting = ref(false)
+const exportSlide = ref<DeckSlide | undefined>()
+const exportStage = ref<HTMLElement | null>(null)
 
 const deck = computed(() => route.params.deckId ? decks.getDeck(route.params.deckId as string) : undefined)
 const selectedIndex = computed(() => deck.value?.slides.findIndex(slide => slide.id === selectedSlideId.value) ?? -1)
@@ -55,6 +60,42 @@ async function deleteDeck(target: Deck): Promise<void> {
   await decks.removeDeck(target.id)
   await router.push('/decks')
 }
+
+async function renderForExport(slide: { id: string }): Promise<HTMLElement> {
+  exportSlide.value = deck.value?.slides.find(item => item.id === slide.id)
+  await nextTick()
+  await document.fonts?.ready
+  const canvas = exportStage.value?.querySelector<HTMLElement>('.deck-canvas')
+  if (!canvas) throw new Error('Slide canvas is unavailable.')
+  return canvas
+}
+
+async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
+  if (!deck.value || isExporting.value) return
+  const visibleSlides = deck.value.slides.filter(slide => !slide.hidden)
+  if (!visibleSlides.length) { status.value = 'No visible slides to export'; return }
+  isExporting.value = true
+  status.value = 'Preparing export…'
+  try {
+    const exporter = await import('@/utils/presentationExport')
+    const preset = getAspectRatioPreset(deck.value.aspectRatio)
+    if (kind === 'png') {
+      const slide = selectedSlide.value && !selectedSlide.value.hidden ? selectedSlide.value : visibleSlides[0]!
+      await exporter.exportSlideAsPng({ ...slide, element: await renderForExport(slide) }, preset, deck.value.name)
+    } else if (kind === 'zip') {
+      await exporter.exportSlidesAsZip(visibleSlides, preset, renderForExport, deck.value.name)
+    } else {
+      await exporter.exportSlidesAsPptx(visibleSlides, preset, renderForExport, deck.value.name)
+    }
+    status.value = 'Export complete'
+  } catch (error) {
+    console.error('Deck export failed', error)
+    status.value = 'Export failed'
+  } finally {
+    isExporting.value = false
+    exportSlide.value = undefined
+  }
+}
 </script>
 
 <template>
@@ -76,6 +117,9 @@ async function deleteDeck(target: Deck): Promise<void> {
         <input v-model="deck.name" class="studio-title" aria-label="Deck name" @change="saveDeck">
         <span class="app-muted text-xs">{{ status }}</span>
         <router-link :to="`/present/deck/${deck.id}`" class="studio-primary">Present</router-link>
+        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('png')">PNG</button>
+        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('zip')">ZIP</button>
+        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('pptx')">PPTX</button>
         <button type="button" class="app-chip" @click="deleteDeck(deck)">Delete deck</button>
       </header>
       <div class="studio-grid">
@@ -105,6 +149,9 @@ async function deleteDeck(target: Deck): Promise<void> {
           </div>
         </section>
       </div>
+      <div ref="exportStage" class="export-stage" aria-hidden="true">
+        <DeckSlideCanvas v-if="exportSlide" :slide="exportSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" />
+      </div>
     </section>
   </main>
 </template>
@@ -122,5 +169,6 @@ async function deleteDeck(target: Deck): Promise<void> {
 .studio-editor label { display: grid; gap: .35rem; font-size: .85rem; font-weight: 600; }
 .studio-input { width: 100%; border: 1px solid var(--lc-border); border-radius: .55rem; padding: .6rem; background: var(--lc-paper); color: var(--app-ink); }
 .studio-slide-preview { aspect-ratio: 16/9; display: grid; align-content: center; justify-items: center; overflow: hidden; border-radius: .6rem; padding: 5%; background: var(--lc-dark-bg); color: #f6f1e7; text-align: center; }
+.export-stage { position: fixed; left: -10000px; top: 0; width: 1920px; pointer-events: none; }
 @media (max-width: 700px) { .studio-grid { grid-template-columns: 1fr; } .studio-sidebar { border-right: 0; border-bottom: 1px solid var(--lc-border); max-height: 14rem; overflow: auto; } }
 </style>

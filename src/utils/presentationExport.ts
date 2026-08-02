@@ -22,6 +22,14 @@ async function rasterizeSlide(slide: ExportableSlide, preset: AspectRatioPreset)
   })
 }
 
+export async function exportSlideAsPng(slide: ExportableSlide, preset: AspectRatioPreset, filenamePrefix: string): Promise<void> {
+  const dataUrl = await rasterizeSlide(slide, preset)
+  const link = document.createElement('a')
+  link.download = `${sanitizeFilename(filenamePrefix)}-${sanitizeFilename(slide.title)}.png`
+  link.href = dataUrl
+  link.click()
+}
+
 export function sanitizeFilename(value: string): string {
   return (
     value
