@@ -15,9 +15,11 @@ import type { PresentationThemeId } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
 import { useUiText } from '@/composables/useUiText'
 import LibraryManager from '@/components/LibraryManager.vue'
+import { useStaticText } from '@/composables/useStaticText'
 
 const settings = useSettingsStore()
 const text = useUiText()
+const copy = useStaticText()
 
 onMounted(async () => {
   await settings.load()
@@ -56,9 +58,9 @@ function onTextAlignChange(value: PresentationTextAlign): void {
 <template>
   <main class="app-page">
     <section class="app-panel">
-      <h1 class="app-section-title">Settings</h1>
+      <h1 class="app-section-title">{{ copy.text('settings.title') }}</h1>
       <p class="app-muted mt-2 mb-4">
-        These preferences are saved on this device and apply the next time you open the app.
+        {{ copy.text('settings.savedLocally') }}
       </p>
       <hr class="app-divider" />
 
@@ -66,7 +68,7 @@ function onTextAlignChange(value: PresentationTextAlign): void {
         <section>
           <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ text.lao('bilingual') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            ສະແດງຄຳອະທິບາຍພາສາອັງກິດຂະໜາດນ້ອຍສຳລັບເມນູ. Content remains in Lao.
+            {{ copy.text('settings.bilingualHelp') }}
           </p>
           <button
             type="button"
@@ -80,17 +82,17 @@ function onTextAlignChange(value: PresentationTextAlign): void {
         <LibraryManager />
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">ຕິດຕັ້ງແອັບ <span class="app-muted text-sm font-normal">· Install the app</span></h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.installTitle') }}</h2>
           <p class="app-muted mt-1 text-sm">
-            When the download-cloud icon appears in the top bar, select it to install. On iPhone or iPad, use Safari’s Share menu and choose “Add to Home Screen.” Download collections above before going offline.
+            {{ copy.text('settings.installHelp') }}
           </p>
-          <router-link to="/migrate" class="app-link mt-2 inline-block">Domain migration and local-data transfer →</router-link>
+          <router-link to="/migrate" class="app-link mt-2 inline-block">{{ copy.text('settings.migration') }} →</router-link>
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Reading text size</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.readingSize') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            Adjusts the base font size for chapter content across the app.
+            {{ copy.text('settings.readingSizeHelp') }}
           </p>
           <div class="flex items-center gap-4">
             <input
@@ -108,15 +110,15 @@ function onTextAlignChange(value: PresentationTextAlign): void {
               class="app-chip hover:bg-slate-100 dark:hover:bg-slate-800"
               @click="settings.resetContentFontScale"
             >
-              Reset
+              {{ copy.text('action.reset') }}
             </button>
           </div>
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Presentation font size</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.presentationSize') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            Default slide text size used in Presentation mode. Can also be adjusted from within a presentation.
+            {{ copy.text('settings.presentationSizeHelp') }}
           </p>
           <div class="flex items-center gap-4">
             <input
@@ -134,15 +136,15 @@ function onTextAlignChange(value: PresentationTextAlign): void {
               class="app-chip hover:bg-slate-100 dark:hover:bg-slate-800"
               @click="settings.resetPresentationFontScale"
             >
-              Reset
+              {{ copy.text('action.reset') }}
             </button>
           </div>
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Default presentation size</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.defaultRatio') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            Aspect ratio used when a presentation starts. Can also be changed from within a presentation.
+            {{ copy.text('settings.defaultRatioHelp') }}
           </p>
           <select
             class="rounded-lg border border-slate-300/70 bg-white/85 px-3 py-2 text-sm text-slate-700 dark:border-slate-500 dark:bg-slate-800/85 dark:text-slate-100"
@@ -156,9 +158,9 @@ function onTextAlignChange(value: PresentationTextAlign): void {
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Default presentation theme</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.defaultTheme') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            Background/text theme used when a presentation starts. Can also be changed from within a presentation.
+            {{ copy.text('settings.defaultThemeHelp') }}
           </p>
           <select
             class="rounded-lg border border-slate-300/70 bg-white/85 px-3 py-2 text-sm text-slate-700 dark:border-slate-500 dark:bg-slate-800/85 dark:text-slate-100"
@@ -172,9 +174,9 @@ function onTextAlignChange(value: PresentationTextAlign): void {
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Default presentation text alignment</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.defaultAlignment') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            How content slide text is aligned. Can also be changed from within a presentation.
+            {{ copy.text('settings.defaultAlignmentHelp') }}
           </p>
           <div class="flex gap-2">
             <button
@@ -183,7 +185,7 @@ function onTextAlignChange(value: PresentationTextAlign): void {
               :class="{ 'bg-teal-100 dark:bg-teal-900/50': settings.presentationTextAlign === 'left' }"
               @click="onTextAlignChange('left')"
             >
-              Left
+              {{ copy.text('action.left') }}
             </button>
             <button
               type="button"
@@ -191,15 +193,15 @@ function onTextAlignChange(value: PresentationTextAlign): void {
               :class="{ 'bg-teal-100 dark:bg-teal-900/50': settings.presentationTextAlign === 'center' }"
               @click="onTextAlignChange('center')"
             >
-              Center
+              {{ copy.text('action.center') }}
             </button>
           </div>
         </section>
 
         <section>
-          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Default presentation font</h2>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('settings.defaultFont') }}</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
-            Lao font used for slide text. Can also be changed from within a presentation.
+            {{ copy.text('settings.defaultFontHelp') }}
           </p>
           <select
             class="rounded-lg border border-slate-300/70 bg-white/85 px-3 py-2 text-sm text-slate-700 dark:border-slate-500 dark:bg-slate-800/85 dark:text-slate-100"

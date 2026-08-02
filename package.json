@@ -21,6 +21,7 @@
     "normalize:data:check": "node scripts/normalize-content.mjs && node -e \"const fs=require('fs');const p='src/assets/data-normalized/normalization-report.json';console.log(fs.readFileSync(p,'utf8'))\"",
     "content:release": "node scripts/build-content-release.mjs",
     "content:publish": "bash scripts/publish-content.sh",
+    "translate:static": "node scripts/translate-static-copy.mjs",
     "pages:build:project": "VITE_BASE_PATH='/lao-christian-app/' npm run build-only",
     "pages:build:root": "VITE_BASE_PATH='/' npm run build-only",
     "docker:up": "docker compose up -d --build",

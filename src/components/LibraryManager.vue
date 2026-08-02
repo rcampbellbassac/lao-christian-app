@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useContentStore, type ContentCacheStatus } from '@/stores/content'
+import { useStaticText } from '@/composables/useStaticText'
 
 const content = useContentStore()
+const copy = useStaticText()
 const statuses = ref<ContentCacheStatus[]>([])
 const busyKey = ref<string | null>(null)
 const message = ref('')
@@ -18,7 +20,7 @@ async function refresh(): Promise<void> {
   statuses.value = await content.getContentCacheStatuses()
   if (navigator.storage?.estimate) {
     const estimate = await navigator.storage.estimate()
-    storageLabel.value = `${formatBytes(estimate.usage ?? 0)} used locally`
+    storageLabel.value = `${formatBytes(estimate.usage ?? 0)} ${copy.text('offline.usedLocally')}`
   }
 }
 
@@ -27,9 +29,9 @@ async function download(item: ContentCacheStatus): Promise<void> {
   message.value = ''
   try {
     await content.downloadContentSet(item.key)
-    message.value = `${item.material.native_name} is available offline.`
+    message.value = `${item.material.native_name} ${copy.text('offline.downloaded')}`
   } catch {
-    message.value = `Could not download ${item.material.native_name}. Check your connection.`
+    message.value = copy.text('offline.downloadFailed')
   } finally {
     busyKey.value = null
     await refresh()
@@ -40,7 +42,7 @@ async function remove(item: ContentCacheStatus): Promise<void> {
   busyKey.value = item.key
   await content.removeContentSet(item.key)
   busyKey.value = null
-  message.value = `${item.material.native_name} was removed from this device.`
+  message.value = `${item.material.native_name} ${copy.text('offline.removed')}`
   await refresh()
 }
 
@@ -51,8 +53,8 @@ onMounted(refresh)
   <section>
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
-        <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">ດາວໂຫຼດເນື້ອຫາ · Offline libraries</h2>
-        <p class="app-muted mt-1 text-sm">Choose what is stored on this device. Downloaded libraries can be read and searched without a connection.</p>
+        <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">{{ copy.text('offline.title') }}</h2>
+        <p class="app-muted mt-1 text-sm">{{ copy.text('offline.help') }}</p>
       </div>
       <span v-if="storageLabel" class="app-chip">{{ storageLabel }}</span>
     </div>
@@ -63,11 +65,11 @@ onMounted(refresh)
           <img :src="item.material.icon" alt="" class="h-10 w-10 object-contain">
           <div class="min-w-0">
             <p class="font-semibold">{{ item.material.native_name }}</p>
-            <p class="app-muted text-xs">{{ item.cached ? `${formatBytes(item.approximateBytes)} · available offline` : 'Not downloaded' }}</p>
+            <p class="app-muted text-xs">{{ item.cached ? `${formatBytes(item.approximateBytes)} · ${copy.text('offline.available')}` : copy.text('offline.notDownloaded') }}</p>
           </div>
         </div>
-        <button v-if="!item.cached" type="button" class="app-chip" :disabled="busyKey === item.key" @click="download(item)">{{ busyKey === item.key ? '…' : 'Download' }}</button>
-        <button v-else type="button" class="app-chip" :disabled="busyKey === item.key" @click="remove(item)">Remove</button>
+        <button v-if="!item.cached" type="button" class="app-chip" :disabled="busyKey === item.key" @click="download(item)">{{ busyKey === item.key ? '…' : copy.text('offline.download') }}</button>
+        <button v-else type="button" class="app-chip" :disabled="busyKey === item.key" @click="remove(item)">{{ copy.text('offline.remove') }}</button>
       </li>
     </ul>
   </section>
