@@ -25,7 +25,7 @@
     --app-muted: color-mix(in srgb, var(--lc-ink), transparent 28%);
     --app-brand: var(--lc-brand);
     --app-accent: var(--lc-clay);
-    --app-panel: color-mix(in srgb, var(--lc-paper), white 18%);
+    --app-panel: color-mix(in srgb, var(--lc-paper), transparent 7%);
     --app-panel-border: var(--lc-border);
     --app-panel-shadow: 0 2px 18px color-mix(in srgb, var(--lc-ink), transparent 88%);
     --app-content-font-scale: 1;
@@ -47,7 +47,11 @@ body {
     min-height: 100vh;
     font-family: var(--font-noto-sans-lao), var(--font-noto-color-emoji), sans-serif;
     color: var(--app-ink);
-    background: var(--lc-paper);
+    background-color: var(--lc-paper);
+    background-image: linear-gradient(color-mix(in srgb, var(--lc-paper), transparent 30%), color-mix(in srgb, var(--lc-paper), transparent 30%)), url('./img/page-texture-light.webp');
+    background-position: center top;
+    background-size: cover;
+    background-attachment: fixed;
 }
 
 body::after {
@@ -69,10 +73,11 @@ body.dark,
     --lc-ink: #f6f1e7;
     --lc-border: color-mix(in srgb, #f6f1e7, transparent 84%);
     --lc-soft: #203f43;
-    --app-panel: #172f35;
+    --app-panel: color-mix(in srgb, #172f35, transparent 6%);
     --app-panel-border: rgba(148, 163, 184, 0.34);
     --app-panel-shadow: 0 26px 56px rgba(0, 0, 0, 0.58);
-    background: var(--lc-dark-bg);
+    background-color: var(--lc-dark-bg);
+    background-image: linear-gradient(rgba(16, 43, 52, .26), rgba(16, 43, 52, .26)), url('./img/page-texture-dark.webp');
 }
 
 .app-page {
