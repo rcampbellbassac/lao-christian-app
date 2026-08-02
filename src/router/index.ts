@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/SearchView.vue'),
     },
     {
+      path: '/decks/:deckId?',
+      name: 'decks',
+      component: () => import('../views/SlideStudioView.vue'),
+    },
+    {
       path: '/cookie-policy',
       name: 'cookie-policy',
       component: () => import('../views/CookiePolicyView.vue'),

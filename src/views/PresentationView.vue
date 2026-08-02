@@ -16,12 +16,14 @@ import {
 } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
 import { sanitizeContentHtml } from '@/utils/sanitize'
+import { useDeckStore } from '@/stores/decks'
 
 const route = useRoute()
 const router = useRouter()
 const store = useContentStore()
 const settings = useSettingsStore()
 const selectionStore = usePresentationSelectionStore()
+const deckStore = useDeckStore()
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
@@ -348,6 +350,18 @@ async function exportPptx(): Promise<void> {
   }
 }
 
+async function saveAsDeck(): Promise<void> {
+  if (!activeSlides.value.length) return
+  const deck = await deckStore.createFromSlides(
+    chapter.value?.name.replace(/<[^>]*>/g, '') || 'Presentation',
+    activeSlides.value,
+    { fileId, bookId, chapterId },
+    settings.presentationAspectRatio,
+    settings.presentationTheme,
+  )
+  await router.push(`/decks/${deck.id}`)
+}
+
 async function toggleFullscreen(): Promise<void> {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen()
@@ -486,6 +500,7 @@ function onFullscreenChange(): void {
         {{ isFullscreen ? 'Windowed' : 'Fullscreen' }}
       </button>
       <button class="presentation-btn" type="button" title="Export current slide as PNG (E)" @click="exportCurrentSlide">Export PNG</button>
+      <button class="presentation-btn" type="button" title="Save as an editable local deck" @click="saveAsDeck">Save deck</button>
       <button class="presentation-btn" type="button" :disabled="isExporting" title="Export selected slides as a ZIP of PNGs" @click="exportZip">
         {{ isExporting ? 'Exporting…' : 'Export ZIP' }}
       </button>

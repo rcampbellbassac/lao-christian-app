@@ -35,6 +35,13 @@ const text = useUiText()
     </section>
 
     <section class="app-panel mt-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 class="app-section-title">ສະຕູດິໂອສະໄລ້</h2><p class="app-muted">Slide Studio · create and save church presentations locally</p></div>
+        <router-link to="/decks" class="lc-btn-link">→</router-link>
+      </div>
+    </section>
+
+    <section class="app-panel mt-4">
       <h2 class="app-section-title">LaoChristian.org Other Digital Resources</h2>
       <p class="app-muted mt-2 italic">
         We also provide additional digital resources to help Lao communities study the Bible.
