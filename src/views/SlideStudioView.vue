@@ -127,9 +127,9 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
       <div class="studio-grid">
         <aside class="studio-sidebar">
           <button type="button" class="studio-primary w-full" @click="decks.addSlide(deck)">＋ {{ copy.text('studio.addSlide') }}</button>
-          <ol class="mt-3 grid gap-2">
+          <ol class="studio-slide-list mt-3 grid gap-2">
             <li v-for="(slide, index) in deck.slides" :key="slide.id" class="studio-slide-item" :class="{ 'studio-slide-item--active': slide.id === selectedSlideId }" @click="selectedSlideId = slide.id">
-              <span>{{ index + 1 }}</span><span class="min-w-0 flex-1 truncate">{{ slide.title }}</span><span v-if="slide.hidden">◌</span>
+              <span class="studio-slide-number">{{ index + 1 }}</span><span class="studio-slide-name" :title="slide.title">{{ slide.title }}</span><span v-if="slide.hidden">◌</span>
             </li>
           </ol>
         </aside>
@@ -161,9 +161,12 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
 .studio-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .8rem; border-bottom: 1px solid var(--lc-border); }
 .studio-title { min-width: 10rem; flex: 1; border: 0; background: transparent; color: var(--app-ink); font-size: 1.2rem; font-weight: 600; }
 .studio-primary { border-radius: 999px; padding: .55rem 1rem; background: var(--lc-brand); color: #f6f1e7; font-weight: 600; }
-.studio-grid { display: grid; grid-template-columns: minmax(12rem, 16rem) 1fr; min-height: 35rem; }
-.studio-sidebar { border-right: 1px solid var(--lc-border); padding: .8rem; }
-.studio-slide-item { display: flex; cursor: pointer; align-items: center; gap: .5rem; border: 1px solid var(--lc-border); border-radius: .55rem; padding: .6rem; }
+.studio-grid { display: grid; grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr); min-height: 35rem; }
+.studio-sidebar { min-width: 0; overflow: hidden; border-right: 1px solid var(--lc-border); padding: .8rem; }
+.studio-slide-list { min-width: 0; }
+.studio-slide-item { display: flex; min-width: 0; width: 100%; cursor: pointer; align-items: flex-start; gap: .5rem; border: 1px solid var(--lc-border); border-radius: .55rem; padding: .6rem; }
+.studio-slide-number { flex: 0 0 auto; }
+.studio-slide-name { display: -webkit-box; min-width: 0; flex: 1; overflow: hidden; overflow-wrap: anywhere; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .studio-slide-item--active { background: var(--lc-soft); border-color: var(--lc-brand); }
 .studio-editor { display: grid; align-content: start; gap: 1rem; padding: 1rem; }
 .studio-editor label { display: grid; gap: .35rem; font-size: .85rem; font-weight: 600; }

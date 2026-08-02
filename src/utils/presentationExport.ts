@@ -22,12 +22,41 @@ async function rasterizeSlide(slide: ExportableSlide, preset: AspectRatioPreset)
   })
 }
 
+/**
+ * Starts a browser download using an attached anchor and keeps the object URL
+ * alive long enough for browsers that consume it after the click handler ends.
+ */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = filename
+  link.href = url
+  link.hidden = true
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
+}
+
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const [metadata, encoded = ''] = dataUrl.split(',', 2)
+  const mimeType = metadata.match(/^data:([^;,]+)/)?.[1] ?? 'application/octet-stream'
+  const bytes = metadata.includes(';base64')
+    ? Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0))
+    : new TextEncoder().encode(decodeURIComponent(encoded))
+  return new Blob([bytes], { type: mimeType })
+}
+
+export function downloadDataUrl(dataUrl: string, filename: string): void {
+  downloadBlob(dataUrlToBlob(dataUrl), filename)
+}
+
 export async function exportSlideAsPng(slide: ExportableSlide, preset: AspectRatioPreset, filenamePrefix: string): Promise<void> {
   const dataUrl = await rasterizeSlide(slide, preset)
-  const link = document.createElement('a')
-  link.download = `${sanitizeFilename(filenamePrefix)}-${sanitizeFilename(slide.title)}.png`
-  link.href = dataUrl
-  link.click()
+  downloadDataUrl(
+    dataUrl,
+    `${sanitizeFilename(filenamePrefix)}-${sanitizeFilename(slide.title)}.png`
+  )
 }
 
 export function sanitizeFilename(value: string): string {
@@ -62,12 +91,7 @@ export async function exportSlidesAsZip(
   }
 
   const blob = await zip.generateAsync({ type: 'blob' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.download = `${sanitizeFilename(filenamePrefix)}-slides.zip`
-  link.href = url
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadBlob(blob, `${sanitizeFilename(filenamePrefix)}-slides.zip`)
 }
 
 /**
@@ -99,5 +123,11 @@ export async function exportSlidesAsPptx(
     })
   }
 
-  await pptx.writeFile({ fileName: `${sanitizeFilename(filenamePrefix)}.pptx` })
+  const output = await pptx.write({ outputType: 'blob', compression: true })
+  const blob = output instanceof Blob
+    ? output
+    : new Blob([output as BlobPart], {
+        type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      })
+  downloadBlob(blob, `${sanitizeFilename(filenamePrefix)}.pptx`)
 }

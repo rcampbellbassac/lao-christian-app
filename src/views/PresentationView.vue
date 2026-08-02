@@ -25,7 +25,7 @@ import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } fro
 import { usePresentationSelectionStore } from '@/stores/presentationSelection'
 import { buildSlidesFromSelection, createSlideGenerator, parseBlocks, type Slide } from '@/utils/slideGenerators'
 import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/utils/aspectRatios'
-import { exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
+import { downloadDataUrl, exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
 import { laoFontPresets, getLaoFontPreset, type LaoFontId } from '@/utils/laoFonts'
 import {
   getPresentationThemeBackground,
@@ -58,6 +58,7 @@ const slideCanvas = ref<HTMLElement | null>(null)
 const isSelectionPanelOpen = ref(false)
 const isCustomizePanelOpen = ref(false)
 const isExporting = ref(false)
+const exportStatus = ref('')
 const selectedSlideIds = ref<Set<string>>(new Set())
 const rangeStart = ref(1)
 const rangeEnd = ref(1)
@@ -310,16 +311,18 @@ function decreaseFontScale(): void {
 
 async function exportCurrentSlide(): Promise<void> {
   if (!slideCanvas.value || !currentSlide.value) return
-
-  const image = await toPng(slideCanvas.value, {
-    cacheBust: true,
-    pixelRatio: 2,
-  })
-
-  const link = document.createElement('a')
-  link.download = `${sanitizeFilename(currentSlide.value.title)}.png`
-  link.href = image
-  link.click()
+  exportStatus.value = copy.text('studio.preparing')
+  try {
+    const image = await toPng(slideCanvas.value, {
+      cacheBust: true,
+      pixelRatio: 2,
+    })
+    downloadDataUrl(image, `${sanitizeFilename(currentSlide.value.title)}.png`)
+    exportStatus.value = copy.text('studio.exportComplete')
+  } catch (err) {
+    console.error('Failed to export slide as PNG', err)
+    exportStatus.value = copy.text('studio.exportFailed')
+  }
 }
 
 async function renderSlideForExport(slide: { id: string }): Promise<HTMLElement> {
@@ -339,6 +342,7 @@ async function exportZip(): Promise<void> {
   if (!activeSlides.value.length || isExporting.value) return
 
   isExporting.value = true
+  exportStatus.value = copy.text('studio.preparing')
   const originalIndex = currentSlideIndex.value
   try {
     await exportSlidesAsZip(
@@ -347,8 +351,10 @@ async function exportZip(): Promise<void> {
       renderSlideForExport,
       chapter.value?.name ?? 'presentation'
     )
+    exportStatus.value = copy.text('studio.exportComplete')
   } catch (err) {
     console.error('Failed to export slides as ZIP', err)
+    exportStatus.value = copy.text('studio.exportFailed')
   } finally {
     currentSlideIndex.value = originalIndex
     isExporting.value = false
@@ -359,6 +365,7 @@ async function exportPptx(): Promise<void> {
   if (!activeSlides.value.length || isExporting.value) return
 
   isExporting.value = true
+  exportStatus.value = copy.text('studio.preparing')
   const originalIndex = currentSlideIndex.value
   try {
     await exportSlidesAsPptx(
@@ -367,8 +374,10 @@ async function exportPptx(): Promise<void> {
       renderSlideForExport,
       chapter.value?.name ?? 'presentation'
     )
+    exportStatus.value = copy.text('studio.exportComplete')
   } catch (err) {
     console.error('Failed to export slides as PPTX', err)
+    exportStatus.value = copy.text('studio.exportFailed')
   } finally {
     currentSlideIndex.value = originalIndex
     isExporting.value = false
@@ -538,6 +547,7 @@ function onFullscreenChange(): void {
       <button class="presentation-btn" type="button" :disabled="isExporting" :title="copy.text('presentation.exportPptx')" :aria-label="copy.text('presentation.exportPptx')" @click="exportPptx">
         <span v-if="isExporting">…</span><font-awesome-icon v-else icon="file-powerpoint" />
       </button>
+      <span class="presentation-export-status" role="status" aria-live="polite">{{ exportStatus }}</span>
     </header>
 
     <section v-if="isSelectionPanelOpen" class="selection-panel">
