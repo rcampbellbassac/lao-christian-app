@@ -2,6 +2,9 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
+import darkLogo from '@/assets/img/logo 2-black.png'
+import lightLogo from '@/assets/img/logo 2-white.png'
+import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
 import { useContentStore } from '@/stores/content'
 import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } from '@/stores/settings'
 import { usePresentationSelectionStore } from '@/stores/presentationSelection'
@@ -10,7 +13,7 @@ import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/
 import { exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
 import { laoFontPresets, getLaoFontPreset, type LaoFontId } from '@/utils/laoFonts'
 import {
-  presentationThemePresets,
+  getPresentationThemeBackground,
   getPresentationThemePreset,
   type PresentationThemeId,
 } from '@/utils/presentationThemes'
@@ -179,6 +182,8 @@ const selectedContentSlideCount = computed(
 
 const currentPreset = computed(() => getAspectRatioPreset(settings.presentationAspectRatio))
 const currentTheme = computed(() => getPresentationThemePreset(settings.presentationTheme))
+const currentThemeBackground = computed(() => getPresentationThemeBackground(currentTheme.value, settings.presentationAspectRatio))
+const currentThemeLogo = computed(() => currentTheme.value.logoTone === 'light' ? lightLogo : darkLogo)
 const currentFont = computed(() => getLaoFontPreset(settings.presentationFontFamily))
 
 function goNext(): void {
@@ -543,17 +548,13 @@ function onFullscreenChange(): void {
     </section>
 
     <section v-if="isCustomizePanelOpen" class="selection-panel">
-      <div class="selection-panel-row">
+      <div class="selection-panel-row selection-panel-row--themes">
         <span class="presentation-field-label">Theme</span>
-        <select
-          class="presentation-select"
-          :value="settings.presentationTheme"
-          @change="setTheme(($event.target as HTMLSelectElement).value as PresentationThemeId)"
-        >
-          <option v-for="preset in presentationThemePresets" :key="preset.id" :value="preset.id">
-            {{ preset.label }}
-          </option>
-        </select>
+        <PresentationThemePicker
+          :model-value="settings.presentationTheme"
+          :aspect-ratio="settings.presentationAspectRatio"
+          @update:model-value="setTheme"
+        />
       </div>
 
       <div class="selection-panel-row">
@@ -595,7 +596,7 @@ function onFullscreenChange(): void {
       :style="{
         '--slide-ratio': currentPreset.ratio,
         '--slide-font-scale': settings.presentationFontScale * fitScale,
-        '--slide-background': currentTheme.background,
+        '--slide-background': currentThemeBackground,
         '--slide-text-color': currentTheme.textColor,
         '--slide-muted-color': currentTheme.mutedColor,
         '--slide-text-align': settings.presentationTextAlign,
@@ -608,6 +609,7 @@ function onFullscreenChange(): void {
         class="slide-content"
         :class="{ 'slide-content--title': currentSlide.id === 'title' }"
       >
+        <img class="slide-logo" :src="currentThemeLogo" alt="" aria-hidden="true" />
         <h1
           class="slide-title"
           :class="{ 'slide-title--header': currentSlide.id !== 'title' }"
@@ -741,6 +743,9 @@ function onFullscreenChange(): void {
   color: #e2e8f0;
 }
 
+.selection-panel-row--themes { align-items: flex-start; }
+.selection-panel-row--themes > :last-child { flex: 1; }
+
 .selection-title-toggle {
   display: inline-flex;
   align-items: center;
@@ -805,6 +810,7 @@ function onFullscreenChange(): void {
 }
 
 .slide-content {
+  position: relative;
   aspect-ratio: var(--slide-ratio, 1.7778);
   width: min(1200px, 96vw, calc(78vh * var(--slide-ratio, 1.7778)));
   background: var(--slide-background, radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95)));
@@ -824,6 +830,15 @@ function onFullscreenChange(): void {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.slide-logo {
+  position: absolute;
+  left: 3.5%;
+  bottom: 3.5%;
+  width: clamp(5rem, 14%, 10rem);
+  height: auto;
+  opacity: .82;
 }
 
 .slide-content--title {

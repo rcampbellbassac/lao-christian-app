@@ -3,10 +3,9 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDeckStore, type Deck, type DeckSlide } from '@/stores/decks'
 import { aspectRatioPresets } from '@/utils/aspectRatios'
-import { presentationThemePresets } from '@/utils/presentationThemes'
-import { sanitizeContentHtml } from '@/utils/sanitize'
 import { getAspectRatioPreset } from '@/utils/aspectRatios'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
+import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -132,7 +131,7 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
           </ol>
         </aside>
         <section v-if="selectedSlide" class="studio-editor">
-          <div class="studio-slide-preview"><h2>{{ selectedSlide.title }}</h2><div v-html="sanitizeContentHtml(selectedSlide.html)"></div></div>
+          <div class="studio-slide-preview"><DeckSlideCanvas :slide="selectedSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" /></div>
           <label>Slide title<input v-model="selectedSlide.title" class="studio-input" @change="saveDeck"></label>
           <label>Slide text<textarea :value="textFromHtml(selectedSlide.html)" rows="7" class="studio-input" @change="updateSlideBody(selectedSlide, $event)"></textarea></label>
           <label>Speaker notes<textarea v-model="selectedSlide.speakerNotes" rows="4" class="studio-input" @change="saveDeck"></textarea></label>
@@ -143,10 +142,8 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
             <button type="button" class="app-chip" @click="selectedSlide.hidden = !selectedSlide.hidden; saveDeck()">{{ selectedSlide.hidden ? 'Show' : 'Hide' }}</button>
             <button type="button" class="app-chip" @click="decks.removeSlide(deck, selectedIndex); selectedSlideId = deck.slides[0]?.id ?? null">Delete slide</button>
           </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label>Aspect ratio<select v-model="deck.aspectRatio" class="studio-input" @change="saveDeck"><option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">{{ preset.label }}</option></select></label>
-            <label>Theme<select v-model="deck.theme" class="studio-input" @change="saveDeck"><option v-for="theme in presentationThemePresets" :key="theme.id" :value="theme.id">{{ theme.label }}</option></select></label>
-          </div>
+          <label>Aspect ratio<select v-model="deck.aspectRatio" class="studio-input" @change="saveDeck"><option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">{{ preset.label }}</option></select></label>
+          <label>Theme<PresentationThemePicker v-model="deck.theme" :aspect-ratio="deck.aspectRatio" @update:model-value="saveDeck" /></label>
         </section>
       </div>
       <div ref="exportStage" class="export-stage" aria-hidden="true">
@@ -168,7 +165,8 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
 .studio-editor { display: grid; align-content: start; gap: 1rem; padding: 1rem; }
 .studio-editor label { display: grid; gap: .35rem; font-size: .85rem; font-weight: 600; }
 .studio-input { width: 100%; border: 1px solid var(--lc-border); border-radius: .55rem; padding: .6rem; background: var(--lc-paper); color: var(--app-ink); }
-.studio-slide-preview { aspect-ratio: 16/9; display: grid; align-content: center; justify-items: center; overflow: hidden; border-radius: .6rem; padding: 5%; background: var(--lc-dark-bg); color: #f6f1e7; text-align: center; }
+.studio-slide-preview { display: grid; max-height: 32rem; place-items: center; overflow: hidden; border-radius: .6rem; background: var(--lc-dark-bg); }
+.studio-slide-preview :deep(.deck-canvas) { max-height: 32rem; }
 .export-stage { position: fixed; left: -10000px; top: 0; width: 1920px; pointer-events: none; }
 @media (max-width: 700px) { .studio-grid { grid-template-columns: 1fr; } .studio-sidebar { border-right: 0; border-bottom: 1px solid var(--lc-border); max-height: 14rem; overflow: auto; } }
 </style>
