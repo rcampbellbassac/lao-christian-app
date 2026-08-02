@@ -53,7 +53,7 @@ function openSet(fileId: number) {
       @click="openSet(item.id)"
     >
       <div class="flex items-start gap-3">
-        <img :src="item.icon" alt="" class="h-14 w-14 shrink-0 rounded-xl bg-[var(--lc-soft)] p-2 object-contain" />
+        <img :src="item.icon" alt="" class="h-16 w-16 shrink-0 rounded-xl object-cover shadow-sm" />
         <div class="min-w-0">
           <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
             {{ item.native_name }}

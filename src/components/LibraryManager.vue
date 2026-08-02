@@ -62,7 +62,7 @@ onMounted(refresh)
     <ul class="mt-4 grid gap-2">
       <li v-for="item in statuses" :key="item.key" class="lc-card flex flex-wrap items-center justify-between gap-3 p-3">
         <div class="flex min-w-0 items-center gap-3">
-          <img :src="item.material.icon" alt="" class="h-10 w-10 object-contain">
+          <img :src="item.material.icon" alt="" class="h-11 w-11 rounded-lg object-cover shadow-sm">
           <div class="min-w-0">
             <p class="font-semibold">{{ item.material.native_name }}</p>
             <p class="app-muted text-xs">{{ item.cached ? `${formatBytes(item.approximateBytes)} · ${copy.text('offline.available')}` : copy.text('offline.notDownloaded') }}</p>

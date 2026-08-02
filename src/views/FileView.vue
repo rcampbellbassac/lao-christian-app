@@ -88,7 +88,7 @@ const updateState = computed(() => {
       <BreadcrumbNav />
     <section v-if="contentSet">
       <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="" class="h-16 w-16 rounded-xl bg-slate-100 object-contain p-2 dark:bg-slate-700" />
+        <img :src="store.getSetById(parseInt(route.params.fileid as string, 10))?.icon" alt="" class="h-20 w-20 rounded-xl object-cover shadow-sm" />
         <div class="min-w-0">
           <h1 v-html="sanitizeContentHtml(contentSet.title)" class="app-section-title"></h1>
           <p v-html="sanitizeContentHtml(contentSet.description)" class="mt-1 text-sm text-slate-600 dark:text-slate-300"></p>

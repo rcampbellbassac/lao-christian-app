@@ -7,7 +7,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBible.json",
             "content_type": "bible",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/bible-v2.webp"
         }, 
         {
             "id": 2,
@@ -16,7 +16,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoSongs.json",
             "content_type": "songs",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Songs.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/worship-songs-v2.webp"
         }, 
         {
             "id": 3,
@@ -25,7 +25,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoBibleStudies.json",
             "content_type": "studies",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible Studies.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/bible-studies-v2.webp"
         }, 
         {
             "id": 4,
@@ -34,7 +34,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoEGW.json",
             "content_type": "studies",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao EGW Books.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/egw-books-v2.webp"
         }, 
         {
             "id": 5,
@@ -43,7 +43,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoHealthBooks.json",
             "content_type": "studies",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Health Books.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/health-studies-v2.webp"
         },
         {
             "id": 6,
@@ -52,7 +52,7 @@
             "url": "https://laoadventist-media.s3.us-west-2.amazonaws.com/LaoStories.json",
             "content_type": "studies",
             "lang": "Lao",
-            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/Lao Bible Stories.svg"
+            "icon": "https://laoadventist-media.s3.us-west-2.amazonaws.com/app-assets/collections/bible-stories-v2.webp"
         }
     ],
     "langs": [
@@ -62,5 +62,5 @@
             "emoji_flag": "🇱🇦"
         }
     ],
-    "update": "2025-05-26T17:31:27.009Z"
+    "update": "2026-08-02T16:15:59.000Z"
 }
