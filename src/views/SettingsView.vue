@@ -80,6 +80,13 @@ function onTextAlignChange(value: PresentationTextAlign): void {
         <LibraryManager />
 
         <section>
+          <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">ຕິດຕັ້ງແອັບ <span class="app-muted text-sm font-normal">· Install the app</span></h2>
+          <p class="app-muted mt-1 text-sm">
+            When the download-cloud icon appears in the top bar, select it to install. On iPhone or iPad, use Safari’s Share menu and choose “Add to Home Screen.” Download collections above before going offline.
+          </p>
+        </section>
+
+        <section>
           <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Reading text size</h2>
           <p class="app-muted mt-1 mb-3 text-sm">
             Adjusts the base font size for chapter content across the app.

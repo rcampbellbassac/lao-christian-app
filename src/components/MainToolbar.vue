@@ -7,6 +7,7 @@ import { faHouse, faCircleInfo, faGear, faLanguage, faMagnifyingGlass } from '@f
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useUiText, type UiMessageKey } from '@/composables/useUiText'
 import { useSettingsStore } from '@/stores/settings'
+import PwaStatus from './PwaStatus.vue'
 
 library.add(faHouse, faCircleInfo, faGear, faLanguage, faMagnifyingGlass)
 
@@ -44,6 +45,7 @@ const menuItems: Array<{ name: UiMessageKey; to: string; icon: string }> = [
         </RouterLink>
       </div>
       <div class="flex items-center gap-2">
+        <PwaStatus />
         <RouterLink to="/search" class="lc-icon-control" :aria-label="text.accessible('search')" :title="text.accessible('search')">
           <font-awesome-icon icon="magnifying-glass" />
         </RouterLink>

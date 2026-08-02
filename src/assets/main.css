@@ -160,6 +160,19 @@ body.dark .app-panel,
 }
 .lc-icon-control:hover, .lc-icon-control--active { background: var(--lc-soft); color: var(--lc-brand); }
 .dark .lc-icon-control--active { color: var(--lc-gold); }
+.lc-status-pill {
+    display: inline-flex;
+    min-height: 2.35rem;
+    align-items: center;
+    gap: .35rem;
+    border: 1px solid color-mix(in srgb, var(--lc-clay), transparent 35%);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lc-clay), transparent 84%);
+    padding: .45rem .65rem;
+    color: var(--app-ink);
+    font-size: .75rem;
+    font-weight: 700;
+}
 
 .lc-card {
     display: block;
