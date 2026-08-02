@@ -3,12 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import indexData from '@/assets/data/index.json'
 import { useUiText } from '@/composables/useUiText'
-import bibleIcon from '@/assets/img/Lao Bible.svg'
-import songsIcon from '@/assets/img/Lao Songs.svg'
-import studiesIcon from '@/assets/img/Lao Bible Studies.svg'
-import egwIcon from '@/assets/img/Lao EGW Books.svg'
-import healthIcon from '@/assets/img/Lao Health Books.svg'
-import storiesIcon from '@/assets/img/Lao Bible Stories.svg'
 
 interface UrlItem {
   id: number
@@ -29,9 +23,6 @@ const urls = ref<UrlItem[]>([])
 const langs = ref<LangItem[]>([])
 const router = useRouter()
 const text = useUiText()
-const localIcons: Record<number, string> = {
-  1: bibleIcon, 2: songsIcon, 3: studiesIcon, 4: egwIcon, 5: healthIcon, 6: storiesIcon,
-}
 
 onMounted(() => {
   const data = indexData as {
@@ -62,7 +53,7 @@ function openSet(fileId: number) {
       @click="openSet(item.id)"
     >
       <div class="flex items-start gap-3">
-        <img :src="localIcons[item.id] || item.icon" alt="" loading="lazy" decoding="async" class="h-14 w-14 shrink-0 rounded-xl bg-[var(--lc-soft)] p-2 object-contain" />
+        <img :src="item.icon" alt="" class="h-14 w-14 shrink-0 rounded-xl bg-[var(--lc-soft)] p-2 object-contain" />
         <div class="min-w-0">
           <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
             {{ item.native_name }}
