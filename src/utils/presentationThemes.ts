@@ -27,6 +27,7 @@ export type PresentationLogoTone = 'light' | 'dark'
 export interface PresentationThemePreset {
   id: PresentationThemeId
   label: string
+  labelKey: 'theme.midnight' | 'theme.slate' | 'theme.forest' | 'theme.plum' | 'theme.plainLight'
   background: string
   backgrounds: Record<AspectRatioId, string>
   textColor: string
@@ -50,6 +51,7 @@ export const presentationThemePresets: PresentationThemePreset[] = [
   {
     id: 'midnight',
     label: 'Midnight (default)',
+    labelKey: 'theme.midnight',
     background: '#071b36',
     backgrounds: backgrounds(midnight16x9, midnight4x3, midnight1x1, midnightA4),
     textColor: '#f8fafc',
@@ -59,6 +61,7 @@ export const presentationThemePresets: PresentationThemePreset[] = [
   {
     id: 'slate',
     label: 'Slate',
+    labelKey: 'theme.slate',
     background: '#25313b',
     backgrounds: backgrounds(slate16x9, slate4x3, slate1x1, slateA4),
     textColor: '#f8fafc',
@@ -68,6 +71,7 @@ export const presentationThemePresets: PresentationThemePreset[] = [
   {
     id: 'forest',
     label: 'Forest',
+    labelKey: 'theme.forest',
     background: '#073c33',
     backgrounds: backgrounds(forest16x9, forest4x3, forest1x1, forestA4),
     textColor: '#f3fff9',
@@ -77,6 +81,7 @@ export const presentationThemePresets: PresentationThemePreset[] = [
   {
     id: 'plum',
     label: 'Deep Purple',
+    labelKey: 'theme.plum',
     background: '#38183f',
     backgrounds: backgrounds(plum16x9, plum4x3, plum1x1, plumA4),
     textColor: '#fff8ff',
@@ -86,6 +91,7 @@ export const presentationThemePresets: PresentationThemePreset[] = [
   {
     id: 'plain-light',
     label: 'Plain Light',
+    labelKey: 'theme.plainLight',
     background: '#fbf4e3',
     backgrounds: backgrounds(plainLight16x9, plainLight4x3, plainLight1x1, plainLightA4),
     textColor: '#17202a',

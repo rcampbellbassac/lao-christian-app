@@ -5,6 +5,7 @@ import {
   getPresentationThemeBackground,
   presentationThemePresets,
 } from '@/utils/presentationThemes'
+import { useStaticText } from '@/composables/useStaticText'
 
 defineProps<{
   modelValue: PresentationThemeId
@@ -14,10 +15,11 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: PresentationThemeId]
 }>()
+const copy = useStaticText()
 </script>
 
 <template>
-  <div class="theme-picker" role="radiogroup" aria-label="Presentation theme">
+  <div class="theme-picker" role="radiogroup" :aria-label="copy.text('presentation.theme')">
     <button
       v-for="preset in presentationThemePresets"
       :key="preset.id"
@@ -26,7 +28,7 @@ const emit = defineEmits<{
       type="button"
       role="radio"
       :aria-checked="modelValue === preset.id"
-      :aria-label="preset.label"
+      :aria-label="copy.text(preset.labelKey)"
       @click="emit('update:modelValue', preset.id)"
     >
       <span
@@ -38,7 +40,7 @@ const emit = defineEmits<{
       >
         <span v-if="modelValue === preset.id" class="theme-option-check" aria-hidden="true">✓</span>
       </span>
-      <span class="theme-option-label">{{ preset.label }}</span>
+      <span class="theme-option-label">{{ copy.text(preset.labelKey) }}</span>
     </button>
   </div>
 </template>

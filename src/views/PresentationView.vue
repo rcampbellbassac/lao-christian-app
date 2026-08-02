@@ -2,6 +2,21 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import {
+  faArrowLeft,
+  faArrowRight,
+  faCompress,
+  faExpand,
+  faFileImage,
+  faFilePowerpoint,
+  faFileZipper,
+  faFloppyDisk,
+  faListCheck,
+  faSliders,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import darkLogo from '@/assets/img/logo 2-black.png'
 import lightLogo from '@/assets/img/logo 2-white.png'
 import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
@@ -20,6 +35,10 @@ import {
 import type { PresentationTextAlign } from '@/stores/settings'
 import { sanitizeContentHtml } from '@/utils/sanitize'
 import { useDeckStore } from '@/stores/decks'
+import { useStaticText } from '@/composables/useStaticText'
+import BilingualText from '@/components/BilingualText.vue'
+
+library.add(faArrowLeft, faArrowRight, faCompress, faExpand, faFileImage, faFilePowerpoint, faFileZipper, faFloppyDisk, faListCheck, faSliders, faXmark)
 
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +46,7 @@ const store = useContentStore()
 const settings = useSettingsStore()
 const selectionStore = usePresentationSelectionStore()
 const deckStore = useDeckStore()
+const copy = useStaticText()
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
@@ -386,24 +406,25 @@ function onFullscreenChange(): void {
       <router-link
         :to="`/content/${fileId}/${bookId}/${chapterId}`"
         class="presentation-btn"
-        title="Exit presentation (Esc)"
+        :title="`${copy.text('presentation.exit')} (Esc)`"
+        :aria-label="copy.text('presentation.exit')"
       >
-        Exit
+        <font-awesome-icon icon="xmark" />
       </router-link>
       <span class="presentation-progress">{{ progressLabel }}</span>
       <span v-if="hasAutoSplitSlides" class="presentation-split-badge">
-        {{ selectedContentSlideCount }} / {{ contentSlides.length }} slides selected
+        {{ selectedContentSlideCount }} / {{ contentSlides.length }} {{ copy.text('presentation.selectedCount') }}
       </span>
 
       <div v-if="hasSavedSelection" class="presentation-field">
-        <span class="presentation-field-label">Slides from</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.slidesFrom') }}</span>
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
           :class="{ 'presentation-btn-active': slideSourceMode === 'full' }"
           @click="slideSourceMode = 'full'"
         >
-          Full chapter
+          {{ copy.text('presentation.fullChapter') }}
         </button>
         <button
           class="presentation-btn presentation-btn-compact"
@@ -411,19 +432,19 @@ function onFullscreenChange(): void {
           :class="{ 'presentation-btn-active': slideSourceMode === 'selection' }"
           @click="slideSourceMode = 'selection'"
         >
-          My selection
+          {{ copy.text('presentation.mySelection') }}
         </button>
       </div>
 
       <div v-if="slideSourceMode === 'selection'" class="presentation-field">
-        <span class="presentation-field-label">Grouping</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.grouping') }}</span>
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
           :class="{ 'presentation-btn-active': selectionStore.groupingMode === 'grouped' }"
           @click="selectionStore.setGroupingMode('grouped')"
         >
-          Grouped
+          {{ copy.text('presentation.grouped') }}
         </button>
         <button
           class="presentation-btn presentation-btn-compact"
@@ -431,32 +452,33 @@ function onFullscreenChange(): void {
           :class="{ 'presentation-btn-active': selectionStore.groupingMode === 'split' }"
           @click="selectionStore.setGroupingMode('split')"
         >
-          Split
+          {{ copy.text('presentation.split') }}
         </button>
       </div>
 
-      <button class="presentation-btn" type="button" title="Previous slide (Left arrow, Page Up)" @click="goPrev">Prev</button>
-      <button class="presentation-btn" type="button" title="Next slide (Right arrow, Page Down, Space)" @click="goNext">Next</button>
+      <button class="presentation-btn" type="button" :title="copy.text('presentation.previous')" :aria-label="copy.text('presentation.previous')" @click="goPrev"><font-awesome-icon icon="arrow-left" /></button>
+      <button class="presentation-btn" type="button" :title="copy.text('presentation.next')" :aria-label="copy.text('presentation.next')" @click="goNext"><font-awesome-icon icon="arrow-right" /></button>
 
       <label class="presentation-field">
-        <span class="presentation-field-label">Size</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.size') }}</span>
         <select
           class="presentation-select"
           :value="settings.presentationAspectRatio"
           @change="setAspectRatio(($event.target as HTMLSelectElement).value as AspectRatioId)"
         >
           <option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">
-            {{ preset.label }}
+            {{ copy.text(preset.labelKey) }}
           </option>
         </select>
       </label>
 
       <div class="presentation-field">
-        <span class="presentation-field-label">Font</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.font') }}</span>
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
-          title="Decrease slide font size"
+          :title="copy.text('presentation.decreaseFont')"
+          :aria-label="copy.text('presentation.decreaseFont')"
           :disabled="settings.presentationFontScale <= FONT_SCALE_MIN"
           @click="decreaseFontScale"
         >
@@ -466,7 +488,8 @@ function onFullscreenChange(): void {
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
-          title="Increase slide font size"
+          :title="copy.text('presentation.increaseFont')"
+          :aria-label="copy.text('presentation.increaseFont')"
           :disabled="settings.presentationFontScale >= FONT_SCALE_MAX"
           @click="increaseFontScale"
         >
@@ -475,7 +498,8 @@ function onFullscreenChange(): void {
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
-          title="Reset slide font size to 100%"
+          :title="copy.text('presentation.resetFont')"
+          :aria-label="copy.text('presentation.resetFont')"
           :disabled="settings.presentationFontScale === 1"
           @click="settings.resetPresentationFontScale"
         >
@@ -486,31 +510,33 @@ function onFullscreenChange(): void {
       <button
         class="presentation-btn"
         type="button"
-        title="Choose which slides to include"
+        :title="isSelectionPanelOpen ? copy.text('presentation.closeSelection') : copy.text('presentation.selectSlides')"
+        :aria-label="isSelectionPanelOpen ? copy.text('presentation.closeSelection') : copy.text('presentation.selectSlides')"
         @click="isSelectionPanelOpen = !isSelectionPanelOpen"
       >
-        {{ isSelectionPanelOpen ? 'Close selection' : 'Select slides' }}
+        <font-awesome-icon icon="list-check" />
       </button>
 
       <button
         class="presentation-btn"
         type="button"
-        title="Customize theme, alignment, and font"
+        :title="isCustomizePanelOpen ? copy.text('presentation.closeCustomize') : copy.text('presentation.customize')"
+        :aria-label="isCustomizePanelOpen ? copy.text('presentation.closeCustomize') : copy.text('presentation.customize')"
         @click="isCustomizePanelOpen = !isCustomizePanelOpen"
       >
-        {{ isCustomizePanelOpen ? 'Close customize' : 'Customize' }}
+        <font-awesome-icon icon="sliders" />
       </button>
 
-      <button class="presentation-btn" type="button" :title="isFullscreen ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)'" @click="toggleFullscreen">
-        {{ isFullscreen ? 'Windowed' : 'Fullscreen' }}
+      <button class="presentation-btn" type="button" :title="`${isFullscreen ? copy.text('presentation.exitFullscreen') : copy.text('presentation.enterFullscreen')} (F)`" :aria-label="isFullscreen ? copy.text('presentation.exitFullscreen') : copy.text('presentation.enterFullscreen')" @click="toggleFullscreen">
+        <font-awesome-icon :icon="isFullscreen ? 'compress' : 'expand'" />
       </button>
-      <button class="presentation-btn" type="button" title="Export current slide as PNG (E)" @click="exportCurrentSlide">Export PNG</button>
-      <button class="presentation-btn" type="button" title="Save as an editable local deck" @click="saveAsDeck">Save deck</button>
-      <button class="presentation-btn" type="button" :disabled="isExporting" title="Export selected slides as a ZIP of PNGs" @click="exportZip">
-        {{ isExporting ? 'Exporting…' : 'Export ZIP' }}
+      <button class="presentation-btn" type="button" :title="`${copy.text('presentation.exportPng')} (E)`" :aria-label="copy.text('presentation.exportPng')" @click="exportCurrentSlide"><font-awesome-icon icon="file-image" /></button>
+      <button class="presentation-btn" type="button" :title="copy.text('presentation.saveDeck')" :aria-label="copy.text('presentation.saveDeck')" @click="saveAsDeck"><font-awesome-icon icon="floppy-disk" /></button>
+      <button class="presentation-btn" type="button" :disabled="isExporting" :title="copy.text('presentation.exportZip')" :aria-label="copy.text('presentation.exportZip')" @click="exportZip">
+        <span v-if="isExporting">…</span><font-awesome-icon v-else icon="file-zipper" />
       </button>
-      <button class="presentation-btn" type="button" :disabled="isExporting" title="Export selected slides as a PowerPoint file" @click="exportPptx">
-        {{ isExporting ? 'Exporting…' : 'Export PPTX' }}
+      <button class="presentation-btn" type="button" :disabled="isExporting" :title="copy.text('presentation.exportPptx')" :aria-label="copy.text('presentation.exportPptx')" @click="exportPptx">
+        <span v-if="isExporting">…</span><font-awesome-icon v-else icon="file-powerpoint" />
       </button>
     </header>
 
@@ -518,18 +544,18 @@ function onFullscreenChange(): void {
       <div class="selection-panel-row">
         <label class="selection-title-toggle">
           <input type="checkbox" :checked="isTitleSlideIncluded" @change="toggleSlideSelection('title')" />
-          Include title slide
+          {{ copy.text('presentation.includeTitle') }}
         </label>
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectAllSlides">Select all</button>
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectNoContentSlides">Select none</button>
+        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectAllSlides">{{ copy.text('presentation.selectAll') }}</button>
+        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectNoContentSlides">{{ copy.text('presentation.selectNone') }}</button>
       </div>
 
       <div v-if="contentSlides.length > 1" class="selection-panel-row">
-        <span class="presentation-field-label">Slides</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.slides') }}</span>
         <input v-model.number="rangeStart" type="number" min="1" :max="contentSlides.length" class="presentation-range-input" />
-        <span>to</span>
+        <span>{{ copy.text('presentation.to') }}</span>
         <input v-model.number="rangeEnd" type="number" min="1" :max="contentSlides.length" class="presentation-range-input" />
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="applyRange">Apply range</button>
+        <button class="presentation-btn presentation-btn-compact" type="button" @click="applyRange">{{ copy.text('presentation.applyRange') }}</button>
       </div>
 
       <ul class="selection-list">
@@ -549,7 +575,7 @@ function onFullscreenChange(): void {
 
     <section v-if="isCustomizePanelOpen" class="selection-panel">
       <div class="selection-panel-row selection-panel-row--themes">
-        <span class="presentation-field-label">Theme</span>
+        <span class="presentation-field-label">{{ copy.text('studio.theme') }}</span>
         <PresentationThemePicker
           :model-value="settings.presentationTheme"
           :aspect-ratio="settings.presentationAspectRatio"
@@ -558,14 +584,14 @@ function onFullscreenChange(): void {
       </div>
 
       <div class="selection-panel-row">
-        <span class="presentation-field-label">Text align</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.textAlign') }}</span>
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
           :class="{ 'presentation-btn-active': settings.presentationTextAlign === 'left' }"
           @click="setTextAlign('left')"
         >
-          Left
+          {{ copy.text('action.left') }}
         </button>
         <button
           class="presentation-btn presentation-btn-compact"
@@ -573,12 +599,12 @@ function onFullscreenChange(): void {
           :class="{ 'presentation-btn-active': settings.presentationTextAlign === 'center' }"
           @click="setTextAlign('center')"
         >
-          Center
+          {{ copy.text('action.center') }}
         </button>
       </div>
 
       <div class="selection-panel-row">
-        <span class="presentation-field-label">Font</span>
+        <span class="presentation-field-label">{{ copy.text('presentation.font') }}</span>
         <select
           class="presentation-select"
           :value="settings.presentationFontFamily"
@@ -618,8 +644,8 @@ function onFullscreenChange(): void {
         <div v-if="currentSlide.id === 'title'" class="slide-subtitle" v-html="currentSlide.html"></div>
         <div v-else class="slide-body" v-html="currentSlide.html"></div>
       </article>
-      <article v-else-if="!chapter" class="slide-empty">Loading chapter...</article>
-      <article v-else class="slide-empty">No slides selected — use "Select slides" to choose which slides to include.</article>
+      <article v-else-if="!chapter" class="slide-empty"><BilingualText text-key="presentation.loading" /></article>
+      <article v-else class="slide-empty"><BilingualText text-key="presentation.noSlides" /></article>
     </section>
   </main>
 </template>

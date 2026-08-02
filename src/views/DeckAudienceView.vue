@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import { useDeckStore } from '@/stores/decks'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import { deckChannelName, deckStorageKey, isDeckPresentationState } from '@/utils/deckBroadcast'
+import { useStaticText } from '@/composables/useStaticText'
+import BilingualText from '@/components/BilingualText.vue'
 
 const route = useRoute()
 const decks = useDeckStore()
@@ -11,6 +13,7 @@ const deckId = route.params.deckId as string
 const index = ref(0)
 const blank = ref(false)
 let channel: BroadcastChannel | null = null
+const copy = useStaticText()
 
 const deck = computed(() => decks.getDeck(deckId))
 const slides = computed(() => deck.value?.slides.filter(slide => !slide.hidden) ?? [])
@@ -46,8 +49,8 @@ onBeforeUnmount(() => { channel?.close(); window.removeEventListener('storage', 
 <template>
   <main class="audience-shell" @dblclick="fullscreen">
     <DeckSlideCanvas v-if="deck && slide" :slide="slide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :blank="blank" />
-    <p v-else>Waiting for presentation…</p>
-    <button type="button" class="fullscreen-button" title="Fullscreen" aria-label="Fullscreen" @click="fullscreen">⛶</button>
+    <p v-else><BilingualText text-key="presenter.waiting" /></p>
+    <button type="button" class="fullscreen-button" :title="copy.text('presenter.fullscreen')" :aria-label="copy.text('presenter.fullscreen')" @click="fullscreen">⛶</button>
   </main>
 </template>
 

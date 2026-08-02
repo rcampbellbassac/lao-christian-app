@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useDeckStore } from '@/stores/decks'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import { deckChannelName, deckStorageKey, type DeckPresentationState } from '@/utils/deckBroadcast'
+import { useStaticText } from '@/composables/useStaticText'
 
 const route = useRoute()
 const decks = useDeckStore()
@@ -11,6 +12,7 @@ const deckId = route.params.deckId as string
 const currentIndex = ref(0)
 const blank = ref(false)
 const audienceOpen = ref(false)
+const copy = useStaticText()
 let channel: BroadcastChannel | null = null
 
 const deck = computed(() => decks.getDeck(deckId))
@@ -56,20 +58,20 @@ onBeforeUnmount(() => { channel?.close(); window.removeEventListener('keydown', 
 <template>
   <main class="controller-shell">
     <header class="controller-toolbar">
-      <router-link :to="`/decks/${deckId}`" class="controller-btn">← Edit</router-link>
+      <router-link :to="`/decks/${deckId}`" class="controller-btn">← {{ copy.text('presenter.edit') }}</router-link>
       <strong class="min-w-0 flex-1 truncate">{{ deck?.name }}</strong>
       <span>{{ currentIndex + 1 }} / {{ slides.length }}</span>
-      <button type="button" class="controller-btn" @click="openAudience">{{ audienceOpen ? 'Reconnect audience' : 'Open audience' }}</button>
-      <button type="button" class="controller-btn" @click="blank = !blank">{{ blank ? 'Show slide' : 'Black screen' }}</button>
+      <button type="button" class="controller-btn" @click="openAudience">▣ {{ audienceOpen ? copy.text('presenter.reconnectAudience') : copy.text('presenter.openAudience') }}</button>
+      <button type="button" class="controller-btn" @click="blank = !blank">{{ blank ? '◉' : '●' }} {{ blank ? copy.text('presenter.showSlide') : copy.text('presenter.blackScreen') }}</button>
     </header>
     <section v-if="deck && currentSlide" class="controller-grid">
       <div class="controller-current"><DeckSlideCanvas :slide="currentSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :blank="blank" /></div>
       <aside class="controller-notes">
-        <h2>Speaker notes</h2><p class="whitespace-pre-wrap">{{ currentSlide.speakerNotes || 'No notes for this slide.' }}</p>
-        <h2 class="mt-6">Next</h2><div v-if="nextSlide" class="next-card"><strong>{{ nextSlide.title }}</strong></div><p v-else class="app-muted">End of deck</p>
+        <h2>{{ copy.text('studio.speakerNotes') }}</h2><p class="whitespace-pre-wrap">{{ currentSlide.speakerNotes || copy.text('presenter.noNotes') }}</p>
+        <h2 class="mt-6">{{ copy.text('presenter.next') }}</h2><div v-if="nextSlide" class="next-card"><strong>{{ nextSlide.title }}</strong></div><p v-else class="app-muted">{{ copy.text('presenter.end') }}</p>
       </aside>
     </section>
-    <footer class="controller-footer"><button type="button" class="controller-btn" :disabled="currentIndex === 0" @click="previous">← Previous</button><button type="button" class="controller-btn" :disabled="currentIndex >= slides.length - 1" @click="next">Next →</button></footer>
+    <footer class="controller-footer"><button type="button" class="controller-btn" :disabled="currentIndex === 0" @click="previous">← {{ copy.text('presenter.previous') }}</button><button type="button" class="controller-btn" :disabled="currentIndex >= slides.length - 1" @click="next">{{ copy.text('presenter.next') }} →</button></footer>
   </main>
 </template>
 

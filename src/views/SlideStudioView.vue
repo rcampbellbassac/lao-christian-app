@@ -6,6 +6,8 @@ import { aspectRatioPresets } from '@/utils/aspectRatios'
 import { getAspectRatioPreset } from '@/utils/aspectRatios'
 import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
+import BilingualText from '@/components/BilingualText.vue'
+import { useStaticText } from '@/composables/useStaticText'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +17,7 @@ const status = ref('')
 const isExporting = ref(false)
 const exportSlide = ref<DeckSlide | undefined>()
 const exportStage = ref<HTMLElement | null>(null)
+const copy = useStaticText()
 
 const deck = computed(() => route.params.deckId ? decks.getDeck(route.params.deckId as string) : undefined)
 const selectedIndex = computed(() => deck.value?.slides.findIndex(slide => slide.id === selectedSlideId.value) ?? -1)
@@ -46,13 +49,13 @@ function escapeHtml(value: string): string {
 async function updateSlideBody(slide: DeckSlide, event: Event): Promise<void> {
   slide.html = `<p>${escapeHtml((event.target as HTMLTextAreaElement).value)}</p>`
   if (deck.value) await decks.saveDeck(deck.value)
-  status.value = 'Saved locally'
+  status.value = copy.text('studio.saved')
 }
 
 async function saveDeck(): Promise<void> {
   if (!deck.value) return
   await decks.saveDeck(deck.value)
-  status.value = 'Saved locally'
+  status.value = copy.text('studio.saved')
 }
 
 async function deleteDeck(target: Deck): Promise<void> {
@@ -72,9 +75,9 @@ async function renderForExport(slide: { id: string }): Promise<HTMLElement> {
 async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
   if (!deck.value || isExporting.value) return
   const visibleSlides = deck.value.slides.filter(slide => !slide.hidden)
-  if (!visibleSlides.length) { status.value = 'No visible slides to export'; return }
+  if (!visibleSlides.length) { status.value = copy.text('studio.noVisible'); return }
   isExporting.value = true
-  status.value = 'Preparing export…'
+  status.value = copy.text('studio.preparing')
   try {
     const exporter = await import('@/utils/presentationExport')
     const preset = getAspectRatioPreset(deck.value.aspectRatio)
@@ -86,10 +89,10 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
     } else {
       await exporter.exportSlidesAsPptx(visibleSlides, preset, renderForExport, deck.value.name)
     }
-    status.value = 'Export complete'
+    status.value = copy.text('studio.exportComplete')
   } catch (error) {
     console.error('Deck export failed', error)
-    status.value = 'Export failed'
+    status.value = copy.text('studio.exportFailed')
   } finally {
     isExporting.value = false
     exportSlide.value = undefined
@@ -100,30 +103,30 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
 <template>
   <main class="app-page">
     <section v-if="!deck" class="app-panel">
-      <div class="flex items-center justify-between gap-3"><div><h1 class="app-section-title">ສະຕູດິໂອສະໄລ້</h1><p class="app-muted">Slide Studio · Decks stay on this device</p></div><button type="button" class="studio-primary" @click="newDeck">＋ New deck</button></div>
+      <div class="flex items-center justify-between gap-3"><div><h1 class="app-section-title">ສະຕູດິໂອສະໄລ້</h1><p class="app-muted"><BilingualText text-key="studio.localHelp" /></p></div><button type="button" class="studio-primary" @click="newDeck">＋ {{ copy.text('studio.newDeck') }}</button></div>
       <ul class="mt-6 grid gap-3 sm:grid-cols-2">
         <li v-for="item in decks.decks" :key="item.id" class="lc-card p-4">
           <router-link :to="`/decks/${item.id}`" class="app-link text-lg">{{ item.name }}</router-link>
-          <p class="app-muted mt-1 text-sm">{{ item.slides.length }} slides · {{ new Date(item.updatedAt).toLocaleDateString() }}</p>
+          <p class="app-muted mt-1 text-sm">{{ item.slides.length }} {{ copy.text('studio.slides') }} · {{ new Date(item.updatedAt).toLocaleDateString() }}</p>
         </li>
       </ul>
-      <p v-if="decks.isLoaded && !decks.decks.length" class="app-muted py-12 text-center">No saved decks yet. Create one here or save a generated presentation.</p>
+      <p v-if="decks.isLoaded && !decks.decks.length" class="app-muted py-12 text-center"><BilingualText text-key="studio.empty" /></p>
     </section>
 
     <section v-else class="studio-shell">
       <header class="studio-toolbar">
-        <router-link to="/decks" class="app-chip">← Decks</router-link>
-        <input v-model="deck.name" class="studio-title" aria-label="Deck name" @change="saveDeck">
+        <router-link to="/decks" class="app-chip">← {{ copy.text('studio.back') }}</router-link>
+        <input v-model="deck.name" class="studio-title" :aria-label="copy.text('studio.deckName')" @change="saveDeck">
         <span class="app-muted text-xs">{{ status }}</span>
-        <router-link :to="`/present/deck/${deck.id}`" class="studio-primary">Present</router-link>
-        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('png')">PNG</button>
-        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('zip')">ZIP</button>
-        <button type="button" class="app-chip" :disabled="isExporting" @click="runExport('pptx')">PPTX</button>
-        <button type="button" class="app-chip" @click="deleteDeck(deck)">Delete deck</button>
+        <router-link :to="`/present/deck/${deck.id}`" class="studio-primary">▶ {{ copy.text('studio.present') }}</router-link>
+        <button type="button" class="app-chip" :disabled="isExporting" :title="copy.text('presentation.exportPng')" @click="runExport('png')">PNG</button>
+        <button type="button" class="app-chip" :disabled="isExporting" :title="copy.text('presentation.exportZip')" @click="runExport('zip')">ZIP</button>
+        <button type="button" class="app-chip" :disabled="isExporting" :title="copy.text('presentation.exportPptx')" @click="runExport('pptx')">PPTX</button>
+        <button type="button" class="app-chip" :title="copy.text('studio.deleteDeck')" :aria-label="copy.text('studio.deleteDeck')" @click="deleteDeck(deck)">⌫</button>
       </header>
       <div class="studio-grid">
         <aside class="studio-sidebar">
-          <button type="button" class="studio-primary w-full" @click="decks.addSlide(deck)">＋ Add slide</button>
+          <button type="button" class="studio-primary w-full" @click="decks.addSlide(deck)">＋ {{ copy.text('studio.addSlide') }}</button>
           <ol class="mt-3 grid gap-2">
             <li v-for="(slide, index) in deck.slides" :key="slide.id" class="studio-slide-item" :class="{ 'studio-slide-item--active': slide.id === selectedSlideId }" @click="selectedSlideId = slide.id">
               <span>{{ index + 1 }}</span><span class="min-w-0 flex-1 truncate">{{ slide.title }}</span><span v-if="slide.hidden">◌</span>
@@ -132,18 +135,18 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
         </aside>
         <section v-if="selectedSlide" class="studio-editor">
           <div class="studio-slide-preview"><DeckSlideCanvas :slide="selectedSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" /></div>
-          <label>Slide title<input v-model="selectedSlide.title" class="studio-input" @change="saveDeck"></label>
-          <label>Slide text<textarea :value="textFromHtml(selectedSlide.html)" rows="7" class="studio-input" @change="updateSlideBody(selectedSlide, $event)"></textarea></label>
-          <label>Speaker notes<textarea v-model="selectedSlide.speakerNotes" rows="4" class="studio-input" @change="saveDeck"></textarea></label>
+          <label>{{ copy.text('studio.slideTitle') }}<input v-model="selectedSlide.title" class="studio-input" @change="saveDeck"></label>
+          <label>{{ copy.text('studio.slideText') }}<textarea :value="textFromHtml(selectedSlide.html)" rows="7" class="studio-input" @change="updateSlideBody(selectedSlide, $event)"></textarea></label>
+          <label>{{ copy.text('studio.speakerNotes') }}<textarea v-model="selectedSlide.speakerNotes" rows="4" class="studio-input" @change="saveDeck"></textarea></label>
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="app-chip" @click="decks.moveSlide(deck, selectedIndex, -1)">↑ Move</button>
-            <button type="button" class="app-chip" @click="decks.moveSlide(deck, selectedIndex, 1)">↓ Move</button>
-            <button type="button" class="app-chip" @click="decks.duplicateSlide(deck, selectedIndex)">Duplicate</button>
-            <button type="button" class="app-chip" @click="selectedSlide.hidden = !selectedSlide.hidden; saveDeck()">{{ selectedSlide.hidden ? 'Show' : 'Hide' }}</button>
-            <button type="button" class="app-chip" @click="decks.removeSlide(deck, selectedIndex); selectedSlideId = deck.slides[0]?.id ?? null">Delete slide</button>
+            <button type="button" class="app-chip" :title="copy.text('studio.moveUp')" :aria-label="copy.text('studio.moveUp')" @click="decks.moveSlide(deck, selectedIndex, -1)">↑</button>
+            <button type="button" class="app-chip" :title="copy.text('studio.moveDown')" :aria-label="copy.text('studio.moveDown')" @click="decks.moveSlide(deck, selectedIndex, 1)">↓</button>
+            <button type="button" class="app-chip" :title="copy.text('studio.duplicate')" :aria-label="copy.text('studio.duplicate')" @click="decks.duplicateSlide(deck, selectedIndex)">⧉</button>
+            <button type="button" class="app-chip" :title="selectedSlide.hidden ? copy.text('studio.show') : copy.text('studio.hide')" :aria-label="selectedSlide.hidden ? copy.text('studio.show') : copy.text('studio.hide')" @click="selectedSlide.hidden = !selectedSlide.hidden; saveDeck()">{{ selectedSlide.hidden ? '◉' : '◌' }}</button>
+            <button type="button" class="app-chip" :title="copy.text('studio.deleteSlide')" :aria-label="copy.text('studio.deleteSlide')" @click="decks.removeSlide(deck, selectedIndex); selectedSlideId = deck.slides[0]?.id ?? null">×</button>
           </div>
-          <label>Aspect ratio<select v-model="deck.aspectRatio" class="studio-input" @change="saveDeck"><option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">{{ preset.label }}</option></select></label>
-          <label>Theme<PresentationThemePicker v-model="deck.theme" :aspect-ratio="deck.aspectRatio" @update:model-value="saveDeck" /></label>
+          <label>{{ copy.text('studio.aspectRatio') }}<select v-model="deck.aspectRatio" class="studio-input" @change="saveDeck"><option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">{{ copy.text(preset.labelKey) }}</option></select></label>
+          <label>{{ copy.text('studio.theme') }}<PresentationThemePicker v-model="deck.theme" :aspect-ratio="deck.aspectRatio" @update:model-value="saveDeck" /></label>
         </section>
       </div>
       <div ref="exportStage" class="export-stage" aria-hidden="true">

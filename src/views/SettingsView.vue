@@ -152,7 +152,7 @@ function onTextAlignChange(value: PresentationTextAlign): void {
             @change="onAspectRatioChange"
           >
             <option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">
-              {{ preset.label }}
+              {{ copy.text(preset.labelKey) }}
             </option>
           </select>
         </section>
@@ -168,7 +168,7 @@ function onTextAlignChange(value: PresentationTextAlign): void {
             @change="onThemeChange"
           >
             <option v-for="preset in presentationThemePresets" :key="preset.id" :value="preset.id">
-              {{ preset.label }}
+              {{ copy.text(preset.labelKey) }}
             </option>
           </select>
         </section>
