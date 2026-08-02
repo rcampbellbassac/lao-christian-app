@@ -10,7 +10,13 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const basePath = env.VITE_BASE_PATH || '/'
+  const configuredBasePath = env.VITE_BASE_PATH || '/'
+  // GitHub Pages reports project base paths without a trailing slash. Vite's
+  // %BASE_URL% replacement is string-based, so normalize it before it is used
+  // by the manifest link, router, service worker, and generated asset URLs.
+  const basePath = configuredBasePath === '/'
+    ? '/'
+    : `/${configuredBasePath.replace(/^\/+|\/+$/g, '')}/`
 
   return {
     base: basePath,
@@ -20,6 +26,23 @@ export default defineConfig(({ mode }) => {
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      manifest: {
+        name: 'LaoChristian.org',
+        short_name: 'LaoChristian.org',
+        description: 'Lao Bible, worship, study, and presentation resources',
+        lang: 'lo',
+        id: '.',
+        start_url: '.',
+        scope: '.',
+        display: 'standalone',
+        orientation: 'any',
+        background_color: '#f4efe4',
+        theme_color: '#123c47',
+        icons: [
+          { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'android-chrome-256x256.png', sizes: '256x256', type: 'image/png' },
+        ],
+      },
       // Registration is handled explicitly in App.vue via useRegisterSW(),
       // so a client actually reloads when a new version activates instead
       // of silently sitting on stale precached assets until a 2nd refresh.
