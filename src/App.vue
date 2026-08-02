@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import MainToolbar from './components/MainToolbar.vue'
 import MainFooter from './components/MainFooter.vue'
+import CookieConsent from './components/CookieConsent.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
@@ -54,5 +55,6 @@ useRegisterSW({
     <MainToolbar v-if="!route.meta.bare" />
     <RouterView class="pb-5 transition-all duration-300 ease-out" />
     <MainFooter v-if="!route.meta.bare" />
+    <CookieConsent v-if="!route.meta.bare" />
   </div>
 </template>

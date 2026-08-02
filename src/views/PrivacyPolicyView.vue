@@ -1,140 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
-
-const showModal = ref(false)
-
-onMounted(() => {
-if (!document.cookie.includes('cookieConsent=true')) {
-showModal.value = true
-}
-})
-
-function agreeToCookies() {
-const date = new Date()
-date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
-document.cookie = `cookieConsent=true; expires=${date.toUTCString()}; path=/`
-showModal.value = false
-}
+import BilingualText from '@/components/BilingualText.vue'
 </script>
-
 
 <template>
   <main class="app-page">
-    <div class="app-panel dark:bg-slate-950/95 dark:border-slate-500/45">
-      <div class="text-center mb-6">
-        <img src="../assets/img/privacy-penguin-web-fast.webp" alt="Privacy Penguin Logo" class="mx-auto max-w-xs" />
-      </div>
+    <article class="app-panel policy-page">
+      <img src="../assets/img/privacy-penguin-web-fast.webp" alt="" class="policy-illustration" />
       <hr class="app-divider" />
-      <h1 class="app-section-title mb-4">Privacy Policy</h1>
+      <h1 class="app-section-title"><BilingualText text-key="policy.privacy" /></h1>
 
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Legal Basis for Processing Personal Data (GDPR)</h2>
-        <p>We process Personal Data under the following legal bases:</p>
-        <ul class="list-disc list-inside space-y-1 mt-2">
-          <li><strong>Consent:</strong> Your consent to processing activities for specific purposes.</li>
-          <li><strong>Contractual Necessity:</strong> Processing is necessary for the performance of a contract with you.</li>
-          <li><strong>Legal Obligation:</strong> Processing is necessary to comply with the law.</li>
-          <li><strong>Legitimate Interests:</strong> Processing is necessary for the purposes of our legitimate interests.</li>
+      <section>
+        <h2><BilingualText text-key="privacy.legalTitle" /></h2>
+        <p><BilingualText text-key="privacy.legalIntro" /></p>
+        <ul class="policy-list">
+          <li><strong><BilingualText text-key="privacy.consentTitle" /></strong><BilingualText text-key="privacy.consent" /></li>
+          <li><strong><BilingualText text-key="privacy.contractTitle" /></strong><BilingualText text-key="privacy.contract" /></li>
+          <li><strong><BilingualText text-key="privacy.obligationTitle" /></strong><BilingualText text-key="privacy.obligation" /></li>
+          <li><strong><BilingualText text-key="privacy.interestsTitle" /></strong><BilingualText text-key="privacy.interests" /></li>
         </ul>
       </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">User Rights Under CCPA and GDPR</h2>
-        <p>
-          You have the right to access, rectify, or erase your personal data, restrict processing, object to processing,
-          and if applicable, the right to data portability. Under the CCPA, you also have the right to opt-out of the sale
-          of your personal data.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Children's Privacy</h2>
-        <p>
-          We do not knowingly collect personal data from children under 13 (or a higher age threshold where applicable).
-          If you are a parent or guardian and believe your child has provided us with personal data, please contact us.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Data Protection Officer</h2>
-        <p>Our Data Protection Officer can be contacted at [DPO's contact information].</p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Data Breach Notification</h2>
-        <p>
-          In the event of a data breach, we will notify you and any applicable regulator when we are legally required to do so.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">International Data Transfers</h2>
-        <p>
-          We transfer data internationally only in compliance with data protection laws and ensure that there is adequate
-          data protection in all cases of data transfer.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Cookie Policy</h2>
-        <p>
-          Our website uses cookies. For more information, please visit our
-          <RouterLink to="/cookie-policy" class="app-link underline">Cookie Policy</RouterLink>.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Changes to This Privacy Policy</h2>
-        <p>
-          We review and update this policy regularly. The latest version will always be posted on our website.
-        </p>
-      </section>
-
-      <section class="mb-6">
-        <h2 class="text-2xl font-semibold mb-2">Contact Us</h2>
-        <p>
-          For any questions or concerns about this Privacy Policy or our data practices, contact us at [contact details].
-        </p>
-      </section>
-    </div>
-
-    <!-- Cookie Consent Modal -->
-    <transition name="fade">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900">
-          <h3 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Cookie Consent</h3>
-          <p class="mb-4">
-            We use cookies to improve your experience on our site. By continuing, you agree to our use of cookies.
-            Read the terms
-            <RouterLink to="/cookie-policy" class="app-link underline">here</RouterLink>.
-          </p>
-          <div class="text-right">
-            <button
-              @click="agreeToCookies"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-            >
-              I Agree
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
+      <section><h2><BilingualText text-key="privacy.rightsTitle" /></h2><p><BilingualText text-key="privacy.rights" /></p></section>
+      <section><h2><BilingualText text-key="privacy.childrenTitle" /></h2><p><BilingualText text-key="privacy.children" /></p></section>
+      <section><h2><BilingualText text-key="privacy.breachTitle" /></h2><p><BilingualText text-key="privacy.breach" /></p></section>
+      <section><h2><BilingualText text-key="privacy.transfersTitle" /></h2><p><BilingualText text-key="privacy.transfers" /></p></section>
+      <section><h2><BilingualText text-key="privacy.cookiesTitle" /></h2><p><BilingualText text-key="privacy.cookiesBeforeLink" /> <RouterLink to="/cookie-policy" class="app-link underline"><BilingualText text-key="policy.cookies" /></RouterLink>.</p></section>
+      <section><h2><BilingualText text-key="privacy.changesTitle" /></h2><p><BilingualText text-key="privacy.changes" /></p></section>
+      <section><h2><BilingualText text-key="privacy.contactTitle" /></h2><p><BilingualText text-key="privacy.contact" /></p></section>
+    </article>
   </main>
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+.policy-page { display: grid; gap: 1.5rem; }
+.policy-illustration { width: min(18rem, 72vw); margin-inline: auto; }
+.policy-page section { display: grid; gap: .45rem; }
+.policy-page h2 { font-size: 1.35rem; font-weight: 700; color: var(--lc-brand); }
+.dark .policy-page h2 { color: var(--lc-gold); }
+.policy-list { display: grid; gap: .7rem; padding-left: 1.4rem; list-style: disc; }
+.policy-list strong { display: block; }
 </style>
