@@ -48,7 +48,7 @@ onBeforeUnmount(() => { channel?.close(); window.removeEventListener('storage', 
 
 <template>
   <main class="audience-shell" @dblclick="fullscreen">
-    <DeckSlideCanvas v-if="deck && slide" :slide="slide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :blank="blank" />
+    <DeckSlideCanvas v-if="deck && slide" :slide="slide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" :blank="blank" />
     <p v-else><BilingualText text-key="presenter.waiting" /></p>
     <button type="button" class="fullscreen-button" :title="copy.text('presenter.fullscreen')" :aria-label="copy.text('presenter.fullscreen')" @click="fullscreen">⛶</button>
   </main>

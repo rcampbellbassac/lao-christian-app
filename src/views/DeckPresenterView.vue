@@ -65,7 +65,7 @@ onBeforeUnmount(() => { channel?.close(); window.removeEventListener('keydown', 
       <button type="button" class="controller-btn" @click="blank = !blank">{{ blank ? '◉' : '●' }} {{ blank ? copy.text('presenter.showSlide') : copy.text('presenter.blackScreen') }}</button>
     </header>
     <section v-if="deck && currentSlide" class="controller-grid">
-      <div class="controller-current"><DeckSlideCanvas :slide="currentSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :blank="blank" /></div>
+      <div class="controller-current"><DeckSlideCanvas :slide="currentSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" :blank="blank" /></div>
       <aside class="controller-notes">
         <h2>{{ copy.text('studio.speakerNotes') }}</h2><p class="whitespace-pre-wrap">{{ currentSlide.speakerNotes || copy.text('presenter.noNotes') }}</p>
         <h2 class="mt-6">{{ copy.text('presenter.next') }}</h2><div v-if="nextSlide" class="next-card"><strong>{{ nextSlide.title }}</strong></div><p v-else class="app-muted">{{ copy.text('presenter.end') }}</p>

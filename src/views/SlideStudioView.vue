@@ -8,6 +8,8 @@ import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
 import BilingualText from '@/components/BilingualText.vue'
 import { useStaticText } from '@/composables/useStaticText'
+import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } from '@/stores/settings'
+import { laoFontPresets } from '@/utils/laoFonts'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,6 +20,7 @@ const isExporting = ref(false)
 const exportSlide = ref<DeckSlide | undefined>()
 const exportStage = ref<HTMLElement | null>(null)
 const copy = useStaticText()
+const settings = useSettingsStore()
 
 const deck = computed(() => route.params.deckId ? decks.getDeck(route.params.deckId as string) : undefined)
 const selectedIndex = computed(() => deck.value?.slides.findIndex(slide => slide.id === selectedSlideId.value) ?? -1)
@@ -25,6 +28,7 @@ const selectedSlide = computed(() => selectedIndex.value >= 0 ? deck.value?.slid
 
 onMounted(async () => {
   await decks.load()
+  await settings.load()
   if (deck.value?.slides[0]) selectedSlideId.value = deck.value.slides[0].id
 })
 
@@ -34,8 +38,17 @@ watch(() => route.params.deckId, () => {
 
 async function newDeck(): Promise<void> {
   const created = await decks.createDeck()
+  created.fontScale = settings.presentationFontScale
+  created.fontFamily = settings.presentationFontFamily
+  created.textAlign = settings.presentationTextAlign
   await decks.addSlide(created)
   await router.push(`/decks/${created.id}`)
+}
+
+function changeDeckFont(step: number): void {
+  if (!deck.value) return
+  deck.value.fontScale = Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, Math.round((deck.value.fontScale + step) * 10) / 10))
+  void saveDeck()
 }
 
 function textFromHtml(html: string): string {
@@ -134,7 +147,7 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
           </ol>
         </aside>
         <section v-if="selectedSlide" class="studio-editor">
-          <div class="studio-slide-preview"><DeckSlideCanvas :slide="selectedSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" /></div>
+          <div class="studio-slide-preview"><DeckSlideCanvas :slide="selectedSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" /></div>
           <label>{{ copy.text('studio.slideTitle') }}<input v-model="selectedSlide.title" class="studio-input" @change="saveDeck"></label>
           <label>{{ copy.text('studio.slideText') }}<textarea :value="textFromHtml(selectedSlide.html)" rows="7" class="studio-input" @change="updateSlideBody(selectedSlide, $event)"></textarea></label>
           <label>{{ copy.text('studio.speakerNotes') }}<textarea v-model="selectedSlide.speakerNotes" rows="4" class="studio-input" @change="saveDeck"></textarea></label>
@@ -147,10 +160,18 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
           </div>
           <label>{{ copy.text('studio.aspectRatio') }}<select v-model="deck.aspectRatio" class="studio-input" @change="saveDeck"><option v-for="preset in aspectRatioPresets" :key="preset.id" :value="preset.id">{{ copy.text(preset.labelKey) }}</option></select></label>
           <label>{{ copy.text('studio.theme') }}<PresentationThemePicker v-model="deck.theme" :aspect-ratio="deck.aspectRatio" @update:model-value="saveDeck" /></label>
+          <div class="studio-format-grid">
+            <label>{{ copy.text('presentation.font') }}<select v-model="deck.fontFamily" class="studio-input" @change="saveDeck"><option v-for="preset in laoFontPresets" :key="preset.id" :value="preset.id">{{ preset.label }}</option></select></label>
+            <div class="studio-control-group">
+              <span>{{ copy.text('presentation.fontSize') }}</span>
+              <div class="flex items-center gap-2"><button type="button" class="app-chip" :disabled="deck.fontScale <= FONT_SCALE_MIN" @click="changeDeckFont(-FONT_SCALE_STEP)">−</button><strong>{{ Math.round(deck.fontScale * 100) }}%</strong><button type="button" class="app-chip" :disabled="deck.fontScale >= FONT_SCALE_MAX" @click="changeDeckFont(FONT_SCALE_STEP)">＋</button></div>
+            </div>
+            <label>{{ copy.text('presentation.textAlign') }}<select v-model="deck.textAlign" class="studio-input" @change="saveDeck"><option value="left">{{ copy.text('action.left') }}</option><option value="center">{{ copy.text('action.center') }}</option></select></label>
+          </div>
         </section>
       </div>
       <div ref="exportStage" class="export-stage" aria-hidden="true">
-        <DeckSlideCanvas v-if="exportSlide" :slide="exportSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" />
+        <DeckSlideCanvas v-if="exportSlide" :slide="exportSlide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" />
       </div>
     </section>
   </main>
@@ -171,8 +192,10 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
 .studio-editor { display: grid; align-content: start; gap: 1rem; padding: 1rem; }
 .studio-editor label { display: grid; gap: .35rem; font-size: .85rem; font-weight: 600; }
 .studio-input { width: 100%; border: 1px solid var(--lc-border); border-radius: .55rem; padding: .6rem; background: var(--lc-paper); color: var(--app-ink); }
+.studio-format-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+.studio-control-group { display: grid; align-content: start; gap: .35rem; font-size: .85rem; font-weight: 600; }
 .studio-slide-preview { display: grid; max-height: 32rem; place-items: center; overflow: hidden; border-radius: .6rem; background: var(--lc-dark-bg); }
 .studio-slide-preview :deep(.deck-canvas) { max-height: 32rem; }
 .export-stage { position: fixed; left: -10000px; top: 0; width: 1920px; pointer-events: none; }
-@media (max-width: 700px) { .studio-grid { grid-template-columns: 1fr; } .studio-sidebar { border-right: 0; border-bottom: 1px solid var(--lc-border); max-height: 14rem; overflow: auto; } }
+@media (max-width: 700px) { .studio-grid { grid-template-columns: 1fr; } .studio-sidebar { border-right: 0; border-bottom: 1px solid var(--lc-border); max-height: 14rem; overflow: auto; } .studio-format-grid { grid-template-columns: 1fr; } }
 </style>

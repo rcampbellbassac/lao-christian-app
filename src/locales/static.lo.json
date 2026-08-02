@@ -205,6 +205,7 @@
   "presentation.next": "ສະໄລ້ຕໍ່ໄປ",
   "presentation.size": "ຂະໜາດ",
   "presentation.font": "ຟອນຕ໌",
+  "presentation.fontSize": "ຂະໜາດຕົວອັກສອນ",
   "presentation.decreaseFont": "ຫຼຸດຂະໜາດຕົວອັກສອນສະໄລ້",
   "presentation.increaseFont": "ເພີ່ມຂະໜາດຕົວອັກສອນສະໄລ້",
   "presentation.resetFont": "ຕັ້ງຄ່າຂະໜາດຕົວອັກສອນສະໄລ້ຄືນໃໝ່ເປັນ 100%",

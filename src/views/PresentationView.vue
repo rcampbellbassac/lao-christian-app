@@ -369,6 +369,9 @@ async function saveAsDeck(): Promise<void> {
     { fileId, bookId, chapterId },
     settings.presentationAspectRatio,
     settings.presentationTheme,
+    settings.presentationFontScale,
+    settings.presentationFontFamily,
+    settings.presentationTextAlign,
   )
   await router.push(`/decks/${deck.id}`)
 }

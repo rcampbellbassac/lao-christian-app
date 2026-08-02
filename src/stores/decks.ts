@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import localforage from 'localforage'
 import type { AspectRatioId } from '@/utils/aspectRatios'
 import type { PresentationThemeId } from '@/utils/presentationThemes'
+import type { LaoFontId } from '@/utils/laoFonts'
+import type { PresentationTextAlign } from '@/stores/settings'
 import type { Slide } from '@/utils/slideGenerators'
 
 export interface DeckSlide {
@@ -21,6 +23,9 @@ export interface Deck {
   updatedAt: string
   aspectRatio: AspectRatioId
   theme: PresentationThemeId
+  fontScale: number
+  fontFamily: LaoFontId
+  textAlign: PresentationTextAlign
   slides: DeckSlide[]
 }
 
@@ -48,7 +53,14 @@ export const useDeckStore = defineStore('decks', () => {
   async function load(): Promise<void> {
     if (isLoaded.value) return
     const stored = await storage.getItem<DeckDataV1>(STORAGE_KEY)
-    if (stored?.schemaVersion === 1 && Array.isArray(stored.decks)) data.value = stored
+    if (stored?.schemaVersion === 1 && Array.isArray(stored.decks)) {
+      data.value = stored
+      data.value.decks.forEach((deck) => {
+        deck.fontScale ??= 1
+        deck.fontFamily ??= 'noto-sans-lao'
+        deck.textAlign ??= 'left'
+      })
+    }
     isLoaded.value = true
   }
 
@@ -70,6 +82,9 @@ export const useDeckStore = defineStore('decks', () => {
       updatedAt: now,
       aspectRatio: '16:9',
       theme: 'forest',
+      fontScale: 1,
+      fontFamily: 'noto-sans-lao',
+      textAlign: 'left',
       slides: [],
     }
     data.value.decks.unshift(deck)
@@ -83,10 +98,16 @@ export const useDeckStore = defineStore('decks', () => {
     source: { fileId: number; bookId: number; chapterId: number },
     aspectRatio: AspectRatioId,
     theme: PresentationThemeId,
+    fontScale = 1,
+    fontFamily: LaoFontId = 'noto-sans-lao',
+    textAlign: PresentationTextAlign = 'left',
   ): Promise<Deck> {
     const deck = await createDeck(name)
     deck.aspectRatio = aspectRatio
     deck.theme = theme
+    deck.fontScale = fontScale
+    deck.fontFamily = fontFamily
+    deck.textAlign = textAlign
     deck.slides = slides.map(slide => ({
       id: crypto.randomUUID(),
       title: slide.title.replace(/<[^>]*>/g, ''),
