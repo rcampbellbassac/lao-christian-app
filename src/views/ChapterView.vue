@@ -315,12 +315,12 @@ function presentSelection(): void {
   font-weight: 700;
 }
 
-:global(.dark) .icon-btn {
+.dark .icon-btn {
   border-color: rgb(45 212 191 / 0.5);
   color: rgb(94 234 212);
 }
 
-:global(.dark) .icon-btn:hover {
+.dark .icon-btn:hover {
   background: rgb(19 78 74 / 0.4);
 }
 
@@ -358,15 +358,15 @@ function presentSelection(): void {
   background: rgba(250, 204, 21, 0.5);
 }
 
-:global(.dark) .content-block--selectable:hover {
+.dark .content-block--selectable:hover {
   background: rgba(226, 232, 240, 0.06);
 }
 
-:global(.dark) .content-block--selected {
+.dark .content-block--selected {
   background: rgba(250, 204, 21, 0.22);
 }
 
-:global(.dark) .content-block--selected:hover {
+.dark .content-block--selected:hover {
   background: rgba(250, 204, 21, 0.3);
 }
 
