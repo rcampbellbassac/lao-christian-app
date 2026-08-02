@@ -108,6 +108,14 @@ export interface CachedContentSet {
   data: ContentSet
 }
 
+export interface ContentCacheStatus {
+  material: MaterialSet
+  key: string
+  cached: boolean
+  fetchedAt: string | null
+  approximateBytes: number
+}
+
 interface LoadSetOptions {
   forceRefresh?: boolean
 }
@@ -488,6 +496,27 @@ export const useContentStore = defineStore('content', () => {
     return cached
   }
 
+  async function getContentCacheStatuses(): Promise<ContentCacheStatus[]> {
+    await loadIndex()
+    return Promise.all(indexList.value.map(async material => {
+      const key = _keyFromUrl(material.url)
+      const value = await localforage.getItem<ContentSet | CachedSetEnvelope>(key)
+      const envelope = value && _isEnvelope(value) ? value : null
+      const cachedData = envelope?.data ?? value
+      return {
+        material,
+        key,
+        cached: Boolean(cachedData),
+        fetchedAt: envelope?.fetchedAt ?? null,
+        approximateBytes: cachedData ? new Blob([JSON.stringify(cachedData)]).size : 0,
+      }
+    }))
+  }
+
+  async function downloadContentSet(setKey: string): Promise<void> {
+    await loadContentSet(setKey, { forceRefresh: true })
+  }
+
   function getSetById(id: number): MaterialSet | undefined {
     return indexList.value.find(item => item.id === id)
   }
@@ -518,6 +547,8 @@ export const useContentStore = defineStore('content', () => {
     applyContentUpdate,
     removeContentSet,
     getCachedContentSets,
+    getContentCacheStatuses,
+    downloadContentSet,
     getSetById,
     getKeyFromId,
     getContentUpdateState,

@@ -14,6 +14,7 @@ import { presentationThemePresets } from '@/utils/presentationThemes'
 import type { PresentationThemeId } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
 import { useUiText } from '@/composables/useUiText'
+import LibraryManager from '@/components/LibraryManager.vue'
 
 const settings = useSettingsStore()
 const text = useUiText()
@@ -75,6 +76,8 @@ function onTextAlignChange(value: PresentationTextAlign): void {
             {{ settings.bilingualUi ? text.accessible('laoOnly') : text.accessible('bilingual') }}
           </button>
         </section>
+
+        <LibraryManager />
 
         <section>
           <h2 class="text-xl font-semibold text-sky-900 dark:text-sky-100">Reading text size</h2>
