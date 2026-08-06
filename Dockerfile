@@ -18,7 +18,7 @@ FROM deps AS build
 COPY . .
 RUN npm run build
 
-FROM cgr.dev/chainguard/nginx:latest@sha256:e4ff957080737c90a9ecfeaa40e3d19ea9d687e9cacda2f2a031c75ffcdd72b7 AS prod
+FROM cgr.dev/chainguard/nginx:latest@sha256:171bc52d7bb01604bfb107800e646a02915ec9f98fb145659bb859955d1d7f51 AS prod
 USER 65532
 ENV NODE_ENV=production
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
