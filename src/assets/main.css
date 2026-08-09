@@ -271,6 +271,13 @@ body.dark .app-panel,
   position: relative;
   overflow: hidden;
   padding-bottom: clamp(1.25rem, 3vw, 2.25rem);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--app-ink), transparent 92%);
+}
+.lc-home-resources {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+.dark .lc-home-hero {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 .lc-home-hero::before {
   content: '';
