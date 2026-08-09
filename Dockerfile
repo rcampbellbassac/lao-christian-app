@@ -4,7 +4,7 @@
 # automatic same-tag security patching for a reproducible build; the repo's
 # .github/dependabot.yml (docker ecosystem) opens a PR to bump these digests
 # on a schedule so the pin doesn't go stale.
-FROM cgr.dev/chainguard/node:latest-dev@sha256:576199e9510d2c40c75374ed80c15b3113a479d19ac061d998c3318adbaf75d8 AS base
+FROM cgr.dev/chainguard/node:latest-dev@sha256:375f9011f2571ebf99f161eb71c2502fdca363605b91df8290cfdefc276bd7f7 AS base
 # Already the base image's own default (uid 65532); set explicitly so it's
 # visible in this file rather than only implied by the upstream image.
 USER 65532
@@ -18,7 +18,7 @@ FROM deps AS build
 COPY . .
 RUN npm run build
 
-FROM cgr.dev/chainguard/nginx:latest@sha256:171bc52d7bb01604bfb107800e646a02915ec9f98fb145659bb859955d1d7f51 AS prod
+FROM cgr.dev/chainguard/nginx:latest@sha256:2189489ef3fa5b1e94a8463f98f9c148a4d8e7498d3f747069fc78de405742fc AS prod
 USER 65532
 ENV NODE_ENV=production
 COPY nginx/nginx.conf /etc/nginx/nginx.conf

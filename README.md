@@ -12,8 +12,8 @@ LaoChristian.org is a Vue 3 + Vite SPA/PWA that presents Lao Christian materials
 
 ## Requirements
 
-- Node.js 22 LTS (or Node.js 24)
-- npm 10+
+- Node.js 24 or Node.js 26
+- npm 11+
 - Docker + Docker Compose (for containerized workflows)
 
 ## Environment configuration
