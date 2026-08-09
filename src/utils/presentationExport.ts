@@ -2,6 +2,7 @@ import { toPng } from 'html-to-image'
 import JSZip from 'jszip'
 import PptxGenJS from 'pptxgenjs'
 import type { AspectRatioPreset } from './aspectRatios'
+import { contentHtmlToText } from './sanitize'
 
 export interface ExportableSlide {
   id: string
@@ -51,18 +52,21 @@ export function downloadDataUrl(dataUrl: string, filename: string): void {
   downloadBlob(dataUrlToBlob(dataUrl), filename)
 }
 
-export async function exportSlideAsPng(slide: ExportableSlide, preset: AspectRatioPreset, filenamePrefix: string): Promise<void> {
+export async function exportSlideAsPng(
+  slide: ExportableSlide,
+  preset: AspectRatioPreset,
+  filenamePrefix: string,
+): Promise<void> {
   const dataUrl = await rasterizeSlide(slide, preset)
   downloadDataUrl(
     dataUrl,
-    `${sanitizeFilename(filenamePrefix)}-${sanitizeFilename(slide.title)}.png`
+    `${sanitizeFilename(filenamePrefix)}-${sanitizeFilename(slide.title)}.png`,
   )
 }
 
 export function sanitizeFilename(value: string): string {
   return (
-    value
-      .replace(/<[^>]*>/g, '')
+    contentHtmlToText(value)
       .replace(/[^a-zA-Z0-9຀-໿\s_-]/g, '')
       .trim()
       .replace(/\s+/g, '-') || 'presentation'
@@ -77,7 +81,7 @@ export async function exportSlidesAsZip(
   slides: Array<{ id: string; title: string }>,
   preset: AspectRatioPreset,
   renderSlide: (slide: { id: string; title: string }) => Promise<HTMLElement>,
-  filenamePrefix: string
+  filenamePrefix: string,
 ): Promise<void> {
   const zip = new JSZip()
 
@@ -104,10 +108,14 @@ export async function exportSlidesAsPptx(
   slides: Array<{ id: string; title: string }>,
   preset: AspectRatioPreset,
   renderSlide: (slide: { id: string; title: string }) => Promise<HTMLElement>,
-  filenamePrefix: string
+  filenamePrefix: string,
 ): Promise<void> {
   const pptx = new PptxGenJS()
-  pptx.defineLayout({ name: 'CUSTOM', width: preset.pptxInches.width, height: preset.pptxInches.height })
+  pptx.defineLayout({
+    name: 'CUSTOM',
+    width: preset.pptxInches.width,
+    height: preset.pptxInches.height,
+  })
   pptx.layout = 'CUSTOM'
 
   for (const slide of slides) {
@@ -124,10 +132,11 @@ export async function exportSlidesAsPptx(
   }
 
   const output = await pptx.write({ outputType: 'blob', compression: true })
-  const blob = output instanceof Blob
-    ? output
-    : new Blob([output as BlobPart], {
-        type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      })
+  const blob =
+    output instanceof Blob
+      ? output
+      : new Blob([output as BlobPart], {
+          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        })
   downloadBlob(blob, `${sanitizeFilename(filenamePrefix)}.pptx`)
 }
