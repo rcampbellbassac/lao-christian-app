@@ -67,6 +67,17 @@ async function newDeck(): Promise<void> {
   await router.push(`/decks/${created.id}`)
 }
 
+async function addBlankSlide(): Promise<void> {
+  if (!deck.value) return
+  const created = await decks.addSlide(deck.value)
+  selectedSlideId.value = created.id
+}
+
+async function switchDeck(event: Event): Promise<void> {
+  const deckId = (event.target as HTMLSelectElement).value
+  if (deckId && deckId !== deck.value?.id) await router.push(`/decks/${deckId}`)
+}
+
 function changeDeckFont(step: number): void {
   if (!deck.value) return
   deck.value.fontScale = Math.min(
@@ -108,8 +119,12 @@ async function toggleSelectedSlideVisibility(): Promise<void> {
 
 async function removeSelectedSlide(): Promise<void> {
   if (!deck.value || selectedIndex.value < 0) return
+  const nextSelection =
+    deck.value.slides[selectedIndex.value + 1]?.id ??
+    deck.value.slides[selectedIndex.value - 1]?.id ??
+    null
   await decks.removeSlide(deck.value, selectedIndex.value)
-  selectedSlideId.value = deck.value.slides[0]?.id ?? null
+  selectedSlideId.value = nextSelection
 }
 
 async function deleteDeck(target: Deck): Promise<void> {
@@ -195,6 +210,14 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
       <DevelopmentNotice />
       <header class="studio-toolbar">
         <router-link to="/decks" class="app-chip">← {{ copy.text('studio.back') }}</router-link>
+        <label class="studio-deck-picker">
+          <span>{{ copy.text('studio.chooseDeck') }}</span>
+          <select class="studio-deck-select" :value="deck.id" @change="switchDeck">
+            <option v-for="item in decks.decks" :key="item.id" :value="item.id">
+              {{ item.name }} ({{ item.slides.length }})
+            </option>
+          </select>
+        </label>
         <input
           v-model="deck.name"
           class="studio-title"
@@ -244,7 +267,7 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
       </header>
       <div class="studio-grid">
         <aside class="studio-sidebar">
-          <button type="button" class="studio-primary w-full" @click="decks.addSlide(deck)">
+          <button type="button" class="studio-primary w-full" @click="addBlankSlide">
             ＋ {{ copy.text('studio.addSlide') }}
           </button>
           <ol class="studio-slide-list mt-3 grid gap-2">
@@ -436,6 +459,23 @@ async function runExport(kind: 'png' | 'zip' | 'pptx'): Promise<void> {
   color: var(--app-ink);
   font-size: 1.2rem;
   font-weight: 600;
+}
+.studio-deck-picker {
+  display: inline-grid;
+  gap: 0.15rem;
+  color: var(--app-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.studio-deck-select {
+  max-width: min(15rem, 58vw);
+  min-height: 2.75rem;
+  border: 1px solid var(--lc-border);
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--lc-paper);
+  color: var(--app-ink);
+  font-size: 0.85rem;
 }
 .studio-primary {
   border-radius: 999px;
