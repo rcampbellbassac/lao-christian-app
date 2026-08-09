@@ -1,15 +1,16 @@
 {
-  "extends": "./node_modules/@tsconfig/node22/tsconfig.json",
+  "extends": "./node_modules/@tsconfig/node26/tsconfig.json",
   "include": [
     "vite.config.*",
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*",
+    "playwright*.config.*",
     "eslint.config.*"
   ],
   "compilerOptions": {
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
 
     "module": "ESNext",
