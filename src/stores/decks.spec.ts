@@ -61,6 +61,43 @@ describe('deck store', () => {
     expect(deck.slides[0]?.layout).toBe('title')
   })
 
+  it('appends slides from different resources to one deck', async () => {
+    const store = useDeckStore()
+    const deck = await store.createFromSlides(
+      'Sabbath service',
+      [{ id: 'title', title: 'Genesis', html: 'Creation' }],
+      { fileId: 1, bookId: 2, chapterId: 3 },
+      '16:9',
+      'forest',
+    )
+
+    const added = await store.appendSlides(
+      deck,
+      [{ id: 'content-1', title: 'Worship song', html: '<p>Sing together</p>' }],
+      { fileId: 2, bookId: 8, chapterId: 13 },
+    )
+
+    expect(added).toHaveLength(1)
+    expect(deck.slides.map((slide) => slide.title)).toEqual(['Genesis', 'Worship song'])
+    expect(deck.slides.map((slide) => slide.source?.fileId)).toEqual([1, 2])
+    expect(new Set(deck.slides.map((slide) => slide.id)).size).toBe(2)
+    expect(deck.aspectRatio).toBe('16:9')
+    expect(deck.theme).toBe('forest')
+  })
+
+  it('removes slides only from the selected deck', async () => {
+    const store = useDeckStore()
+    const firstDeck = await store.createDeck('First')
+    const secondDeck = await store.createDeck('Second')
+    await store.addSlide(firstDeck)
+    await store.addSlide(secondDeck)
+
+    await store.removeSlide(secondDeck, 0)
+
+    expect(firstDeck.slides).toHaveLength(1)
+    expect(secondDeck.slides).toHaveLength(0)
+  })
+
   it('reorders and duplicates slides', async () => {
     const store = useDeckStore()
     const deck = await store.createDeck()

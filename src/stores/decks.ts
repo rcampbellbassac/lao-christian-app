@@ -15,7 +15,13 @@ export interface DeckSlide {
   layout?: 'title' | 'content'
   speakerNotes: string
   hidden: boolean
-  source?: { fileId: number; bookId: number; chapterId: number }
+  source?: DeckSlideSource
+}
+
+export interface DeckSlideSource {
+  fileId: number
+  bookId: number
+  chapterId: number
 }
 
 export interface Deck {
@@ -46,6 +52,18 @@ const STORAGE_KEY = 'decks-v1'
 
 function snapshot<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
+}
+
+function createDeckSlides(slides: Slide[], source: DeckSlideSource): DeckSlide[] {
+  return slides.map((slide) => ({
+    id: crypto.randomUUID(),
+    title: contentHtmlToText(slide.title),
+    html: slide.html,
+    layout: slide.id === 'title' ? 'title' : 'content',
+    speakerNotes: '',
+    hidden: false,
+    source: snapshot(source),
+  }))
 }
 
 export const useDeckStore = defineStore('decks', () => {
@@ -97,7 +115,7 @@ export const useDeckStore = defineStore('decks', () => {
   async function createFromSlides(
     name: string,
     slides: Slide[],
-    source: { fileId: number; bookId: number; chapterId: number },
+    source: DeckSlideSource,
     aspectRatio: AspectRatioId,
     theme: PresentationThemeId,
     fontScale = 1,
@@ -110,18 +128,23 @@ export const useDeckStore = defineStore('decks', () => {
     deck.fontScale = fontScale
     deck.fontFamily = fontFamily
     deck.textAlign = textAlign
-    deck.slides = slides.map((slide) => ({
-      id: crypto.randomUUID(),
-      title: contentHtmlToText(slide.title),
-      html: slide.html,
-      layout: slide.id === 'title' ? 'title' : 'content',
-      speakerNotes: '',
-      hidden: false,
-      source,
-    }))
+    deck.slides = createDeckSlides(slides, source)
     deck.updatedAt = new Date().toISOString()
     await persist()
     return deck
+  }
+
+  async function appendSlides(
+    deck: Deck,
+    slides: Slide[],
+    source: DeckSlideSource,
+  ): Promise<DeckSlide[]> {
+    await load()
+    if (!slides.length) return []
+    const added = createDeckSlides(slides, source)
+    deck.slides.push(...added)
+    await saveDeck(deck)
+    return added
   }
 
   async function saveDeck(deck: Deck): Promise<void> {
@@ -195,6 +218,7 @@ export const useDeckStore = defineStore('decks', () => {
     getDeck,
     createDeck,
     createFromSlides,
+    appendSlides,
     saveDeck,
     addSlide,
     duplicateSlide,

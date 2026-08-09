@@ -64,6 +64,8 @@ const settings = useSettingsStore()
 const selectionStore = usePresentationSelectionStore()
 const deckStore = useDeckStore()
 const copy = useStaticText()
+const NEW_DECK_TARGET = '__new-deck__'
+const TARGET_DECK_STORAGE_KEY = 'laochristian-presentation-target-deck'
 
 const fileId = parseInt(route.params.fileid as string, 10)
 const bookId = parseInt(route.params.bookid as string, 10)
@@ -80,6 +82,9 @@ const exportStatus = ref('')
 const selectedSlideIds = ref<Set<string>>(new Set())
 const rangeStart = ref(1)
 const rangeEnd = ref(1)
+const targetDeckId = ref(NEW_DECK_TARGET)
+const isSavingToDeck = ref(false)
+const deckStatus = ref('')
 
 const hasSavedSelection = computed(() => selectionStore.hasSelectionFor(chapterId))
 const slideSourceMode = ref<'full' | 'selection'>(
@@ -87,7 +92,11 @@ const slideSourceMode = ref<'full' | 'selection'>(
 )
 
 onMounted(async () => {
-  await settings.load()
+  await Promise.all([settings.load(), deckStore.load()])
+  const rememberedDeckId = localStorage.getItem(TARGET_DECK_STORAGE_KEY)
+  if (rememberedDeckId && deckStore.getDeck(rememberedDeckId)) {
+    targetDeckId.value = rememberedDeckId
+  }
   await store.loadIndex()
   const key = store.getKeyFromId(fileId)
   if (!key) {
@@ -177,6 +186,14 @@ watch(slides, (newSlides) => {
 const activeSlides = computed<Slide[]>(() =>
   slides.value.filter((slide) => selectedSlideIds.value.has(slide.id)),
 )
+const targetDeck = computed(() =>
+  targetDeckId.value === NEW_DECK_TARGET ? undefined : deckStore.getDeck(targetDeckId.value),
+)
+
+watch(targetDeckId, (id) => {
+  if (id === NEW_DECK_TARGET) localStorage.removeItem(TARGET_DECK_STORAGE_KEY)
+  else localStorage.setItem(TARGET_DECK_STORAGE_KEY, id)
+})
 
 watch(activeSlides, (list) => {
   if (currentSlideIndex.value >= list.length) {
@@ -394,18 +411,34 @@ async function exportPptx(): Promise<void> {
 }
 
 async function saveAsDeck(): Promise<void> {
-  if (!activeSlides.value.length) return
-  const deck = await deckStore.createFromSlides(
-    contentHtmlToText(chapter.value?.name) || 'Presentation',
-    activeSlides.value,
-    { fileId, bookId, chapterId },
-    settings.presentationAspectRatio,
-    settings.presentationTheme,
-    settings.presentationFontScale,
-    settings.presentationFontFamily,
-    settings.presentationTextAlign,
-  )
-  await router.push(`/decks/${deck.id}`)
+  if (!activeSlides.value.length || isSavingToDeck.value) return
+  isSavingToDeck.value = true
+  deckStatus.value = copy.text('presentation.addingToDeck')
+  try {
+    const source = { fileId, bookId, chapterId }
+    let destination = targetDeck.value
+    if (destination) {
+      await deckStore.appendSlides(destination, activeSlides.value, source)
+    } else {
+      destination = await deckStore.createFromSlides(
+        contentHtmlToText(chapter.value?.name) || 'Presentation',
+        activeSlides.value,
+        source,
+        settings.presentationAspectRatio,
+        settings.presentationTheme,
+        settings.presentationFontScale,
+        settings.presentationFontFamily,
+        settings.presentationTextAlign,
+      )
+      targetDeckId.value = destination.id
+    }
+    deckStatus.value = `${activeSlides.value.length} ${copy.text('presentation.addedToDeck')} ${destination.name}`
+  } catch (error) {
+    console.error('Failed to add slides to deck', error)
+    deckStatus.value = copy.text('presentation.addToDeckFailed')
+  } finally {
+    isSavingToDeck.value = false
+  }
 }
 
 async function toggleFullscreen(): Promise<void> {
@@ -605,15 +638,35 @@ function onFullscreenChange(): void {
       >
         <font-awesome-icon icon="file-image" />
       </button>
+      <label class="presentation-field presentation-deck-picker">
+        <span class="presentation-field-label">{{ copy.text('presentation.targetDeck') }}</span>
+        <select v-model="targetDeckId" class="presentation-select" @change="deckStatus = ''">
+          <option :value="NEW_DECK_TARGET">
+            {{ copy.text('presentation.createNewDeck') }}
+          </option>
+          <option v-for="item in deckStore.decks" :key="item.id" :value="item.id">
+            {{ item.name }} ({{ item.slides.length }})
+          </option>
+        </select>
+      </label>
       <button
-        class="presentation-btn"
+        class="presentation-btn presentation-deck-add"
         type="button"
-        :title="copy.text('presentation.saveDeck')"
-        :aria-label="copy.text('presentation.saveDeck')"
+        :disabled="isSavingToDeck || !activeSlides.length"
+        :title="copy.text('presentation.addSelectedToDeck')"
+        :aria-label="copy.text('presentation.addSelectedToDeck')"
         @click="saveAsDeck"
       >
-        <font-awesome-icon icon="floppy-disk" />
+        <span v-if="isSavingToDeck">…</span><font-awesome-icon v-else icon="floppy-disk" />
+        <span>{{ copy.text('presentation.addSelected') }}</span>
       </button>
+      <router-link
+        v-if="targetDeck"
+        :to="`/decks/${targetDeck.id}`"
+        class="presentation-btn presentation-btn-compact"
+      >
+        {{ copy.text('presentation.openDeck') }}
+      </router-link>
       <button
         class="presentation-btn"
         type="button"
@@ -636,6 +689,9 @@ function onFullscreenChange(): void {
       </button>
       <span class="presentation-export-status" role="status" aria-live="polite">{{
         exportStatus
+      }}</span>
+      <span class="presentation-export-status" role="status" aria-live="polite">{{
+        deckStatus
       }}</span>
     </header>
     <DevelopmentNotice dark />
@@ -907,6 +963,16 @@ function onFullscreenChange(): void {
   font-size: 0.85rem;
   background: #1e293b;
   color: #f8fafc;
+}
+
+.presentation-deck-picker .presentation-select {
+  max-width: min(16rem, 52vw);
+}
+
+.presentation-deck-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .presentation-scale-value {
