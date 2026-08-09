@@ -18,6 +18,12 @@ test('navigation adapts without horizontal overflow', async ({ page }, testInfo)
   await acceptConsent(page)
   await expectNoHorizontalOverflow(page)
 
+  const heroBounds = await page.locator('.lc-home-hero').boundingBox()
+  const resourcesBounds = await page.locator('.lc-home-resources').boundingBox()
+  expect(heroBounds).not.toBeNull()
+  expect(resourcesBounds).not.toBeNull()
+  expect(resourcesBounds!.y - (heroBounds!.y + heroBounds!.height)).toBeGreaterThanOrEqual(24)
+
   if (testInfo.project.name.startsWith('desktop')) {
     await expect(page.locator('.desktop-toolbar')).toBeVisible()
     await expect(page.locator('.mobile-bottom-nav')).toBeHidden()

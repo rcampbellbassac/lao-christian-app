@@ -26,7 +26,7 @@ const copy = useStaticText()
       </article>
     </section>
 
-    <section class="app-panel mt-4">
+    <section class="lc-home-resources app-panel">
       <h2 class="app-section-title">{{ copy.text('home.resources') }}</h2>
       <p class="app-muted mt-2 italic">
         {{ copy.text('home.resourcesHelp') }}
