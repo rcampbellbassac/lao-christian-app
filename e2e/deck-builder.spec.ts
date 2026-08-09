@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import JSZip from 'jszip'
 
 function contentSet(unitId: number, chapterId: number, title: string, html: string) {
   return {
@@ -68,7 +70,22 @@ test('adds slides from different resources to a chosen deck', async ({ page }) =
   await expect(slideNames.filter({ hasText: 'Genesis 1' }).first()).toBeVisible()
   await expect(slideNames.filter({ hasText: 'Song 1' }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'ZIP' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'PPTX' })).toBeVisible()
+  const pptxButton = page.getByRole('button', { name: 'PPTX' })
+  await expect(pptxButton).toBeVisible()
+
+  const downloadPromise = page.waitForEvent('download')
+  await pptxButton.click()
+  const download = await downloadPromise
+  const downloadPath = await download.path()
+  expect(download.suggestedFilename()).toMatch(/\.pptx$/)
+  expect(downloadPath).not.toBeNull()
+
+  const archive = await JSZip.loadAsync(await readFile(downloadPath!))
+  const files = Object.keys(archive.files)
+  const exportedSlides = files.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+  const exportedImages = files.filter((name) => /^ppt\/media\/image\d+\.png$/.test(name))
+  expect(exportedSlides.length).toBeGreaterThanOrEqual(2)
+  expect(exportedImages).toHaveLength(exportedSlides.length)
 })
 
 test('switches the active deck before removing a slide', async ({ page }) => {

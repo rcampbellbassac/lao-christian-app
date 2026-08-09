@@ -1,7 +1,7 @@
 import { toPng } from 'html-to-image'
 import JSZip from 'jszip'
-import PptxGenJS from 'pptxgenjs'
 import type { AspectRatioPreset } from './aspectRatios'
+import { buildImagePptx } from './pptxPackage'
 import { contentHtmlToText } from './sanitize'
 
 export interface ExportableSlide {
@@ -110,33 +110,14 @@ export async function exportSlidesAsPptx(
   renderSlide: (slide: { id: string; title: string }) => Promise<HTMLElement>,
   filenamePrefix: string,
 ): Promise<void> {
-  const pptx = new PptxGenJS()
-  pptx.defineLayout({
-    name: 'CUSTOM',
-    width: preset.pptxInches.width,
-    height: preset.pptxInches.height,
-  })
-  pptx.layout = 'CUSTOM'
+  const images: string[] = []
 
   for (const slide of slides) {
     const element = await renderSlide(slide)
     const dataUrl = await rasterizeSlide({ ...slide, element }, preset)
-    const pptxSlide = pptx.addSlide()
-    pptxSlide.addImage({
-      data: dataUrl,
-      x: 0,
-      y: 0,
-      w: preset.pptxInches.width,
-      h: preset.pptxInches.height,
-    })
+    images.push(dataUrl)
   }
 
-  const output = await pptx.write({ outputType: 'blob', compression: true })
-  const blob =
-    output instanceof Blob
-      ? output
-      : new Blob([output as BlobPart], {
-          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        })
+  const blob = await buildImagePptx(images, preset)
   downloadBlob(blob, `${sanitizeFilename(filenamePrefix)}.pptx`)
 }

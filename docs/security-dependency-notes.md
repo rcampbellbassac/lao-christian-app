@@ -1,15 +1,13 @@
 # Security dependency notes
 
-## PPTXGenJS and `image-size`
+## Resolved: PPTXGenJS and `image-size`
 
-As of 2026-08-09, `npm audit` reports the two `image-size` infinite-loop
-advisories through `pptxgenjs@4.0.1`. The registry currently offers no patched
-`image-size` release, and npm's suggested remediation is a breaking downgrade
-to `pptxgenjs@1.1.5`.
+On 2026-08-09, Dependabot reported two high-severity infinite-loop advisories
+in `image-size`, installed transitively by `pptxgenjs@4.0.1`. Every published
+`image-size` release was affected, so there was no safe version to override.
 
-The app does not accept ICNS, JXL, or HEIF uploads for slide export. PPTX images
-come from the app's controlled PNG/WebP/JPEG theme and logo assets, so the
-vulnerable parsers are not reachable through the current user interface. Keep
-PPTXGenJS current, monitor the upstream dependency, and remove this exception
-as soon as a patched chain is available. Do not use `npm audit fix --force` to
-downgrade the exporter.
+The app removed PptxGenJS and now writes its image-only PowerPoint packages
+directly as standards-based OOXML using JSZip. This matches the existing export
+model—one already-rendered PNG per slide—without installing or invoking a
+general-purpose image parser. `pptxgenjs` and `image-size` are absent from the
+dependency tree, and `npm audit` reports zero vulnerabilities.
