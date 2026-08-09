@@ -19,7 +19,7 @@ watch(
   (scale) => {
     document.documentElement.style.setProperty('--app-content-font-scale', String(scale))
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // registerType: 'autoUpdate' (vite.config.ts) makes this reload the page
@@ -51,7 +51,10 @@ useRegisterSW({
 </script>
 
 <template>
-  <div class="app-shell relative min-h-screen overflow-x-hidden">
+  <div
+    class="app-shell relative min-h-screen overflow-x-hidden"
+    :class="{ 'app-shell--bare': route.meta.bare }"
+  >
     <MainToolbar v-if="!route.meta.bare" />
     <RouterView class="pb-5 transition-all duration-300 ease-out" />
     <MainFooter v-if="!route.meta.bare" />

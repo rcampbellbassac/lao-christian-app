@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createSlideGenerator } from '../index'
 import { buildSlidesFromSelection, parseBlocks } from '../helpers'
 import { representativeFixtures } from '../__fixtures__/representativeContent'
+import { contentHtmlToText } from '@/utils/sanitize'
 
 describe('buildSlidesFromSelection', () => {
   const html = '<p>Alpha</p><p>Beta</p><h2>Header</h2><p>Gamma</p><p>Delta</p>'
@@ -18,7 +19,9 @@ describe('buildSlidesFromSelection', () => {
   it('grouped mode merges the selection into as few slides as fit maxCharsPerSlide', () => {
     const allBlocks = parseBlocks(html)
     const selected = [allBlocks[0], allBlocks[1], allBlocks[3]] // Alpha, Beta, Gamma (skip Header/Delta)
-    const slides = buildSlidesFromSelection(context, selected, 'grouped', { maxCharsPerSlide: 1000 })
+    const slides = buildSlidesFromSelection(context, selected, 'grouped', {
+      maxCharsPerSlide: 1000,
+    })
 
     const contentSlides = slides.slice(1)
     expect(contentSlides.length).toBe(1)
@@ -42,7 +45,8 @@ describe('buildSlidesFromSelection', () => {
   })
 
   it('split mode still auto-splits an individually oversized selected block', () => {
-    const longSentence = 'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
+    const longSentence =
+      'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
     const oversizedHtml = `<p>${longSentence.repeat(20)}</p>`
     const blocks = parseBlocks(oversizedHtml)
 
@@ -115,23 +119,34 @@ describe('slide generators', () => {
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(2)
-    expect(contentSlides.some(slide => slide.html.includes('Short closing paragraph.'))).toBe(true)
-    expect(contentSlides.every(slide => slide.html.length <= 280)).toBe(true)
+    expect(contentSlides.some((slide) => slide.html.includes('Short closing paragraph.'))).toBe(
+      true,
+    )
+    expect(contentSlides.every((slide) => slide.html.length <= 280)).toBe(true)
   })
 
   it('keeps whole paragraphs together and marks unavoidable continuations', () => {
     const generator = createSlideGenerator('default')
     const longParagraph = 'A long sentence that cannot fit the requested slide budget. '.repeat(12)
     const slides = generator.generate(
-      { title: 'Large text', html: `<p>Short first paragraph.</p><p>${longParagraph}</p><p>Short last paragraph.</p>` },
+      {
+        title: 'Large text',
+        html: `<p>Short first paragraph.</p><p>${longParagraph}</p><p>Short last paragraph.</p>`,
+      },
       { maxCharsPerSlide: 120, maxNodesPerSlide: 2 },
     )
     const content = slides.slice(1)
 
     expect(content.length).toBeGreaterThan(3)
-    expect(content.some(slide => slide.html.includes('Short first paragraph.') && slide.html.includes('Short last paragraph.'))).toBe(false)
-    expect(content.some(slide => slide.html.includes(' …</p>'))).toBe(true)
-    expect(content.some(slide => slide.html.includes('<p>… '))).toBe(true)
+    expect(
+      content.some(
+        (slide) =>
+          slide.html.includes('Short first paragraph.') &&
+          slide.html.includes('Short last paragraph.'),
+      ),
+    ).toBe(false)
+    expect(content.some((slide) => slide.html.includes(' …</p>'))).toBe(true)
+    expect(content.some((slide) => slide.html.includes('<p>… '))).toBe(true)
   })
 
   it('splits list-heavy default content into readable slides', () => {
@@ -155,9 +170,9 @@ describe('slide generators', () => {
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(3)
-    expect(contentSlides.some(slide => slide.html.includes('<li>First bullet'))).toBe(true)
-    expect(contentSlides.some(slide => slide.html.includes('<blockquote>'))).toBe(true)
-    expect(contentSlides.every(slide => slide.html.length <= 260)).toBe(true)
+    expect(contentSlides.some((slide) => slide.html.includes('<li>First bullet'))).toBe(true)
+    expect(contentSlides.some((slide) => slide.html.includes('<blockquote>'))).toBe(true)
+    expect(contentSlides.every((slide) => slide.html.length <= 260)).toBe(true)
   })
 
   it('splits a chapter wrapped in a single outer div into multiple verse-bounded slides', () => {
@@ -177,10 +192,10 @@ describe('slide generators', () => {
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(1)
-    expect(contentSlides.every(slide => slide.html.length < html.length)).toBe(true)
+    expect(contentSlides.every((slide) => slide.html.length < html.length)).toBe(true)
 
-    const verse1Slide = contentSlides.find(slide => slide.html.includes('verse number 1 '))
-    const verse10Slide = contentSlides.find(slide => slide.html.includes('verse number 10 '))
+    const verse1Slide = contentSlides.find((slide) => slide.html.includes('verse number 1 '))
+    const verse10Slide = contentSlides.find((slide) => slide.html.includes('verse number 10 '))
     expect(verse1Slide).toBeDefined()
     expect(verse10Slide).toBeDefined()
     expect(verse1Slide).not.toBe(verse10Slide)
@@ -188,14 +203,15 @@ describe('slide generators', () => {
 
   it('unwraps nested single-child section/div wrappers for default content too', () => {
     const generator = createSlideGenerator('default')
-    const html = '<div><section><div><p>One</p><p>Two</p><h2>Header</h2><p>Three</p></div></section></div>'
+    const html =
+      '<div><section><div><p>One</p><p>Two</p><h2>Header</h2><p>Three</p></div></section></div>'
 
     const slides = generator.generate({ title: 'Nested', html }, { maxNodesPerSlide: 1 })
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(1)
-    expect(contentSlides.some(slide => slide.html.includes('One'))).toBe(true)
-    expect(contentSlides.some(slide => slide.html.includes('Header'))).toBe(true)
+    expect(contentSlides.some((slide) => slide.html.includes('One'))).toBe(true)
+    expect(contentSlides.some((slide) => slide.html.includes('Header'))).toBe(true)
   })
 
   it('does not unwrap a wrapper div that carries its own attributes', () => {
@@ -206,35 +222,44 @@ describe('slide generators', () => {
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(0)
-    expect(contentSlides.some(slide => slide.html.includes('One') && slide.html.includes('Two'))).toBe(true)
+    expect(
+      contentSlides.some((slide) => slide.html.includes('One') && slide.html.includes('Two')),
+    ).toBe(true)
   })
 
   it.each(['bible', 'songs', 'studies'] as const)(
     'splits an oversized single block for %s content as a defense-in-depth fallback',
     (type) => {
       const generator = createSlideGenerator(type)
-      const longSentence = 'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
+      const longSentence =
+        'This sentence keeps repeating so the paragraph becomes far too long for one slide. '
       const html = `<p>${longSentence.repeat(20)}</p>`
 
-      const slides = generator.generate({ title: 'Oversized block', html }, { maxCharsPerSlide: 200 })
+      const slides = generator.generate(
+        { title: 'Oversized block', html },
+        { maxCharsPerSlide: 200 },
+      )
       const contentSlides = slides.slice(1)
 
       expect(contentSlides.length).toBeGreaterThan(1)
-      expect(contentSlides.every(slide => slide.html.length <= 260)).toBe(true)
-    }
+      expect(contentSlides.every((slide) => slide.html.length <= 260)).toBe(true)
+    },
   )
 
   it('keeps verse groups bounded for bible content', () => {
     const generator = createSlideGenerator('bible')
-    const fixture = representativeFixtures.find(item => item.setKey === 'LaoBible')
+    const fixture = representativeFixtures.find((item) => item.setKey === 'LaoBible')
     if (!fixture) throw new Error('Missing fixture LaoBible')
 
-    const slides = generator.generate({ title: fixture.title, html: fixture.html }, { versesPerSlide: 2 })
+    const slides = generator.generate(
+      { title: fixture.title, html: fixture.html },
+      { versesPerSlide: 2 },
+    )
 
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThan(1)
-    expect(contentSlides.every(slide => slide.html.length > 0)).toBe(true)
+    expect(contentSlides.every((slide) => slide.html.length > 0)).toBe(true)
     expect(slides.length).toBeGreaterThanOrEqual(4)
 
     const requiredPairs = [
@@ -244,21 +269,27 @@ describe('slide generators', () => {
     ]
 
     requiredPairs.forEach((pair) => {
-      const containingSlide = contentSlides.find(slide => slide.html.includes(pair.verse))
+      const containingSlide = contentSlides.find((slide) => slide.html.includes(pair.verse))
       expect(containingSlide, `Expected verse ${pair.verse} in one content slide`).toBeDefined()
       expect(containingSlide?.html.includes(pair.body)).toBe(true)
     })
 
-    const rerunSlides = generator.generate({ title: fixture.title, html: fixture.html }, { versesPerSlide: 2 })
-    expect(rerunSlides.map(slide => slide.html)).toEqual(slides.map(slide => slide.html))
+    const rerunSlides = generator.generate(
+      { title: fixture.title, html: fixture.html },
+      { versesPerSlide: 2 },
+    )
+    expect(rerunSlides.map((slide) => slide.html)).toEqual(slides.map((slide) => slide.html))
   })
 
   it('keeps stanzas intact for songs content', () => {
     const generator = createSlideGenerator('songs')
-    const fixture = representativeFixtures.find(item => item.setKey === 'LaoSongs')
+    const fixture = representativeFixtures.find((item) => item.setKey === 'LaoSongs')
     if (!fixture) throw new Error('Missing fixture LaoSongs')
 
-    const slides = generator.generate({ title: fixture.title, html: fixture.html }, { stanzasPerSlide: 1 })
+    const slides = generator.generate(
+      { title: fixture.title, html: fixture.html },
+      { stanzasPerSlide: 1 },
+    )
     const contentSlides = slides.slice(1)
 
     expect(contentSlides.length).toBeGreaterThanOrEqual(3)
@@ -270,17 +301,20 @@ describe('slide generators', () => {
     ]
 
     stanzaChecks.forEach(([lineA, lineB]) => {
-      const containingSlide = contentSlides.find(slide => slide.html.includes(lineA))
+      const containingSlide = contentSlides.find((slide) => slide.html.includes(lineA))
       expect(containingSlide, `Expected stanza line ${lineA} in one content slide`).toBeDefined()
       expect(containingSlide?.html.includes(lineB)).toBe(true)
     })
 
-    const rerunSlides = generator.generate({ title: fixture.title, html: fixture.html }, { stanzasPerSlide: 1 })
-    expect(rerunSlides.map(slide => slide.html)).toEqual(slides.map(slide => slide.html))
+    const rerunSlides = generator.generate(
+      { title: fixture.title, html: fixture.html },
+      { stanzasPerSlide: 1 },
+    )
+    expect(rerunSlides.map((slide) => slide.html)).toEqual(slides.map((slide) => slide.html))
   })
 
   it('keeps section headings attached for studies content', () => {
-    const studyFixtures = representativeFixtures.filter(item => item.type === 'studies')
+    const studyFixtures = representativeFixtures.filter((item) => item.type === 'studies')
 
     for (const fixture of studyFixtures) {
       const generator = createSlideGenerator(fixture.type)
@@ -294,8 +328,8 @@ describe('slide generators', () => {
       const headings = fixture.html.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/g) ?? []
 
       headings.forEach((headingHtml) => {
-        const headingText = headingHtml.replace(/<[^>]*>/g, '').trim()
-        const containingSlide = contentSlides.find(slide => slide.html.includes(headingText))
+        const headingText = contentHtmlToText(headingHtml)
+        const containingSlide = contentSlides.find((slide) => slide.html.includes(headingText))
         expect(containingSlide, `Expected heading ${headingText} in a content slide`).toBeDefined()
       })
 
@@ -303,7 +337,7 @@ describe('slide generators', () => {
         { title: fixture.title, html: fixture.html },
         { sectionsPerSlide: 1, maxCharsPerSlide: 500 },
       )
-      expect(rerunSlides.map(slide => slide.html)).toEqual(slides.map(slide => slide.html))
+      expect(rerunSlides.map((slide) => slide.html)).toEqual(slides.map((slide) => slide.html))
     }
   })
 

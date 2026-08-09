@@ -16,7 +16,7 @@ let channel: BroadcastChannel | null = null
 const copy = useStaticText()
 
 const deck = computed(() => decks.getDeck(deckId))
-const slides = computed(() => deck.value?.slides.filter(slide => !slide.hidden) ?? [])
+const slides = computed(() => deck.value?.slides.filter((slide) => !slide.hidden) ?? [])
 const slide = computed(() => slides.value[index.value])
 
 function apply(value: unknown): void {
@@ -27,36 +27,93 @@ function apply(value: unknown): void {
 
 function onStorage(event: StorageEvent): void {
   if (event.key !== deckStorageKey(deckId) || !event.newValue) return
-  try { apply(JSON.parse(event.newValue)) } catch { /* ignore malformed cross-tab state */ }
+  try {
+    apply(JSON.parse(event.newValue))
+  } catch {
+    /* ignore malformed cross-tab state */
+  }
 }
 
-async function fullscreen(): Promise<void> { await document.documentElement.requestFullscreen() }
+async function fullscreen(): Promise<void> {
+  await document.documentElement.requestFullscreen()
+}
 
 onMounted(async () => {
   await decks.load()
   if ('BroadcastChannel' in window) {
     channel = new BroadcastChannel(deckChannelName(deckId))
-    channel.addEventListener('message', event => apply(event.data))
+    channel.addEventListener('message', (event) => apply(event.data))
   }
   window.addEventListener('storage', onStorage)
   const stored = localStorage.getItem(deckStorageKey(deckId))
-  if (stored) try { apply(JSON.parse(stored)) } catch { /* ignore stale malformed state */ }
+  if (stored)
+    try {
+      apply(JSON.parse(stored))
+    } catch {
+      /* ignore stale malformed state */
+    }
 })
 
-onBeforeUnmount(() => { channel?.close(); window.removeEventListener('storage', onStorage) })
+onBeforeUnmount(() => {
+  channel?.close()
+  window.removeEventListener('storage', onStorage)
+})
 </script>
 
 <template>
   <main class="audience-shell" @dblclick="fullscreen">
-    <DeckSlideCanvas v-if="deck && slide" :slide="slide" :aspect-ratio="deck.aspectRatio" :theme="deck.theme" :font-scale="deck.fontScale" :font-family="deck.fontFamily" :text-align="deck.textAlign" :blank="blank" />
+    <DeckSlideCanvas
+      v-if="deck && slide"
+      :slide="slide"
+      :aspect-ratio="deck.aspectRatio"
+      :theme="deck.theme"
+      :font-scale="deck.fontScale"
+      :font-family="deck.fontFamily"
+      :text-align="deck.textAlign"
+      :blank="blank"
+    />
     <p v-else><BilingualText text-key="presenter.waiting" /></p>
-    <button type="button" class="fullscreen-button" :title="copy.text('presenter.fullscreen')" :aria-label="copy.text('presenter.fullscreen')" @click="fullscreen">⛶</button>
+    <button
+      type="button"
+      class="fullscreen-button"
+      :title="copy.text('presenter.fullscreen')"
+      :aria-label="copy.text('presenter.fullscreen')"
+      @click="fullscreen"
+    >
+      ⛶
+    </button>
   </main>
 </template>
 
 <style scoped>
-.audience-shell { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: #000; overflow: hidden; }
-.audience-shell :deep(.deck-canvas) { max-width: 100vw; max-height: 100vh; border-radius: 0; box-shadow: none; }
-.fullscreen-button { position: fixed; right: .75rem; bottom: .75rem; width: 2.5rem; height: 2.5rem; border-radius: 999px; background: rgba(0,0,0,.5); color: white; opacity: .25; }
-.fullscreen-button:hover { opacity: 1; }
+.audience-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+.audience-shell :deep(.deck-canvas) {
+  width: min(100vw, calc(100vh * var(--deck-ratio, 1.7778)));
+  max-height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+}
+.fullscreen-button {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  opacity: 0.25;
+}
+.fullscreen-button:hover {
+  opacity: 1;
+}
 </style>

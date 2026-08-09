@@ -14,6 +14,10 @@ export const uiMessages = {
   laoOnly: { lo: 'ພາສາລາວ', en: 'Lao only' },
   myStudy: { lo: 'ການສຶກສາຂອງຂ້ອຍ', en: 'My Study' },
   slideStudio: { lo: 'ສະຕູດິໂອສະໄລ້', en: 'Slide Studio' },
+  studyShort: { lo: 'ສຶກສາ', en: 'Study' },
+  slidesShort: { lo: 'ສະໄລ້', en: 'Slides' },
+  more: { lo: 'ເພີ່ມ', en: 'More' },
+  menu: { lo: 'ເມນູ', en: 'Menu' },
 } as const
 
 export type UiMessageKey = keyof typeof uiMessages

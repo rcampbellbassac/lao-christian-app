@@ -6,11 +6,13 @@ import type { PresentationThemeId } from '@/utils/presentationThemes'
 import type { LaoFontId } from '@/utils/laoFonts'
 import type { PresentationTextAlign } from '@/stores/settings'
 import type { Slide } from '@/utils/slideGenerators'
+import { contentHtmlToText } from '@/utils/sanitize'
 
 export interface DeckSlide {
   id: string
   title: string
   html: string
+  layout?: 'title' | 'content'
   speakerNotes: string
   hidden: boolean
   source?: { fileId: number; bookId: number; chapterId: number }
@@ -69,7 +71,7 @@ export const useDeckStore = defineStore('decks', () => {
   }
 
   function getDeck(id: string): Deck | undefined {
-    return data.value.decks.find(deck => deck.id === id)
+    return data.value.decks.find((deck) => deck.id === id)
   }
 
   async function createDeck(name = 'New presentation'): Promise<Deck> {
@@ -108,10 +110,11 @@ export const useDeckStore = defineStore('decks', () => {
     deck.fontScale = fontScale
     deck.fontFamily = fontFamily
     deck.textAlign = textAlign
-    deck.slides = slides.map(slide => ({
+    deck.slides = slides.map((slide) => ({
       id: crypto.randomUUID(),
-      title: slide.title.replace(/<[^>]*>/g, ''),
+      title: contentHtmlToText(slide.title),
       html: slide.html,
+      layout: slide.id === 'title' ? 'title' : 'content',
       speakerNotes: '',
       hidden: false,
       source,
@@ -127,7 +130,14 @@ export const useDeckStore = defineStore('decks', () => {
   }
 
   async function addSlide(deck: Deck, afterIndex = deck.slides.length - 1): Promise<DeckSlide> {
-    const slide: DeckSlide = { id: crypto.randomUUID(), title: 'New slide', html: '<p></p>', speakerNotes: '', hidden: false }
+    const slide: DeckSlide = {
+      id: crypto.randomUUID(),
+      title: 'New slide',
+      html: '<p></p>',
+      layout: 'content',
+      speakerNotes: '',
+      hidden: false,
+    }
     deck.slides.splice(afterIndex + 1, 0, slide)
     await saveDeck(deck)
     return slide
@@ -154,7 +164,7 @@ export const useDeckStore = defineStore('decks', () => {
   }
 
   async function removeDeck(id: string): Promise<void> {
-    data.value.decks = data.value.decks.filter(deck => deck.id !== id)
+    data.value.decks = data.value.decks.filter((deck) => deck.id !== id)
     await persist()
   }
 
@@ -164,10 +174,11 @@ export const useDeckStore = defineStore('decks', () => {
 
   async function importBackupData(value: DeckDataV1, mode: 'merge' | 'replace'): Promise<void> {
     await load()
-    if (value?.schemaVersion !== 1 || !Array.isArray(value.decks)) throw new Error('Invalid slide deck backup data.')
+    if (value?.schemaVersion !== 1 || !Array.isArray(value.decks))
+      throw new Error('Invalid slide deck backup data.')
     if (mode === 'replace') data.value = snapshot(value)
     else {
-      const merged = new Map(data.value.decks.map(deck => [deck.id, deck]))
+      const merged = new Map(data.value.decks.map((deck) => [deck.id, deck]))
       for (const deck of value.decks) {
         const current = merged.get(deck.id)
         if (!current || deck.updatedAt > current.updatedAt) merged.set(deck.id, snapshot(deck))

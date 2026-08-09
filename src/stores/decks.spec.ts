@@ -6,7 +6,10 @@ vi.mock('localforage', () => ({
   default: {
     createInstance: () => ({
       getItem: async (key: string) => values.get(key) ?? null,
-      setItem: async (key: string, value: unknown) => { values.set(key, JSON.parse(JSON.stringify(value))); return value },
+      setItem: async (key: string, value: unknown) => {
+        values.set(key, JSON.parse(JSON.stringify(value)))
+        return value
+      },
     }),
   },
 }))
@@ -41,7 +44,21 @@ describe('deck store', () => {
       'forest',
     )
     expect(deck.slides[0]?.title).toBe('Genesis')
+    expect(deck.slides[0]?.layout).toBe('content')
     expect(deck.slides[0]?.source?.chapterId).toBe(3)
+  })
+
+  it('preserves generated title-slide layout', async () => {
+    const store = useDeckStore()
+    const deck = await store.createFromSlides(
+      'Genesis',
+      [{ id: 'title', title: 'Genesis', html: 'The first book' }],
+      { fileId: 1, bookId: 2, chapterId: 3 },
+      '16:9',
+      'forest',
+    )
+
+    expect(deck.slides[0]?.layout).toBe('title')
   })
 
   it('reorders and duplicates slides', async () => {
@@ -53,7 +70,7 @@ describe('deck store', () => {
     second.title = 'Second'
     await store.moveSlide(deck, 1, -1)
     await store.duplicateSlide(deck, 0)
-    expect(deck.slides.map(slide => slide.title)).toEqual(['Second', 'Second', 'First'])
+    expect(deck.slides.map((slide) => slide.title)).toEqual(['Second', 'Second', 'First'])
   })
 
   it('merges backups by deck id and newest update time', async () => {

@@ -1,14 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { applyInlineHighlights, extractSafeEmbedLink, safeExternalUrl, sanitizeContentHtml } from './sanitize'
+import {
+  applyInlineHighlights,
+  contentHtmlToText,
+  extractSafeEmbedLink,
+  safeExternalUrl,
+  sanitizeContentHtml,
+} from './sanitize'
 
 describe('content sanitization', () => {
   it('preserves reading markup while removing executable content', () => {
-    const clean = sanitizeContentHtml('<h2 onclick="steal()">Title</h2><script>steal()</script><p style="position:fixed">Text <strong>bold</strong></p>')
+    const clean = sanitizeContentHtml(
+      '<h2 onclick="steal()">Title</h2><script>steal()</script><p style="position:fixed">Text <strong>bold</strong></p>',
+    )
     expect(clean).toContain('<h2>Title</h2>')
     expect(clean).toContain('<strong>bold</strong>')
     expect(clean).not.toContain('script')
     expect(clean).not.toContain('onclick')
     expect(clean).not.toContain('style=')
+  })
+
+  it('extracts plain display text without regex-based HTML stripping', () => {
+    expect(contentHtmlToText('<h2>ພຣະຄຳ <em>ບໍລິສຸດ</em></h2><script>bad()</script>')).toBe(
+      'ພຣະຄຳ ບໍລິສຸດ',
+    )
   })
 
   it('allows HTTPS media links and rejects active or insecure protocols', () => {
@@ -18,11 +32,15 @@ describe('content sanitization', () => {
   })
 
   it('extracts a safe link from legacy embed HTML without rendering the embed', () => {
-    expect(extractSafeEmbedLink('<iframe src="https://www.youtube.com/embed/abc"></iframe>')).toBe('https://www.youtube.com/embed/abc')
+    expect(extractSafeEmbedLink('<iframe src="https://www.youtube.com/embed/abc"></iframe>')).toBe(
+      'https://www.youtube.com/embed/abc',
+    )
   })
 
   it('marks exact text without making stored HTML executable', () => {
-    const marked = applyInlineHighlights('<p>ພຣະເຈົ້າຊົງຮັກໂລກ<script>bad()</script></p>', ['ຊົງຮັກ'])
+    const marked = applyInlineHighlights('<p>ພຣະເຈົ້າຊົງຮັກໂລກ<script>bad()</script></p>', [
+      'ຊົງຮັກ',
+    ])
     expect(marked).toContain('<mark class="study-inline-highlight">ຊົງຮັກ</mark>')
     expect(marked).not.toContain('script')
   })

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { toPng } from 'html-to-image'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
   faArrowLeft,
@@ -17,29 +16,46 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import darkLogo from '@/assets/img/logo 2-black.png'
-import lightLogo from '@/assets/img/logo 2-white.png'
+import DeckSlideCanvas from '@/components/DeckSlideCanvas.vue'
 import PresentationThemePicker from '@/components/PresentationThemePicker.vue'
 import { useContentStore } from '@/stores/content'
-import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, useSettingsStore } from '@/stores/settings'
-import { usePresentationSelectionStore } from '@/stores/presentationSelection'
-import { buildSlidesFromSelection, createSlideGenerator, parseBlocks, type Slide } from '@/utils/slideGenerators'
-import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/utils/aspectRatios'
-import { downloadDataUrl, exportSlidesAsPptx, exportSlidesAsZip, sanitizeFilename } from '@/utils/presentationExport'
-import { laoFontPresets, getLaoFontPreset, type LaoFontId } from '@/utils/laoFonts'
 import {
-  getPresentationThemeBackground,
-  getPresentationThemePreset,
-  type PresentationThemeId,
-} from '@/utils/presentationThemes'
+  FONT_SCALE_MAX,
+  FONT_SCALE_MIN,
+  FONT_SCALE_STEP,
+  useSettingsStore,
+} from '@/stores/settings'
+import { usePresentationSelectionStore } from '@/stores/presentationSelection'
+import {
+  buildSlidesFromSelection,
+  createSlideGenerator,
+  parseBlocks,
+  type Slide,
+} from '@/utils/slideGenerators'
+import { aspectRatioPresets, getAspectRatioPreset, type AspectRatioId } from '@/utils/aspectRatios'
+import { exportSlideAsPng, exportSlidesAsPptx, exportSlidesAsZip } from '@/utils/presentationExport'
+import { laoFontPresets, type LaoFontId } from '@/utils/laoFonts'
+import type { PresentationThemeId } from '@/utils/presentationThemes'
 import type { PresentationTextAlign } from '@/stores/settings'
-import { sanitizeContentHtml } from '@/utils/sanitize'
+import { contentHtmlToText, sanitizeContentHtml } from '@/utils/sanitize'
 import { useDeckStore } from '@/stores/decks'
 import { useStaticText } from '@/composables/useStaticText'
 import BilingualText from '@/components/BilingualText.vue'
 import DevelopmentNotice from '@/components/DevelopmentNotice.vue'
 
-library.add(faArrowLeft, faArrowRight, faCompress, faExpand, faFileImage, faFilePowerpoint, faFileZipper, faFloppyDisk, faListCheck, faSliders, faXmark)
+library.add(
+  faArrowLeft,
+  faArrowRight,
+  faCompress,
+  faExpand,
+  faFileImage,
+  faFilePowerpoint,
+  faFileZipper,
+  faFloppyDisk,
+  faListCheck,
+  faSliders,
+  faXmark,
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -55,7 +71,8 @@ const chapterId = parseInt(route.params.chapterid as string, 10)
 
 const currentSlideIndex = ref(0)
 const isFullscreen = ref(false)
-const slideCanvas = ref<HTMLElement | null>(null)
+const exportSlide = ref<Slide | null>(null)
+const exportStage = ref<HTMLElement | null>(null)
 const isSelectionPanelOpen = ref(false)
 const isCustomizePanelOpen = ref(false)
 const isExporting = ref(false)
@@ -66,7 +83,7 @@ const rangeEnd = ref(1)
 
 const hasSavedSelection = computed(() => selectionStore.hasSelectionFor(chapterId))
 const slideSourceMode = ref<'full' | 'selection'>(
-  selectionStore.hasSelectionFor(chapterId) ? 'selection' : 'full'
+  selectionStore.hasSelectionFor(chapterId) ? 'selection' : 'full',
 )
 
 onMounted(async () => {
@@ -95,17 +112,11 @@ onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', onFullscreenChange)
 })
 
-const unit = computed(() =>
-  store.currentSetData?.unit.find((entry) => entry.id === bookId)
-)
+const unit = computed(() => store.currentSetData?.unit.find((entry) => entry.id === bookId))
 
-const chapter = computed(() =>
-  unit.value?.contents.find((entry) => entry.id === chapterId)
-)
+const chapter = computed(() => unit.value?.contents.find((entry) => entry.id === chapterId))
 
-const slideGenerator = computed(() =>
-  createSlideGenerator(store.getCurrentContentType())
-)
+const slideGenerator = computed(() => createSlideGenerator(store.getCurrentContentType()))
 
 const generatorConfig = computed(() => {
   // Approximate Lao display lines before rendering. Larger requested text
@@ -135,8 +146,15 @@ const slides = computed<Slide[]>(() => {
   try {
     if (slideSourceMode.value === 'selection' && selectionStore.hasSelectionFor(chapterId)) {
       const allBlocks = parseBlocks(context.html)
-      const selectedBlocks = allBlocks.filter((_, index) => selectionStore.selectedBlockIndices.has(index))
-      return buildSlidesFromSelection(context, selectedBlocks, selectionStore.groupingMode, generatorConfig.value)
+      const selectedBlocks = allBlocks.filter((_, index) =>
+        selectionStore.selectedBlockIndices.has(index),
+      )
+      return buildSlidesFromSelection(
+        context,
+        selectedBlocks,
+        selectionStore.groupingMode,
+        generatorConfig.value,
+      )
     }
 
     return slideGenerator.value.generate(context, generatorConfig.value)
@@ -157,7 +175,7 @@ watch(slides, (newSlides) => {
 })
 
 const activeSlides = computed<Slide[]>(() =>
-  slides.value.filter((slide) => selectedSlideIds.value.has(slide.id))
+  slides.value.filter((slide) => selectedSlideIds.value.has(slide.id)),
 )
 
 watch(activeSlides, (list) => {
@@ -167,6 +185,22 @@ watch(activeSlides, (list) => {
 })
 
 const currentSlide = computed(() => activeSlides.value[currentSlideIndex.value] || null)
+const currentCanvasSlide = computed(() =>
+  currentSlide.value
+    ? {
+        ...currentSlide.value,
+        layout: currentSlide.value.id === 'title' ? ('title' as const) : ('content' as const),
+      }
+    : undefined,
+)
+const exportCanvasSlide = computed(() =>
+  exportSlide.value
+    ? {
+        ...exportSlide.value,
+        layout: exportSlide.value.id === 'title' ? ('title' as const) : ('content' as const),
+      }
+    : undefined,
+)
 
 const progressLabel = computed(() => {
   if (activeSlides.value.length === 0) return '0 / 0'
@@ -176,14 +210,14 @@ const progressLabel = computed(() => {
 const hasAutoSplitSlides = computed(() => contentSlides.value.length > 1)
 const isTitleSlideIncluded = computed(() => selectedSlideIds.value.has('title'))
 const selectedContentSlideCount = computed(
-  () => contentSlides.value.filter((slide) => selectedSlideIds.value.has(slide.id)).length
+  () => contentSlides.value.filter((slide) => selectedSlideIds.value.has(slide.id)).length,
 )
 
 const currentPreset = computed(() => getAspectRatioPreset(settings.presentationAspectRatio))
-const currentTheme = computed(() => getPresentationThemePreset(settings.presentationTheme))
-const currentThemeBackground = computed(() => getPresentationThemeBackground(currentTheme.value, settings.presentationAspectRatio))
-const currentThemeLogo = computed(() => currentTheme.value.logoTone === 'light' ? lightLogo : darkLogo)
-const currentFont = computed(() => getLaoFontPreset(settings.presentationFontFamily))
+const exportStageStyle = computed(() => ({
+  width: `${currentPreset.value.exportPixelWidth}px`,
+  height: `${Math.round(currentPreset.value.exportPixelWidth / currentPreset.value.ratio)}px`,
+}))
 
 function goNext(): void {
   if (currentSlideIndex.value < activeSlides.value.length - 1) {
@@ -223,7 +257,7 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 function slidePreview(slide: Slide): string {
-  const text = slide.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  const text = contentHtmlToText(slide.html)
   return text.length > 70 ? `${text.slice(0, 70)}…` : text
 }
 
@@ -277,25 +311,26 @@ function setFontFamily(id: LaoFontId): void {
 
 function increaseFontScale(): void {
   settings.setPresentationFontScale(
-    Math.round((settings.presentationFontScale + FONT_SCALE_STEP) * 100) / 100
+    Math.round((settings.presentationFontScale + FONT_SCALE_STEP) * 100) / 100,
   )
 }
 
 function decreaseFontScale(): void {
   settings.setPresentationFontScale(
-    Math.round((settings.presentationFontScale - FONT_SCALE_STEP) * 100) / 100
+    Math.round((settings.presentationFontScale - FONT_SCALE_STEP) * 100) / 100,
   )
 }
 
 async function exportCurrentSlide(): Promise<void> {
-  if (!slideCanvas.value || !currentSlide.value) return
+  if (!currentSlide.value) return
   exportStatus.value = copy.text('studio.preparing')
   try {
-    const image = await toPng(slideCanvas.value, {
-      cacheBust: true,
-      pixelRatio: 2,
-    })
-    downloadDataUrl(image, `${sanitizeFilename(currentSlide.value.title)}.png`)
+    const element = await renderSlideForExport(currentSlide.value)
+    await exportSlideAsPng(
+      { ...currentSlide.value, element },
+      currentPreset.value,
+      currentSlide.value.title,
+    )
     exportStatus.value = copy.text('studio.exportComplete')
   } catch (err) {
     console.error('Failed to export slide as PNG', err)
@@ -304,16 +339,14 @@ async function exportCurrentSlide(): Promise<void> {
 }
 
 async function renderSlideForExport(slide: { id: string }): Promise<HTMLElement> {
-  const index = activeSlides.value.findIndex((candidate) => candidate.id === slide.id)
-  if (index === -1) throw new Error('Slide not found in current selection')
-
-  currentSlideIndex.value = index
+  const selected = activeSlides.value.find((candidate) => candidate.id === slide.id)
+  if (!selected) throw new Error('Slide not found in current selection')
+  exportSlide.value = selected
   await nextTick()
-  // Give fonts/layout a beat to settle before rasterizing.
-  await new Promise((resolve) => setTimeout(resolve, 60))
-
-  if (!slideCanvas.value) throw new Error('Slide canvas not ready')
-  return slideCanvas.value
+  await document.fonts?.ready
+  const canvas = exportStage.value?.querySelector<HTMLElement>('.deck-canvas')
+  if (!canvas) throw new Error('Slide canvas not ready')
+  return canvas
 }
 
 async function exportZip(): Promise<void> {
@@ -321,20 +354,19 @@ async function exportZip(): Promise<void> {
 
   isExporting.value = true
   exportStatus.value = copy.text('studio.preparing')
-  const originalIndex = currentSlideIndex.value
   try {
     await exportSlidesAsZip(
       activeSlides.value,
       currentPreset.value,
       renderSlideForExport,
-      chapter.value?.name ?? 'presentation'
+      chapter.value?.name ?? 'presentation',
     )
     exportStatus.value = copy.text('studio.exportComplete')
   } catch (err) {
     console.error('Failed to export slides as ZIP', err)
     exportStatus.value = copy.text('studio.exportFailed')
   } finally {
-    currentSlideIndex.value = originalIndex
+    exportSlide.value = null
     isExporting.value = false
   }
 }
@@ -344,20 +376,19 @@ async function exportPptx(): Promise<void> {
 
   isExporting.value = true
   exportStatus.value = copy.text('studio.preparing')
-  const originalIndex = currentSlideIndex.value
   try {
     await exportSlidesAsPptx(
       activeSlides.value,
       currentPreset.value,
       renderSlideForExport,
-      chapter.value?.name ?? 'presentation'
+      chapter.value?.name ?? 'presentation',
     )
     exportStatus.value = copy.text('studio.exportComplete')
   } catch (err) {
     console.error('Failed to export slides as PPTX', err)
     exportStatus.value = copy.text('studio.exportFailed')
   } finally {
-    currentSlideIndex.value = originalIndex
+    exportSlide.value = null
     isExporting.value = false
   }
 }
@@ -365,7 +396,7 @@ async function exportPptx(): Promise<void> {
 async function saveAsDeck(): Promise<void> {
   if (!activeSlides.value.length) return
   const deck = await deckStore.createFromSlides(
-    chapter.value?.name.replace(/<[^>]*>/g, '') || 'Presentation',
+    contentHtmlToText(chapter.value?.name) || 'Presentation',
     activeSlides.value,
     { fileId, bookId, chapterId },
     settings.presentationAspectRatio,
@@ -403,7 +434,8 @@ function onFullscreenChange(): void {
       </router-link>
       <span class="presentation-progress">{{ progressLabel }}</span>
       <span v-if="hasAutoSplitSlides" class="presentation-split-badge">
-        {{ selectedContentSlideCount }} / {{ contentSlides.length }} {{ copy.text('presentation.selectedCount') }}
+        {{ selectedContentSlideCount }} / {{ contentSlides.length }}
+        {{ copy.text('presentation.selectedCount') }}
       </span>
 
       <div v-if="hasSavedSelection" class="presentation-field">
@@ -446,8 +478,24 @@ function onFullscreenChange(): void {
         </button>
       </div>
 
-      <button class="presentation-btn" type="button" :title="copy.text('presentation.previous')" :aria-label="copy.text('presentation.previous')" @click="goPrev"><font-awesome-icon icon="arrow-left" /></button>
-      <button class="presentation-btn" type="button" :title="copy.text('presentation.next')" :aria-label="copy.text('presentation.next')" @click="goNext"><font-awesome-icon icon="arrow-right" /></button>
+      <button
+        class="presentation-btn"
+        type="button"
+        :title="copy.text('presentation.previous')"
+        :aria-label="copy.text('presentation.previous')"
+        @click="goPrev"
+      >
+        <font-awesome-icon icon="arrow-left" />
+      </button>
+      <button
+        class="presentation-btn"
+        type="button"
+        :title="copy.text('presentation.next')"
+        :aria-label="copy.text('presentation.next')"
+        @click="goNext"
+      >
+        <font-awesome-icon icon="arrow-right" />
+      </button>
 
       <label class="presentation-field">
         <span class="presentation-field-label">{{ copy.text('presentation.size') }}</span>
@@ -474,7 +522,9 @@ function onFullscreenChange(): void {
         >
           −
         </button>
-        <span class="presentation-scale-value">{{ Math.round(settings.presentationFontScale * 100) }}%</span>
+        <span class="presentation-scale-value"
+          >{{ Math.round(settings.presentationFontScale * 100) }}%</span
+        >
         <button
           class="presentation-btn presentation-btn-compact"
           type="button"
@@ -500,8 +550,16 @@ function onFullscreenChange(): void {
       <button
         class="presentation-btn"
         type="button"
-        :title="isSelectionPanelOpen ? copy.text('presentation.closeSelection') : copy.text('presentation.selectSlides')"
-        :aria-label="isSelectionPanelOpen ? copy.text('presentation.closeSelection') : copy.text('presentation.selectSlides')"
+        :title="
+          isSelectionPanelOpen
+            ? copy.text('presentation.closeSelection')
+            : copy.text('presentation.selectSlides')
+        "
+        :aria-label="
+          isSelectionPanelOpen
+            ? copy.text('presentation.closeSelection')
+            : copy.text('presentation.selectSlides')
+        "
         @click="isSelectionPanelOpen = !isSelectionPanelOpen"
       >
         <font-awesome-icon icon="list-check" />
@@ -510,69 +568,161 @@ function onFullscreenChange(): void {
       <button
         class="presentation-btn"
         type="button"
-        :title="isCustomizePanelOpen ? copy.text('presentation.closeCustomize') : copy.text('presentation.customize')"
-        :aria-label="isCustomizePanelOpen ? copy.text('presentation.closeCustomize') : copy.text('presentation.customize')"
+        :title="
+          isCustomizePanelOpen
+            ? copy.text('presentation.closeCustomize')
+            : copy.text('presentation.customize')
+        "
+        :aria-label="
+          isCustomizePanelOpen
+            ? copy.text('presentation.closeCustomize')
+            : copy.text('presentation.customize')
+        "
         @click="isCustomizePanelOpen = !isCustomizePanelOpen"
       >
         <font-awesome-icon icon="sliders" />
       </button>
 
-      <button class="presentation-btn" type="button" :title="`${isFullscreen ? copy.text('presentation.exitFullscreen') : copy.text('presentation.enterFullscreen')} (F)`" :aria-label="isFullscreen ? copy.text('presentation.exitFullscreen') : copy.text('presentation.enterFullscreen')" @click="toggleFullscreen">
+      <button
+        class="presentation-btn"
+        type="button"
+        :title="`${isFullscreen ? copy.text('presentation.exitFullscreen') : copy.text('presentation.enterFullscreen')} (F)`"
+        :aria-label="
+          isFullscreen
+            ? copy.text('presentation.exitFullscreen')
+            : copy.text('presentation.enterFullscreen')
+        "
+        @click="toggleFullscreen"
+      >
         <font-awesome-icon :icon="isFullscreen ? 'compress' : 'expand'" />
       </button>
-      <button class="presentation-btn" type="button" :title="`${copy.text('presentation.exportPng')} (E)`" :aria-label="copy.text('presentation.exportPng')" @click="exportCurrentSlide"><font-awesome-icon icon="file-image" /></button>
-      <button class="presentation-btn" type="button" :title="copy.text('presentation.saveDeck')" :aria-label="copy.text('presentation.saveDeck')" @click="saveAsDeck"><font-awesome-icon icon="floppy-disk" /></button>
-      <button class="presentation-btn" type="button" :disabled="isExporting" :title="copy.text('presentation.exportZip')" :aria-label="copy.text('presentation.exportZip')" @click="exportZip">
+      <button
+        class="presentation-btn"
+        type="button"
+        :title="`${copy.text('presentation.exportPng')} (E)`"
+        :aria-label="copy.text('presentation.exportPng')"
+        @click="exportCurrentSlide"
+      >
+        <font-awesome-icon icon="file-image" />
+      </button>
+      <button
+        class="presentation-btn"
+        type="button"
+        :title="copy.text('presentation.saveDeck')"
+        :aria-label="copy.text('presentation.saveDeck')"
+        @click="saveAsDeck"
+      >
+        <font-awesome-icon icon="floppy-disk" />
+      </button>
+      <button
+        class="presentation-btn"
+        type="button"
+        :disabled="isExporting"
+        :title="copy.text('presentation.exportZip')"
+        :aria-label="copy.text('presentation.exportZip')"
+        @click="exportZip"
+      >
         <span v-if="isExporting">…</span><font-awesome-icon v-else icon="file-zipper" />
       </button>
-      <button class="presentation-btn" type="button" :disabled="isExporting" :title="copy.text('presentation.exportPptx')" :aria-label="copy.text('presentation.exportPptx')" @click="exportPptx">
+      <button
+        class="presentation-btn"
+        type="button"
+        :disabled="isExporting"
+        :title="copy.text('presentation.exportPptx')"
+        :aria-label="copy.text('presentation.exportPptx')"
+        @click="exportPptx"
+      >
         <span v-if="isExporting">…</span><font-awesome-icon v-else icon="file-powerpoint" />
       </button>
-      <span class="presentation-export-status" role="status" aria-live="polite">{{ exportStatus }}</span>
+      <span class="presentation-export-status" role="status" aria-live="polite">{{
+        exportStatus
+      }}</span>
     </header>
     <DevelopmentNotice dark />
 
     <section v-if="isSelectionPanelOpen" class="selection-panel">
       <div class="selection-panel-row">
         <label class="selection-title-toggle">
-          <input type="checkbox" :checked="isTitleSlideIncluded" @change="toggleSlideSelection('title')" />
+          <input
+            type="checkbox"
+            :checked="isTitleSlideIncluded"
+            @change="toggleSlideSelection('title')"
+          />
           {{ copy.text('presentation.includeTitle') }}
         </label>
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectAllSlides">{{ copy.text('presentation.selectAll') }}</button>
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="selectNoContentSlides">{{ copy.text('presentation.selectNone') }}</button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          @click="selectAllSlides"
+        >
+          {{ copy.text('presentation.selectAll') }}
+        </button>
+        <button
+          class="presentation-btn presentation-btn-compact"
+          type="button"
+          @click="selectNoContentSlides"
+        >
+          {{ copy.text('presentation.selectNone') }}
+        </button>
       </div>
 
       <div class="selection-panel-row">
         <label class="presentation-field">
-          <span class="presentation-field-label">{{ copy.text('presentation.blocksPerSlide') }}</span>
+          <span class="presentation-field-label">{{
+            copy.text('presentation.blocksPerSlide')
+          }}</span>
           <input
             class="presentation-range-input"
             type="number"
             min="1"
             max="10"
             :value="settings.presentationBlocksPerSlide"
-            @change="settings.setPresentationBlocksPerSlide(Number(($event.target as HTMLInputElement).value))"
+            @change="
+              settings.setPresentationBlocksPerSlide(
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
           />
         </label>
         <label class="presentation-field">
-          <span class="presentation-field-label">{{ copy.text('presentation.linesPerSlide') }}</span>
+          <span class="presentation-field-label">{{
+            copy.text('presentation.linesPerSlide')
+          }}</span>
           <input
             class="presentation-range-input"
             type="number"
             min="3"
             max="24"
             :value="settings.presentationLinesPerSlide"
-            @change="settings.setPresentationLinesPerSlide(Number(($event.target as HTMLInputElement).value))"
+            @change="
+              settings.setPresentationLinesPerSlide(
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
           />
         </label>
       </div>
 
       <div v-if="contentSlides.length > 1" class="selection-panel-row">
         <span class="presentation-field-label">{{ copy.text('presentation.slides') }}</span>
-        <input v-model.number="rangeStart" type="number" min="1" :max="contentSlides.length" class="presentation-range-input" />
+        <input
+          v-model.number="rangeStart"
+          type="number"
+          min="1"
+          :max="contentSlides.length"
+          class="presentation-range-input"
+        />
         <span>{{ copy.text('presentation.to') }}</span>
-        <input v-model.number="rangeEnd" type="number" min="1" :max="contentSlides.length" class="presentation-range-input" />
-        <button class="presentation-btn presentation-btn-compact" type="button" @click="applyRange">{{ copy.text('presentation.applyRange') }}</button>
+        <input
+          v-model.number="rangeEnd"
+          type="number"
+          min="1"
+          :max="contentSlides.length"
+          class="presentation-range-input"
+        />
+        <button class="presentation-btn presentation-btn-compact" type="button" @click="applyRange">
+          {{ copy.text('presentation.applyRange') }}
+        </button>
       </div>
 
       <ul class="selection-list">
@@ -634,36 +784,34 @@ function onFullscreenChange(): void {
       </div>
     </section>
 
-    <section
-      class="slide-canvas"
-      :style="{
-        '--slide-ratio': currentPreset.ratio,
-        '--slide-font-scale': settings.presentationFontScale,
-        '--slide-background': currentThemeBackground,
-        '--slide-text-color': currentTheme.textColor,
-        '--slide-muted-color': currentTheme.mutedColor,
-        '--slide-text-align': settings.presentationTextAlign,
-        '--slide-font-family': currentFont.cssFamily,
-      }"
-    >
-      <article
-        v-if="currentSlide"
-        ref="slideCanvas"
-        class="slide-content"
-        :class="{ 'slide-content--title': currentSlide.id === 'title' }"
-      >
-        <img class="slide-logo" :src="currentThemeLogo" alt="" aria-hidden="true" />
-        <h1
-          class="slide-title"
-          :class="{ 'slide-title--header': currentSlide.id !== 'title' }"
-          v-html="currentSlide.title"
-        ></h1>
-        <div v-if="currentSlide.id === 'title'" class="slide-subtitle" v-html="currentSlide.html"></div>
-        <div v-else class="slide-body" v-html="currentSlide.html"></div>
+    <section class="slide-canvas">
+      <DeckSlideCanvas
+        v-if="currentCanvasSlide"
+        :slide="currentCanvasSlide"
+        :aspect-ratio="settings.presentationAspectRatio"
+        :theme="settings.presentationTheme"
+        :font-scale="settings.presentationFontScale"
+        :font-family="settings.presentationFontFamily"
+        :text-align="settings.presentationTextAlign"
+      />
+      <article v-else-if="!chapter" class="slide-empty">
+        <BilingualText text-key="presentation.loading" />
       </article>
-      <article v-else-if="!chapter" class="slide-empty"><BilingualText text-key="presentation.loading" /></article>
-      <article v-else class="slide-empty"><BilingualText text-key="presentation.noSlides" /></article>
+      <article v-else class="slide-empty">
+        <BilingualText text-key="presentation.noSlides" />
+      </article>
     </section>
+    <div ref="exportStage" class="export-stage" :style="exportStageStyle" aria-hidden="true">
+      <DeckSlideCanvas
+        v-if="exportCanvasSlide"
+        :slide="exportCanvasSlide"
+        :aspect-ratio="settings.presentationAspectRatio"
+        :theme="settings.presentationTheme"
+        :font-scale="settings.presentationFontScale"
+        :font-family="settings.presentationFontFamily"
+        :text-align="settings.presentationTextAlign"
+      />
+    </div>
   </main>
 </template>
 
@@ -786,8 +934,12 @@ function onFullscreenChange(): void {
   color: #e2e8f0;
 }
 
-.selection-panel-row--themes { align-items: flex-start; }
-.selection-panel-row--themes > :last-child { flex: 1; }
+.selection-panel-row--themes {
+  align-items: flex-start;
+}
+.selection-panel-row--themes > :last-child {
+  flex: 1;
+}
 
 .selection-title-toggle {
   display: inline-flex;
@@ -852,80 +1004,24 @@ function onFullscreenChange(): void {
   overflow: auto;
 }
 
-.slide-content {
-  position: relative;
-  aspect-ratio: var(--slide-ratio, 1.7778);
-  width: min(1200px, 96vw, calc(78vh * var(--slide-ratio, 1.7778)));
-  background: var(--slide-background, radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95)));
-  color: var(--slide-text-color, #f8fafc);
-  font-family: var(--slide-font-family, inherit);
-  text-align: var(--slide-text-align, left);
+.slide-canvas :deep(.deck-canvas) {
+  width: min(1200px, 96vw, calc(78vh * var(--deck-ratio, 1.7778)));
   border: 2px solid rgba(148, 163, 184, 0.3);
   border-radius: 1rem;
-  padding: 2.5rem;
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.55);
-  /* Generation adds slides to honor the user's font size; never auto-shrink. */
-  overflow: hidden;
-  /* Every slide's content is vertically centered in the box, not just the
-     title slide -- horizontal alignment stays independently controlled by
-     --slide-text-align. */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
-.slide-logo {
-  position: absolute;
-  left: 3.5%;
-  bottom: 3.5%;
-  width: clamp(5rem, 14%, 10rem);
-  height: auto;
-  opacity: .82;
+.export-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  pointer-events: none;
 }
-
-.slide-content--title {
-  align-items: center;
-  text-align: center;
-}
-
-.slide-content--title .slide-title {
-  text-align: center;
-}
-
-.slide-title {
-  margin: 0;
-  font-size: calc(clamp(1.6rem, 3vw, 3rem) * var(--slide-font-scale, 1));
-  line-height: 1.1;
-}
-
-/* Content slides show "Book — Chapter" as a running header rather than a
-   dominant title, so it doesn't compete with the actual slide content. */
-.slide-title--header {
-  font-size: calc(clamp(1rem, 1.6vw, 1.4rem) * var(--slide-font-scale, 1));
-  font-weight: 600;
-  color: var(--slide-muted-color, #cbd5e1);
-  opacity: 0.85;
-}
-
-.slide-subtitle {
-  margin-top: 0.75rem;
-  font-size: calc(clamp(1rem, 1.6vw, 1.5rem) * var(--slide-font-scale, 1));
-  color: var(--slide-muted-color, #cbd5e1);
-}
-
-.slide-body {
-  margin-top: 1.5rem;
-  font-size: calc(clamp(1.1rem, 2vw, 2rem) * var(--slide-font-scale, 1));
-  line-height: 1.5;
-}
-
-.slide-body :deep(p) {
-  margin: 0 0 0.9rem;
-}
-
-.slide-body :deep(ul),
-.slide-body :deep(ol) {
-  padding-left: 1.4rem;
+.export-stage :deep(.deck-canvas) {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .slide-empty {
@@ -935,7 +1031,7 @@ function onFullscreenChange(): void {
   text-align: center;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .presentation-toolbar {
     justify-content: center;
   }
@@ -951,9 +1047,8 @@ function onFullscreenChange(): void {
     padding: 1rem;
   }
 
-  .slide-content {
-    width: min(1200px, 96vw);
-    padding: 1.25rem;
+  .slide-canvas :deep(.deck-canvas) {
+    width: min(96vw, calc(76vh * var(--deck-ratio, 1.7778)));
   }
 }
 </style>

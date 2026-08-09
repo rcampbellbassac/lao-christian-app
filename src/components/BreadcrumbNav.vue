@@ -28,7 +28,7 @@ const breadcrumbs = computed(() => {
   }
 
   if (bookId.value && store.currentSetData) {
-    const book = store.currentSetData.unit.find(u => u.id === bookId.value)
+    const book = store.currentSetData.unit.find((u) => u.id === bookId.value)
     if (book) {
       crumbs.push({
         name: book.name,
@@ -38,8 +38,8 @@ const breadcrumbs = computed(() => {
   }
 
   if (chapterId.value && store.currentSetData) {
-    const unit = store.currentSetData.unit.find(u => u.id === bookId.value)
-    const chapter = unit?.contents.find(c => c.id === chapterId.value)
+    const unit = store.currentSetData.unit.find((u) => u.id === bookId.value)
+    const chapter = unit?.contents.find((c) => c.id === chapterId.value)
     if (chapter) {
       crumbs.push({
         name: chapter.name,
@@ -53,14 +53,25 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <nav :aria-label="copy.text('navigation.breadcrumb')" class="mb-4 rounded-xl border border-slate-300/60 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-500/50 dark:bg-slate-950/82 dark:text-slate-200">
+  <nav
+    :aria-label="copy.text('navigation.breadcrumb')"
+    class="mb-4 rounded-xl border border-[var(--lc-border)] bg-[var(--lc-soft)] px-3 py-2 text-sm text-[var(--app-muted)]"
+  >
     <ul class="flex flex-wrap items-center gap-x-2 gap-y-1">
       <li>
-        <router-link to="/" class="font-semibold text-teal-700 hover:underline dark:text-teal-300">🏠 {{ ui.lao('home') }}<span v-if="ui.english('home')" class="ml-1 text-xs font-normal opacity-70">{{ ui.english('home') }}</span></router-link>
+        <router-link to="/" class="app-link"
+          >🏠 {{ ui.lao('home')
+          }}<span v-if="ui.english('home')" class="ml-1 text-xs font-normal opacity-70">{{
+            ui.english('home')
+          }}</span></router-link
+        >
       </li>
-      <li v-for="(crumb) in breadcrumbs" :key="crumb.path" class="flex items-center gap-2">
-        <span class="text-slate-400">/</span>
-        <router-link :to="crumb.path" class="line-clamp-1 max-w-[16rem] hover:underline">
+      <li v-for="crumb in breadcrumbs" :key="crumb.path" class="flex items-center gap-2">
+        <span aria-hidden="true" class="opacity-50">/</span>
+        <router-link
+          :to="crumb.path"
+          class="line-clamp-1 max-w-[16rem] hover:text-[var(--app-ink)] hover:underline"
+        >
           {{ crumb.name }}
         </router-link>
       </li>

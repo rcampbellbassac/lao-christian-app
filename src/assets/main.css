@@ -4,31 +4,31 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-noto-sans-lao: "Noto Sans Lao Variable", sans-serif;
-  --font-noto-color-emoji: "Noto Color Emoji", sans-serif;
+  --font-noto-sans-lao: 'Noto Sans Lao Variable', sans-serif;
+  --font-noto-color-emoji: 'Noto Color Emoji', sans-serif;
 }
 
 :root {
-    --lc-paper: #f6f1e7;
-    --lc-ink: #173b38;
-    --lc-brand: #2e675e;
-    --lc-sage: #789b83;
-    --lc-river: #88a7b0;
-    --lc-gold: #e5b957;
-    --lc-clay: #b86f50;
-    --lc-dark-bg: #102b34;
-    --lc-dark-paper: #172f35;
-    --lc-border: color-mix(in srgb, var(--lc-ink), transparent 86%);
-    --lc-soft: color-mix(in srgb, var(--lc-sage), var(--lc-paper) 80%);
-    --app-bg-soft: var(--lc-paper);
-    --app-ink: var(--lc-ink);
-    --app-muted: color-mix(in srgb, var(--lc-ink), transparent 28%);
-    --app-brand: var(--lc-brand);
-    --app-accent: var(--lc-clay);
-    --app-panel: color-mix(in srgb, var(--lc-paper), transparent 7%);
-    --app-panel-border: var(--lc-border);
-    --app-panel-shadow: 0 2px 18px color-mix(in srgb, var(--lc-ink), transparent 88%);
-    --app-content-font-scale: 1;
+  --lc-paper: #f6f1e7;
+  --lc-ink: #173b38;
+  --lc-brand: #2e675e;
+  --lc-sage: #789b83;
+  --lc-river: #88a7b0;
+  --lc-gold: #e5b957;
+  --lc-clay: #b86f50;
+  --lc-dark-bg: #102b34;
+  --lc-dark-paper: #172f35;
+  --lc-border: color-mix(in srgb, var(--lc-ink), transparent 86%);
+  --lc-soft: color-mix(in srgb, var(--lc-sage), var(--lc-paper) 80%);
+  --app-bg-soft: var(--lc-paper);
+  --app-ink: var(--lc-ink);
+  --app-muted: color-mix(in srgb, var(--lc-ink), transparent 28%);
+  --app-brand: var(--lc-brand);
+  --app-accent: var(--lc-clay);
+  --app-panel: color-mix(in srgb, var(--lc-paper), transparent 7%);
+  --app-panel-border: var(--lc-border);
+  --app-panel-shadow: 0 2px 18px color-mix(in srgb, var(--lc-ink), transparent 88%);
+  --app-content-font-scale: 1;
 }
 
 /* User-adjustable base font size for reading content (ChapterView, etc.),
@@ -39,215 +39,293 @@
    rules use em units relative to this element, so overriding it here still
    scales all of them proportionally. */
 .app-content-scale {
-    font-size: calc(1rem * var(--app-content-font-scale)) !important;
+  font-size: calc(1rem * var(--app-content-font-scale)) !important;
 }
 
 body {
-    margin: 0;
-    min-height: 100vh;
-    min-height: 100dvh;
-    font-family: var(--font-noto-sans-lao), var(--font-noto-color-emoji), sans-serif;
-    color: var(--app-ink);
-    background-color: var(--lc-paper);
-    background-image: linear-gradient(color-mix(in srgb, var(--lc-paper), transparent 30%), color-mix(in srgb, var(--lc-paper), transparent 30%)), url('./img/page-texture-light.webp');
-    background-position: center center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-noto-sans-lao), var(--font-noto-color-emoji), sans-serif;
+  color: var(--app-ink);
+  background-color: var(--lc-paper);
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--lc-paper), transparent 30%),
+      color-mix(in srgb, var(--lc-paper), transparent 30%)
+    ),
+    url('./img/page-texture-light.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    pointer-events: none;
-    opacity: 0.055;
-    background-image: url('./img/paper-grain.svg');
-    mix-blend-mode: multiply;
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url('./img/paper-grain.svg');
+  mix-blend-mode: multiply;
 }
 
 body.dark,
 .dark {
-    --app-ink: #f8fafc;
-    --app-muted: #dbe5f5;
-    --lc-paper: #102b34;
-    --lc-ink: #f6f1e7;
-    --lc-border: color-mix(in srgb, #f6f1e7, transparent 84%);
-    --lc-soft: #203f43;
-    --app-panel: color-mix(in srgb, #172f35, transparent 6%);
-    --app-panel-border: rgba(148, 163, 184, 0.34);
-    --app-panel-shadow: 0 26px 56px rgba(0, 0, 0, 0.58);
+  --app-ink: #f8fafc;
+  --app-muted: #dbe5f5;
+  --lc-paper: #102b34;
+  --lc-ink: #f6f1e7;
+  --lc-border: color-mix(in srgb, #f6f1e7, transparent 84%);
+  --lc-soft: #203f43;
+  --app-panel: color-mix(in srgb, #172f35, transparent 6%);
+  --app-panel-border: rgba(148, 163, 184, 0.34);
+  --app-panel-shadow: 0 26px 56px rgba(0, 0, 0, 0.58);
 }
 
 body.dark {
-    background-color: var(--lc-dark-bg);
-    background-image: linear-gradient(rgba(16, 43, 52, .26), rgba(16, 43, 52, .26)), url('./img/page-texture-dark.webp');
+  background-color: var(--lc-dark-bg);
+  background-image:
+    linear-gradient(rgba(16, 43, 52, 0.26), rgba(16, 43, 52, 0.26)),
+    url('./img/page-texture-dark.webp');
 }
 
 .app-page {
-    width: min(1100px, 100% - 1.25rem);
-    margin-inline: auto;
-    margin-top: 0.22rem;
-    margin-bottom: 1.75rem;
+  width: min(1100px, 100% - 1.25rem);
+  margin-inline: auto;
+  margin-top: 0.22rem;
+  margin-bottom: 1.75rem;
 }
 
 @media (min-width: 1024px) {
-    .app-page {
-        margin-top: 0.48rem;
-    }
+  .app-page {
+    margin-top: 0.48rem;
+  }
 }
 
 .app-panel {
-    background: var(--app-panel);
-    border: 1px solid var(--app-panel-border);
-    border-radius: 0.95rem;
-    padding: clamp(1rem, 2vw, 1.6rem);
-    box-shadow: var(--app-panel-shadow);
+  background: var(--app-panel);
+  border: 1px solid var(--app-panel-border);
+  border-radius: 0.95rem;
+  padding: clamp(1rem, 2vw, 1.6rem);
+  box-shadow: var(--app-panel-shadow);
 }
 
 body.dark .app-panel,
 .dark .app-panel {
-    background: var(--lc-dark-paper);
+  background: var(--lc-dark-paper);
 }
 
 .app-section-title {
-    font-size: clamp(1.45rem, 1.8vw, 2rem);
-    line-height: 1.15;
-    font-family: "Noto Serif Lao Variable", "Noto Serif", serif;
-    font-weight: 600;
-    color: var(--app-ink);
+  font-size: clamp(1.45rem, 1.8vw, 2rem);
+  line-height: 1.15;
+  font-family: 'Noto Serif Lao Variable', 'Noto Serif', serif;
+  font-weight: 600;
+  color: var(--app-ink);
 }
 
 .app-muted {
-    color: var(--app-muted);
+  color: var(--app-muted);
 }
 
 .app-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--app-ink), transparent 85%);
-    border-radius: 999px;
-    padding: 0.2rem 0.6rem;
-    font-size: 0.8rem;
-    color: var(--app-muted);
-    background: color-mix(in srgb, var(--app-panel), transparent 8%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--app-ink), transparent 85%);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--app-muted);
+  background: color-mix(in srgb, var(--app-panel), transparent 8%);
+}
+
+.app-control {
+  min-height: 2.75rem;
 }
 
 .app-link {
-    color: color-mix(in srgb, var(--app-accent), white 8%);
-    text-decoration: none;
-    font-weight: 600;
+  color: color-mix(in srgb, var(--app-accent), white 8%);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .app-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .app-card-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
 }
 
-.app-shell { background: transparent; }
+.app-shell {
+  background: transparent;
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+.app-shell--bare {
+  padding-bottom: 0;
+}
 
-.lc-nav-link { color: var(--app-muted); }
-.lc-nav-link:hover { background: var(--lc-soft); color: var(--app-ink); }
-.lc-nav-link--active { background: var(--lc-brand); color: #f6f1e7; }
-.dark .lc-nav-link--active { background: var(--lc-gold); color: #102b34; }
+@media (min-width: 1024px) {
+  .app-shell {
+    padding-bottom: 0;
+  }
+}
+
+.lc-nav-link {
+  color: var(--app-muted);
+}
+.lc-nav-link:hover {
+  background: var(--lc-soft);
+  color: var(--app-ink);
+}
+.lc-nav-link--active {
+  background: var(--lc-brand);
+  color: #f6f1e7;
+}
+.dark .lc-nav-link--active {
+  background: var(--lc-gold);
+  color: #102b34;
+}
 .lc-icon-control {
-    display: inline-flex;
-    width: 2.35rem;
-    height: 2.35rem;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--lc-border);
-    border-radius: 999px;
-    color: var(--app-muted);
-    background: var(--app-panel);
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lc-border);
+  border-radius: 999px;
+  color: var(--app-muted);
+  background: var(--app-panel);
 }
-.lc-icon-control:hover, .lc-icon-control--active { background: var(--lc-soft); color: var(--lc-brand); }
-.dark .lc-icon-control--active { color: var(--lc-gold); }
+.lc-icon-control:hover,
+.lc-icon-control--active {
+  background: var(--lc-soft);
+  color: var(--lc-brand);
+}
+.dark .lc-icon-control--active {
+  color: var(--lc-gold);
+}
 .lc-status-pill {
-    display: inline-flex;
-    min-height: 2.35rem;
-    align-items: center;
-    gap: .35rem;
-    border: 1px solid color-mix(in srgb, var(--lc-clay), transparent 35%);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--lc-clay), transparent 84%);
-    padding: .45rem .65rem;
-    color: var(--app-ink);
-    font-size: .75rem;
-    font-weight: 700;
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--lc-clay), transparent 35%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lc-clay), transparent 84%);
+  padding: 0.45rem 0.65rem;
+  color: var(--app-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .lc-card {
-    display: block;
-    position: relative;
-    border: 1px solid var(--lc-border);
-    border-radius: 0.95rem;
-    background: var(--app-panel);
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--app-ink), transparent 93%);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+  position: relative;
+  border: 1px solid var(--lc-border);
+  border-radius: 0.95rem;
+  background: var(--app-panel);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--app-ink), transparent 93%);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.lc-card:hover { transform: translateY(-2px); box-shadow: var(--app-panel-shadow); }
-.lc-card-action { color: var(--lc-brand); }
-.dark .lc-card-action { color: var(--lc-gold); }
-.lc-eyebrow { color: var(--lc-brand); font-size: 0.78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-.dark .lc-eyebrow { color: var(--lc-gold); }
-.lc-btn-link { display: inline-flex; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; border-radius: 999px; background: var(--lc-brand); color: #f6f1e7; font-size: 1.25rem; }
+.lc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--app-panel-shadow);
+}
+.lc-card-action {
+  color: var(--lc-brand);
+}
+.dark .lc-card-action {
+  color: var(--lc-gold);
+}
+.lc-eyebrow {
+  color: var(--lc-brand);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.dark .lc-eyebrow {
+  color: var(--lc-gold);
+}
+.lc-btn-link {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--lc-brand);
+  color: #f6f1e7;
+  font-size: 1.25rem;
+}
 
 .lc-home-hero {
-    position: relative;
-    overflow: hidden;
-    padding-bottom: clamp(1.25rem, 3vw, 2.25rem);
+  position: relative;
+  overflow: hidden;
+  padding-bottom: clamp(1.25rem, 3vw, 2.25rem);
 }
 .lc-home-hero::before {
-    content: '';
-    display: block;
-    height: clamp(11.2rem, 35.2vw, 20.8rem);
-    margin: calc(-1 * clamp(1rem, 2vw, 1.6rem));
-    margin-bottom: 1.25rem;
-    background: url('./img/home-hero-light-v2.webp') center bottom/cover;
+  content: '';
+  display: block;
+  height: clamp(11.2rem, 35.2vw, 20.8rem);
+  margin: calc(-1 * clamp(1rem, 2vw, 1.6rem));
+  margin-bottom: 1.25rem;
+  background: url('./img/home-hero-light-v2.webp') center bottom/cover;
 }
-.dark .lc-home-hero::before { background-image: url('./img/home-hero-dark-v2.webp'); }
+.dark .lc-home-hero::before {
+  background-image: url('./img/home-hero-dark-v2.webp');
+}
 
 @media (max-width: 639px) {
-    .lc-home-hero::before {
-        height: clamp(11rem, 57vw, 14rem);
-    }
+  .lc-home-hero::before {
+    height: clamp(11rem, 57vw, 14rem);
+  }
 }
 
-button, a, select, input, textarea { accent-color: var(--lc-brand); }
-:focus-visible { outline: 3px solid color-mix(in srgb, var(--lc-gold), transparent 20%); outline-offset: 2px; }
+button,
+a,
+select,
+input,
+textarea {
+  accent-color: var(--lc-brand);
+}
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--lc-gold), transparent 20%);
+  outline-offset: 2px;
+}
 
 .app-divider {
-    border: 0;
-    border-top: 1px solid color-mix(in srgb, var(--app-ink), transparent 82%);
-    margin: 1.1rem 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--app-ink), transparent 82%);
+  margin: 1.1rem 0;
 }
 
 /* width */
 ::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #bdbdbd46;
-    border-radius: 12px;
+  background: #bdbdbd46;
+  border-radius: 12px;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #00000060;
-    border-radius: 12px;
+  background: #00000060;
+  border-radius: 12px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(70, 116, 192, 0.61);
+  background: rgba(70, 116, 192, 0.61);
 }

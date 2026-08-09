@@ -72,14 +72,49 @@ describe('study store', () => {
 
   it('reanchors precise highlights and marks missing ones for review', async () => {
     const study = useStudyStore()
-    const paragraph = { ...location, blockIndex: 0, quote: 'Before original words after the passage.' }
+    const paragraph = {
+      ...location,
+      blockIndex: 0,
+      quote: 'Before original words after the passage.',
+    }
     await study.addTextHighlight(paragraph, 'original words', 'Before ', ' after the passage.')
 
     await study.reconcileTextHighlights(location, ['Before revised words after the passage.'])
-    expect(study.highlights[0]).toMatchObject({ exact: 'revised words', quote: 'revised words', unmatched: false })
+    expect(study.highlights[0]).toMatchObject({
+      exact: 'revised words',
+      quote: 'revised words',
+      unmatched: false,
+    })
 
     await study.reconcileTextHighlights(location, ['Unrelated replacement content'])
     expect(study.highlights[0]?.unmatched).toBe(true)
+  })
+
+  it('reanchors paragraph bookmarks and notes after nearby content edits', async () => {
+    const study = useStudyStore()
+    const paragraph = { ...location, blockIndex: 0, quote: 'ພຣະເຈົ້າຊົງຮັກມະນຸດທຸກຄົນ' }
+    await study.toggleBookmark(paragraph)
+    await study.saveNote(paragraph, 'Remember this')
+
+    await study.reconcileParagraphRecords(location, [
+      'A new introductory paragraph',
+      'ພຣະເຈົ້າຊົງຮັກມະນຸດທຸກຄົນຢ່າງຫຼວງຫຼາຍ',
+    ])
+
+    expect(study.bookmarks[0]).toMatchObject({ blockIndex: 1, unmatched: false })
+    expect(study.notes[0]).toMatchObject({ blockIndex: 1, unmatched: false })
+  })
+
+  it('updates an existing note without creating a duplicate', async () => {
+    const study = useStudyStore()
+    await study.saveNote(location, 'First draft')
+    const note = study.notes[0]!
+
+    await study.updateNote(note.id, 'Revised note')
+
+    expect(study.notes).toHaveLength(1)
+    expect(study.notes[0]?.body).toBe('Revised note')
+    expect(study.notes[0]?.updatedAt >= note.createdAt).toBe(true)
   })
 
   it('rejects files that are not study backups', async () => {
