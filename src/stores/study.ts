@@ -17,6 +17,7 @@ export interface StudyRecord extends ContentLocation {
   id: string
   createdAt: string
   updatedAt: string
+  unmatched?: boolean
 }
 
 export interface HighlightRecord extends StudyRecord {
@@ -67,18 +68,69 @@ function recordId(prefix: string): string {
 }
 
 function locationKey(location: ContentLocation): string {
-  return [location.fileId, location.bookId, location.chapterId, location.blockIndex ?? 'chapter'].join(':')
+  return [
+    location.fileId,
+    location.bookId,
+    location.chapterId,
+    location.blockIndex ?? 'chapter',
+  ].join(':')
+}
+
+function normalizedCharacters(value: string): string[] {
+  return Array.from(value.normalize('NFC').toLocaleLowerCase()).filter(
+    (character) => !/\s/u.test(character),
+  )
+}
+
+function paragraphSimilarity(left: string, right: string): number {
+  const grams = (value: string): Map<string, number> => {
+    const characters = normalizedCharacters(value)
+    const result = new Map<string, number>()
+    for (let index = 0; index < characters.length - 1; index += 1) {
+      const gram = `${characters[index]}${characters[index + 1]}`
+      result.set(gram, (result.get(gram) ?? 0) + 1)
+    }
+    return result
+  }
+  const leftGrams = grams(left)
+  const rightGrams = grams(right)
+  const leftSize = [...leftGrams.values()].reduce((sum, count) => sum + count, 0)
+  const rightSize = [...rightGrams.values()].reduce((sum, count) => sum + count, 0)
+  if (!leftSize || !rightSize) return left.trim() === right.trim() ? 1 : 0
+  let overlap = 0
+  for (const [gram, count] of leftGrams) overlap += Math.min(count, rightGrams.get(gram) ?? 0)
+  return (2 * overlap) / (leftSize + rightSize)
+}
+
+function findParagraphIndex(quote: string, blockTexts: string[], preferred = -1): number {
+  const normalizedQuote = quote.trim()
+  if (!normalizedQuote) return -1
+  if (blockTexts[preferred]?.trim() === normalizedQuote) return preferred
+  const exact = blockTexts.findIndex((text) => text.trim() === normalizedQuote)
+  if (exact >= 0) return exact
+  let bestIndex = -1
+  let bestScore = 0
+  for (const [index, text] of blockTexts.entries()) {
+    const score = paragraphSimilarity(normalizedQuote, text)
+    if (score > bestScore) {
+      bestIndex = index
+      bestScore = score
+    }
+  }
+  return bestScore >= 0.72 ? bestIndex : -1
 }
 
 function isValidBackup(value: unknown): value is StudyBackupV1 {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<StudyBackupV1>
-  return candidate.kind === 'laochristian-study-backup'
-    && candidate.schemaVersion === 1
-    && Array.isArray(candidate.bookmarks)
-    && Array.isArray(candidate.highlights)
-    && Array.isArray(candidate.notes)
-    && Array.isArray(candidate.history)
+  return (
+    candidate.kind === 'laochristian-study-backup' &&
+    candidate.schemaVersion === 1 &&
+    Array.isArray(candidate.bookmarks) &&
+    Array.isArray(candidate.highlights) &&
+    Array.isArray(candidate.notes) &&
+    Array.isArray(candidate.history)
+  )
 }
 
 export const useStudyStore = defineStore('study', () => {
@@ -101,43 +153,52 @@ export const useStudyStore = defineStore('study', () => {
 
   function isBookmarked(location: ContentLocation): boolean {
     const key = locationKey(location)
-    return data.value.bookmarks.some(item => locationKey(item) === key)
+    return data.value.bookmarks.some((item) => locationKey(item) === key)
   }
 
   async function toggleBookmark(location: ContentLocation): Promise<boolean> {
     await load()
     const key = locationKey(location)
-    const existing = data.value.bookmarks.findIndex(item => locationKey(item) === key)
+    const existing = data.value.bookmarks.findIndex((item) => locationKey(item) === key)
     if (existing >= 0) {
       data.value.bookmarks.splice(existing, 1)
       await persist()
       return false
     }
     const now = new Date().toISOString()
-    data.value.bookmarks.unshift({ ...location, id: recordId('bookmark'), createdAt: now, updatedAt: now })
+    data.value.bookmarks.unshift({
+      ...location,
+      id: recordId('bookmark'),
+      createdAt: now,
+      updatedAt: now,
+    })
     await persist()
     return true
   }
 
   function isHighlighted(location: ContentLocation): boolean {
     const key = locationKey(location)
-    return data.value.highlights.some(item => locationKey(item) === key)
+    return data.value.highlights.some((item) => locationKey(item) === key)
   }
 
   function isParagraphHighlighted(location: ContentLocation): boolean {
     const key = locationKey(location)
-    return data.value.highlights.some(item => locationKey(item) === key && item.scope !== 'text')
+    return data.value.highlights.some((item) => locationKey(item) === key && item.scope !== 'text')
   }
 
   function textHighlights(location: ContentLocation): HighlightRecord[] {
     const key = locationKey(location)
-    return data.value.highlights.filter(item => locationKey(item) === key && item.scope === 'text' && Boolean(item.exact))
+    return data.value.highlights.filter(
+      (item) => locationKey(item) === key && item.scope === 'text' && Boolean(item.exact),
+    )
   }
 
   async function toggleParagraphHighlight(location: ContentLocation): Promise<boolean> {
     await load()
     const key = locationKey(location)
-    const existing = data.value.highlights.findIndex(item => locationKey(item) === key && item.scope !== 'text')
+    const existing = data.value.highlights.findIndex(
+      (item) => locationKey(item) === key && item.scope !== 'text',
+    )
     if (existing >= 0) {
       data.value.highlights.splice(existing, 1)
       await persist()
@@ -157,12 +218,18 @@ export const useStudyStore = defineStore('study', () => {
     return true
   }
 
-  async function addTextHighlight(location: ContentLocation, exact: string, prefix = '', suffix = ''): Promise<void> {
+  async function addTextHighlight(
+    location: ContentLocation,
+    exact: string,
+    prefix = '',
+    suffix = '',
+  ): Promise<void> {
     await load()
     const selected = exact.trim()
     if (selected.length < 2) return
     const key = locationKey(location)
-    if (data.value.highlights.some(item => locationKey(item) === key && item.exact === selected)) return
+    if (data.value.highlights.some((item) => locationKey(item) === key && item.exact === selected))
+      return
     const now = new Date().toISOString()
     data.value.highlights.unshift({
       ...location,
@@ -179,27 +246,93 @@ export const useStudyStore = defineStore('study', () => {
     await persist()
   }
 
-  async function reconcileTextHighlights(location: ContentLocation, blockTexts: string[]): Promise<void> {
+  async function reconcileTextHighlights(
+    location: ContentLocation,
+    blockTexts: string[],
+  ): Promise<void> {
     await load()
     let changed = false
     for (const highlight of data.value.highlights) {
-      if (highlight.scope !== 'text' || highlight.fileId !== location.fileId || highlight.bookId !== location.bookId || highlight.chapterId !== location.chapterId || !highlight.exact) continue
+      if (
+        highlight.scope !== 'text' ||
+        highlight.fileId !== location.fileId ||
+        highlight.bookId !== location.bookId ||
+        highlight.chapterId !== location.chapterId ||
+        !highlight.exact
+      )
+        continue
       const preferred = highlight.blockIndex ?? -1
-      const searchOrder = [preferred, ...blockTexts.map((_, index) => index).filter(index => index !== preferred)]
+      const searchOrder = [
+        preferred,
+        ...blockTexts.map((_, index) => index).filter((index) => index !== preferred),
+      ]
       let match: { blockIndex: number; exact: string; prefix: string; suffix: string } | null = null
       for (const blockIndex of searchOrder) {
         const text = blockTexts[blockIndex]
         if (text === undefined) continue
-        const anchored = reanchorText(text, { exact: highlight.exact, prefix: highlight.prefix ?? '', suffix: highlight.suffix ?? '' })
-        if (anchored) { match = { blockIndex, ...anchored }; break }
+        const anchored = reanchorText(text, {
+          exact: highlight.exact,
+          prefix: highlight.prefix ?? '',
+          suffix: highlight.suffix ?? '',
+        })
+        if (anchored) {
+          match = { blockIndex, ...anchored }
+          break
+        }
       }
       if (match) {
-        const itemChanged = highlight.blockIndex !== match.blockIndex || highlight.exact !== match.exact || Boolean(highlight.unmatched)
+        const itemChanged =
+          highlight.blockIndex !== match.blockIndex ||
+          highlight.exact !== match.exact ||
+          Boolean(highlight.unmatched)
         if (itemChanged) changed = true
-        Object.assign(highlight, match, { quote: match.exact, unmatched: false, updatedAt: itemChanged ? new Date().toISOString() : highlight.updatedAt })
+        Object.assign(highlight, match, {
+          quote: match.exact,
+          unmatched: false,
+          updatedAt: itemChanged ? new Date().toISOString() : highlight.updatedAt,
+        })
       } else if (!highlight.unmatched) {
         highlight.unmatched = true
         highlight.updatedAt = new Date().toISOString()
+        changed = true
+      }
+    }
+    if (changed) await persist()
+  }
+
+  async function reconcileParagraphRecords(
+    location: ContentLocation,
+    blockTexts: string[],
+  ): Promise<void> {
+    await load()
+    let changed = false
+    const records: StudyRecord[] = [...data.value.bookmarks, ...data.value.notes]
+    for (const record of records) {
+      if (
+        record.blockIndex === undefined ||
+        record.fileId !== location.fileId ||
+        record.bookId !== location.bookId ||
+        record.chapterId !== location.chapterId ||
+        !record.quote
+      )
+        continue
+      const match = findParagraphIndex(record.quote, blockTexts, record.blockIndex)
+      if (match >= 0) {
+        const nextQuote = blockTexts[match]!
+        const itemChanged =
+          record.blockIndex !== match || record.quote !== nextQuote || Boolean(record.unmatched)
+        if (itemChanged) {
+          Object.assign(record, {
+            blockIndex: match,
+            quote: nextQuote,
+            unmatched: false,
+            updatedAt: new Date().toISOString(),
+          })
+          changed = true
+        }
+      } else if (!record.unmatched) {
+        record.unmatched = true
+        record.updatedAt = new Date().toISOString()
         changed = true
       }
     }
@@ -211,15 +344,36 @@ export const useStudyStore = defineStore('study', () => {
     const trimmed = body.trim()
     if (!trimmed) return
     const now = new Date().toISOString()
-    data.value.notes.unshift({ ...location, body: trimmed, id: recordId('note'), createdAt: now, updatedAt: now })
+    data.value.notes.unshift({
+      ...location,
+      body: trimmed,
+      id: recordId('note'),
+      createdAt: now,
+      updatedAt: now,
+    })
     await persist()
   }
 
-  async function removeRecord(type: 'bookmarks' | 'highlights' | 'notes', id: string): Promise<void> {
+  async function updateNote(id: string, body: string): Promise<void> {
     await load()
-    if (type === 'bookmarks') data.value.bookmarks = data.value.bookmarks.filter(item => item.id !== id)
-    if (type === 'highlights') data.value.highlights = data.value.highlights.filter(item => item.id !== id)
-    if (type === 'notes') data.value.notes = data.value.notes.filter(item => item.id !== id)
+    const note = data.value.notes.find((item) => item.id === id)
+    const trimmed = body.trim()
+    if (!note || !trimmed) return
+    note.body = trimmed
+    note.updatedAt = new Date().toISOString()
+    await persist()
+  }
+
+  async function removeRecord(
+    type: 'bookmarks' | 'highlights' | 'notes',
+    id: string,
+  ): Promise<void> {
+    await load()
+    if (type === 'bookmarks')
+      data.value.bookmarks = data.value.bookmarks.filter((item) => item.id !== id)
+    if (type === 'highlights')
+      data.value.highlights = data.value.highlights.filter((item) => item.id !== id)
+    if (type === 'notes') data.value.notes = data.value.notes.filter((item) => item.id !== id)
     await persist()
   }
 
@@ -228,13 +382,17 @@ export const useStudyStore = defineStore('study', () => {
     const key = locationKey(location)
     data.value.history = [
       { ...location, visitedAt: new Date().toISOString() },
-      ...data.value.history.filter(item => locationKey(item) !== key),
+      ...data.value.history.filter((item) => locationKey(item) !== key),
     ].slice(0, MAX_HISTORY)
     await persist()
   }
 
   function createBackup(): StudyBackupV1 {
-    return { kind: 'laochristian-study-backup', exportedAt: new Date().toISOString(), ...data.value }
+    return {
+      kind: 'laochristian-study-backup',
+      exportedAt: new Date().toISOString(),
+      ...data.value,
+    }
   }
 
   async function importBackup(value: unknown, mode: 'merge' | 'replace' = 'merge'): Promise<void> {
@@ -249,8 +407,11 @@ export const useStudyStore = defineStore('study', () => {
         history: value.history.slice(0, MAX_HISTORY),
       }
     } else {
-      const mergeById = <T extends { id: string; updatedAt: string }>(current: T[], incoming: T[]): T[] => {
-        const records = new Map(current.map(item => [item.id, item]))
+      const mergeById = <T extends { id: string; updatedAt: string }>(
+        current: T[],
+        incoming: T[],
+      ): T[] => {
+        const records = new Map(current.map((item) => [item.id, item]))
         for (const item of incoming) {
           const previous = records.get(item.id)
           if (!previous || item.updatedAt > previous.updatedAt) records.set(item.id, item)
@@ -284,7 +445,9 @@ export const useStudyStore = defineStore('study', () => {
     toggleParagraphHighlight,
     addTextHighlight,
     reconcileTextHighlights,
+    reconcileParagraphRecords,
     saveNote,
+    updateNote,
     removeRecord,
     recordVisit,
     createBackup,
