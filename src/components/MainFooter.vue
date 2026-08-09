@@ -9,8 +9,16 @@ import { useStaticText, type StaticTextKey } from '@/composables/useStaticText'
 library.add(faHouse, faCircleInfo, faFacebook, faYoutube)
 
 const socialItems = [
-  { name: 'Facebook', to: 'https://www.facebook.com/sklgospel', icon: 'fa-brands fa-facebook'},
-  { name: 'YouTube', to: 'https://www.youtube.com/@SiengKhaenLaoGospel', icon: 'fa-brands fa-youtube'}
+  {
+    name: 'Facebook',
+    to: 'https://www.facebook.com/lao.holland.sda.church',
+    icon: 'fa-brands fa-facebook',
+  },
+  {
+    name: 'YouTube',
+    to: 'https://www.youtube.com/@LaoHollandSDAChurch',
+    icon: 'fa-brands fa-youtube',
+  },
 ]
 
 const copy = useStaticText()
