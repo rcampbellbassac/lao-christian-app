@@ -16,6 +16,11 @@ LaoChristian.org is a Vue 3 + Vite SPA/PWA that presents Lao Christian materials
 - npm 11+
 - Docker + Docker Compose (for containerized workflows)
 
+The project runs TypeScript 7's native compiler for Node/tooling configuration
+and the TypeScript 6 compatibility API for Vue SFC, Volar, and typed ESLint
+integration. This is TypeScript's supported transition model until its native
+compiler exposes the programmatic API required by embedded-language tooling.
+
 ## Environment configuration
 
 Copy `.env.example` to `.env` when you need custom settings.
