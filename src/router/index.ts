@@ -73,7 +73,7 @@ const router = createRouter({
     {
       path: '/present/:fileid/:bookid/:chapterid',
       name: 'presentation',
-      // Lazy-loaded: keeps pptxgenjs/jszip (used only by presentation export)
+      // Lazy-loaded: keeps JSZip (used only by presentation export)
       // out of the main bundle for everyone just reading content.
       component: () => import('../views/PresentationView.vue'),
     },
@@ -89,7 +89,6 @@ const router = createRouter({
       component: () => import('../views/DeckAudienceView.vue'),
       meta: { bare: true },
     },
-
   ],
 })
 
