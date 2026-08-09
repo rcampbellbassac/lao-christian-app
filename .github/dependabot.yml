@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: 'weekly'
     groups:
+      fontawesome:
+        patterns:
+          - '@fortawesome/*'
       npm-minor-and-patch:
         update-types:
           - 'minor'
@@ -14,6 +17,10 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
 
   - package-ecosystem: 'docker'
     directory: '/'

@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
       - master
     paths:
       - src/assets/data/**
@@ -12,15 +11,19 @@ on:
       - scripts/normalize-content.mjs
       - scripts/build-content-release.mjs
       - scripts/publish-content.sh
-      - .github/workflows/publish-content.yml
 
 permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: publish-content-production
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: production
     steps:
       - name: Checkout
@@ -40,6 +43,10 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
+          role-duration-seconds: 1800
+          role-session-name: lao-christian-${{ github.run_id }}
+          mask-aws-account-id: true
+          unset-current-credentials: true
 
       - name: Fetch source content from S3
         run: |

@@ -87,16 +87,18 @@ npm run docker:dev
 
 ## GitHub Pages deployment
 
-This repo includes a Pages workflow at `.github/workflows/deploy-pages.yml`.
+The required CI checks and Pages deployment share one workflow at
+`.github/workflows/ci.yml`. The tested production artifact is deployed only
+after the `verify` job succeeds on `master`.
 
 ### First deploy now (no custom domain)
 
 Use this flow first so we can verify everything on the default GitHub Pages URL.
 
-1. Push current branch changes to your default branch (`main` or `master`).
+1. Merge the change into the protected `master` branch.
 2. In GitHub: `Settings -> Pages`, set **Source** to **GitHub Actions**.
-3. In GitHub: `Actions`, run or confirm the workflow **Deploy GitHub Pages**.
-4. Wait for the `deploy` job to finish, then open the URL shown in:
+3. In GitHub: `Actions`, run or confirm the workflow **CI and Pages**.
+4. Wait for the `deploy-pages` job to finish, then open the URL shown in:
 	- GitHub: `Settings -> Pages`
 	- or workflow output `page_url`
 5. Validate these URLs in browser:

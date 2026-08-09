@@ -1,19 +1,20 @@
-name: CI
+name: CI and Pages
 
 on:
   pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
-      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -41,7 +42,7 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit -- --run
 
-      - name: Build browser-test app
+      - name: Build production app
         run: npm run build-only
 
       - name: Install Playwright browser
@@ -50,7 +51,28 @@ jobs:
       - name: Run browser tests against production output
         run: npm run test:e2e:production
 
-      - name: Verify GitHub Pages build
-        env:
-          VITE_BASE_PATH: /lao-christian-app/
-        run: npm run build-only
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: ./dist
+
+  deploy-pages:
+    name: deploy-pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
