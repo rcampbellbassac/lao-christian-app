@@ -15,7 +15,7 @@ pr="${1:?usage: poll-pr-checks.sh <pr-number> [max-tries] [sleep-seconds]}"
 max_tries="${2:-30}"
 sleep_secs="${3:-20}"
 
-for i in $(seq 1 "$max_tries"); do
+for ((i=1; i<=max_tries; i++)); do
   state=$(gh pr view "$pr" --json mergeStateStatus,statusCheckRollup)
 
   result=$(echo "$state" | python3 -c "
