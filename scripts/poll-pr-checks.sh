@@ -40,8 +40,8 @@ else:
 
   case "$result" in
     all_green)
-      # Also require mergeStateStatus to have left BEHIND/BLOCKED before calling it ready.
-      if [ "$mss" != "BEHIND" ] && [ "$mss" != "BLOCKED" ] && [ "$mss" != "DIRTY" ]; then
+      # Only treat PR as merge-ready when GitHub reports a clean merge state.
+      if [ "$mss" = "CLEAN" ]; then
         echo "RESULT:all_green"
         exit 0
       fi
