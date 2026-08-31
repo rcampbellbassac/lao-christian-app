@@ -4,7 +4,7 @@
 #
 # Usage: poll-pr-checks.sh <pr-number> [max-tries] [sleep-seconds]
 #
-# Emits one line per check and a final RESULT:<state> line, where state is one of:
+# Emits one line per poll attempt and a final RESULT:<state> line, where state is one of:
 #   all_green   - checks reported, all completed, all successful -> safe to merge
 #   failed      - some check completed with a non-success conclusion
 #   timeout     - max-tries exhausted without reaching a terminal state
