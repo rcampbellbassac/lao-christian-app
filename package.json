@@ -43,7 +43,7 @@
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@fortawesome/vue-fontawesome": "^3.3.3",
     "@tailwindcss/vite": "^4.3.3",
-    "dompurify": "^3.4.15",
+    "dompurify": "^3.4.16",
     "html-to-image": "^1.11.13",
     "jszip": "^3.10.2",
     "localforage": "^1.10.0",
