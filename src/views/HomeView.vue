@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MainContentSelector from '@/components/MainContentSelector.vue';
+import SabbathSchoolCard from '@/components/SabbathSchoolCard.vue';
 import { useUiText } from '@/composables/useUiText'
 import { useStaticText } from '@/composables/useStaticText'
 const text = useUiText()
@@ -25,6 +26,8 @@ const copy = useStaticText()
         <MainContentSelector />
       </article>
     </section>
+
+    <SabbathSchoolCard />
 
     <section class="lc-home-resources app-panel">
       <h2 class="app-section-title">{{ copy.text('home.resources') }}</h2>
