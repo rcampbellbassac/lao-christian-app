@@ -35,7 +35,7 @@ This is a static, offline-capable Vue 3 + Vite PWA for Lao-speaking Christian co
 
 5. **Tests and CI**
    - New logic needs a Vitest unit test next to the code (`*.spec.ts`). UI flows that change should have Playwright coverage where practical.
-   - CI requires `verify`, `analyze-javascript-typescript` and CodeQL to pass. Commands: `npm run lint`, `npm run test:unit`, `npm run build`.
+   - CI runs `verify` / `verify-node-24` plus CodeQL's `analyze-javascript-typescript` job. To mirror it locally: `npm run lint`, `npm run type-check`, `npm run test:unit -- --run`, `npm run build-only`, then `npm run test:e2e:production` after installing Playwright's Chromium browser.
 
 6. **Dependencies and workflows**
    - Dependency PRs: check the lockfile changes only what `package.json` says, and be cautious with major and 0.x bumps.
