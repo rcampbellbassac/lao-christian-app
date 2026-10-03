@@ -18,7 +18,7 @@ This is a static, offline-capable Vue 3 + Vite PWA for Lao-speaking Christian co
 
 2. **Security and privacy**
    - The CSP in `nginx/default.conf` and `caddy/Caddyfile` is strict (`script-src 'self'`, no frames). Flag inline scripts, new third-party script origins, `v-html` with untrusted content, or CSP loosening.
-   - Remote content (`src/assets/data/index.json`, content JSON) is untrusted. It must be sanitized before rendering and links must keep `rel="noopener noreferrer"`.
+   - Remote content (`src/assets/data/index.json`, content JSON) is untrusted. Any remote HTML passed to `v-html` must go through `sanitizeContentHtml`; validate remote URLs with the existing URL helpers, and keep `rel="noopener noreferrer"` on links opened in a new tab.
    - No secrets, tokens, `.env` files or personal data in the diff, fixtures or logs.
    - New third-party links and images must be intentional, attributed to their owner where appropriate, and external-site wording must not imply LaoChristian.org owns them. Prefer bundling images locally over hotlinking.
    - Do not add analytics, trackers or cookies without updating the cookie and privacy policy views.
