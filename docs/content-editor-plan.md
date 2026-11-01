@@ -10,8 +10,14 @@ Written 2026-08-25 after reading `scripts/normalize-content.mjs`,
 ## The data, as it is
 
 `index.json` is a catalogue of collections, each pointing at a JSON file on S3
-(`laoadventist-media.s3.us-west-2.amazonaws.com`) with a `content_type` of
-`bible`, `songs`, `studies`, `egw`, `health` or `stories`.
+(`laoadventist-media.s3.us-west-2.amazonaws.com`). There are six collections
+(LaoBible, LaoSongs, LaoBibleStudies, LaoEGW, LaoHealthBooks, LaoStories), but
+only three `content_type` values: `bible`, `songs` and `studies`. LaoEGW,
+LaoHealthBooks and LaoStories are all `studies`, and the app's
+`_normalizeContentType` (`src/stores/content.ts`) maps anything else to
+`default`. The editor must therefore key on **collection identity** (the file)
+for which collection it is editing, and on **`content_type`** only for the
+schema and renderer; the two are not the same thing.
 
 Each collection file is a **three-level tree**, and this shape is what the
 editor has to be built around:
@@ -36,8 +42,12 @@ Three observations that drive the whole design:
    exists because the source had inline styles, `<font>` tags, colour
    attributes, stray `&nbsp;`, and span wrappers — the fingerprints of content
    pasted out of Word over a decade. The editor must not add more.
-3. **`sortorder` is the display order**, not array position. Reordering means
-   rewriting `sortorder`, and gaps in it are normal.
+3. **Display order is array order today, not `sortorder`.** `FileView.vue`
+   iterates `contentSet.unit` and `BookView.vue` iterates `book.contents` as
+   they come, and the content store does not sort on load. `sortorder` is
+   carried along (gaps are normal) but nothing reads it. A reorder must
+   therefore **move the array elements and rewrite `sortorder` to match**, so
+   the file is right whichever one a future reader trusts.
 
 ## What the editor should be
 
@@ -61,9 +71,19 @@ S3.
 edit in browser
    → export collection JSON
    → commit to the repo (branch + PR)
-   → existing GitHub Actions workflow
+   → GitHub Actions workflow (changed, see below)
    → OIDC → S3 (bucket versioning already on)
 ```
+
+**The current workflow cannot carry an edit as it is.**
+`.github/workflows/publish-content.yml` starts with "Fetch source content from
+S3", which overwrites all six files in `src/assets/data` with the S3 copies,
+and normalization then regenerates `src/assets/data-normalized` from those. An
+editor export committed to either directory would be replaced by the old S3
+content before it is published. Before Phase 5, the workflow must change so
+that the repo is the source for any collection changed in the commit, for
+example by fetching from S3 only the files the commit does not touch, or by
+making the repo the source of truth for all six and dropping the fetch.
 
 Why this and not direct-to-S3:
 
@@ -83,7 +103,8 @@ twice in ten years — that is the correct trade.
 tree, view any node's HTML. No editing. This is where the schema assumptions
 get tested against all six files, and it is genuinely useful on its own.
 
-**Phase 2 — safe edits.** Title/name and `sortorder` only. No HTML editing.
+**Phase 2 — safe edits.** Title/name and order only (reordering moves the
+array elements and rewrites `sortorder`, see observation 3). No HTML editing.
 Export the modified collection, diff it against the original, download.
 Small surface, and it proves the round-trip preserves IDs byte-for-byte.
 
