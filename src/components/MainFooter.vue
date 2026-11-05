@@ -50,13 +50,25 @@ const policies: Array<{ name: StaticTextKey; to: string }> = [
           </a>
         </div>
       </div>
-      <div class="mt-4 text-xs text-slate-300 sm:text-sm">
-        <span v-for="(policy, index) in policies" :key="policy.name">
-          <RouterLink :to="policy.to" class="hover:underline">
-            {{ copy.text(policy.name) }}
-          </RouterLink>
-          <span v-if="index < policies.length - 1"> | </span>
-        </span>
+      <div class="mt-4 flex flex-col gap-2 text-xs text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+        <div>
+          <span v-for="(policy, index) in policies" :key="policy.name">
+            <RouterLink :to="policy.to" class="hover:underline">
+              {{ copy.text(policy.name) }}
+            </RouterLink>
+            <span v-if="index < policies.length - 1"> | </span>
+          </span>
+        </div>
+        <!-- tetra6 supports this site as a gift; the footer panel is always dark, so the light wordmark is right. -->
+        <a
+          href="https://tetra6.com/"
+          rel="noopener"
+          class="flex flex-wrap items-center gap-x-1.5 text-xs text-slate-400 opacity-90 transition hover:text-slate-100 hover:opacity-100"
+        >
+          <span class="inline-flex items-center gap-1.5 whitespace-nowrap">Supported by
+            <img src="../assets/img/tetra6-wordmark.svg" alt="tetra6" width="62" height="13" class="h-3 w-auto" /></span>
+          <span class="whitespace-nowrap"><span aria-hidden="true">·</span> part of our commitment to giving back</span>
+        </a>
       </div>
     </div>
   </footer>
