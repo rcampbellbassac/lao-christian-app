@@ -21,16 +21,22 @@ for ((i=1; i<=max_tries; i++)); do
   result=$(echo "$state" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
-checks = d.get('statusCheckRollup', [])
+checks = [
+    {
+        'status': 'COMPLETED' if c.get('state') in ('SUCCESS', 'FAILURE', 'ERROR') else 'PENDING',
+        'conclusion': c.get('state'),
+    } if c.get('__typename') == 'StatusContext' else c
+    for c in (d.get('statusCheckRollup') or [])
+]
 
 if not checks:
     # Distinct from 'pending': no check runs have registered for this SHA yet
     # (e.g. moments after a rebase, before workflows are triggered).
     print('no_checks')
+elif any(c.get('status') == 'COMPLETED' and c.get('conclusion') not in ('SUCCESS', 'SKIPPED', 'NEUTRAL') for c in checks):
+    print('failed')
 elif any(c.get('status') != 'COMPLETED' for c in checks):
     print('pending')
-elif any(c.get('conclusion') not in ('SUCCESS', 'SKIPPED', 'NEUTRAL') for c in checks):
-    print('failed')
 else:
     print('all_green')
 ")
