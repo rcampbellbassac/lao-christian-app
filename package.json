@@ -81,8 +81,32 @@
   },
   "overrides": {
     "js-beautify": {
-      "editorconfig": "^3.0.2"
+      "editorconfig": {
+        ".": "^3.0.2",
+        "minimatch": "^11.0.4"
+      }
     },
-    "postcss-selector-parser": "^7.1.6"
+    "postcss-selector-parser": "^7.1.6",
+    "@eslint/config-array": {
+      "minimatch": "^11.0.4"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.4"
+    },
+    "@vue/eslint-config-typescript": {
+      "minimatch": "^11.0.4"
+    },
+    "eslint": {
+      "minimatch": "^11.0.4"
+    },
+    "glob": {
+      "minimatch": "^11.0.4"
+    },
+    "workbox-build": {
+      "minimatch": "^11.0.4",
+      "filelist": {
+        "minimatch": "^5.1.9"
+      }
+    }
   }
 }
